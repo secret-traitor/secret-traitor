@@ -1,9 +1,20 @@
-import './LoadEnv'; // Must be the first import
-import app from '@server';
-import logger from '@shared/Logger';
+import './LoadEnv' // Must be the first import
+import 'reflect-metadata'
+import server from '@server'
+import logger from '@shared/Logger'
 
-// Start the server
-const port = Number(process.env.PORT || 3000);
-app.listen(port, () => {
-    logger.info('Express server started on port: ' + port);
-});
+const port = Number(process.env.PORT || 3000)
+
+server.listen({ port }, () => {
+    logger.info(`Apollo Server on http://localhost:${port}/graphql`)
+})
+
+// let id = 2
+//
+// setInterval(() => {
+//     pubsub.publish('MESSAGE_CREATED', {
+//         messageCreated: { id, content: new Date().toString() },
+//     })
+//
+//     id++
+// }, 1000)

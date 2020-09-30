@@ -1,51 +1,22 @@
-import React, { useState } from "react";
-import { Grommet, ResponsiveContext } from "grommet";
+import React from 'react'
+import ApolloClient from 'apollo-boost'
+import { ApolloProvider } from '@apollo/react-hooks'
+import { HashRouter as Router } from 'react-router-dom'
 
-import Header from "Header";
-import PageBody from "PageBody";
+import Layout from 'Layout'
 
-import "./App.css";
-
-const theme = {
-  global: {
-    colors: {
-      brand: "#228BE6",
-    },
-    font: {
-      family: "Roboto",
-      size: "18px",
-      height: "20px",
-    },
-  },
-};
+const client = new ApolloClient({
+    uri: 'http://localhost:4000/graphql',
+})
 
 const App = () => {
-  const [showNavbar, setShowNavbar] = useState<boolean>(false);
-  const toggleNavbar = () => setShowNavbar(!showNavbar);
-  return (
-    <Grommet theme={theme} full>
-      <ResponsiveContext.Consumer>
-        {(size) => (
-          <>
-            <Header
-              size={size}
-              navbar={{
-                toggle: toggleNavbar,
-              }}
-            />
-            <PageBody
-              size={size}
-              navbar={{
-                size,
-                hidden: !showNavbar,
-                toggle: toggleNavbar,
-              }}
-            />
-          </>
-        )}
-      </ResponsiveContext.Consumer>
-    </Grommet>
-  );
-};
+    return (
+        <ApolloProvider client={client}>
+            <Router>
+                <Layout />
+            </Router>
+        </ApolloProvider>
+    )
+}
 
-export default App;
+export default App

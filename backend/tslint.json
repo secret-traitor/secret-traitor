@@ -4,7 +4,9 @@
     "member-ordering": false,
     "object-literal-sort-keys": false,
     "ordered-imports": false,
-    "quotemark": [true, "single"]
+    "quotemark": [true, "single"],
+    "no-shadowed-variable": false,
+    "max-classes-per-file": false
   },
   "linterOptions": {
     "exclude": [

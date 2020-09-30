@@ -12,6 +12,7 @@
     "strict": true,
     "target": "es6",
     "moduleResolution": "node",
+    "strictPropertyInitialization": false,
     "paths": {
       "@daos/*": [
         "src/daos/*"

@@ -1,76 +1,76 @@
-import React from "react";
+import React from 'react'
 
 type Action = {
-  name: String;
-};
+    name: string
+}
 
 type Board = {
-  allyCardCount: Number;
-  enemyCardCount: Number;
-  actions: [Action?, Action?, Action?, Action?, Action?];
-};
+    allyCardCount: Number
+    enemyCardCount: Number
+    actions: [Action?, Action?, Action?, Action?, Action?]
+}
 
 enum Suit {
-  Ally,
-  Enemy,
+    Ally,
+    Enemy,
 }
 
 type Card = {
-  suit: Suit;
-};
+    suit: Suit
+}
 
 type Deck = {
-  draw: Card[];
-  discard: Card[];
-};
+    draw: Card[]
+    discard: Card[]
+}
 
 enum Faction {
-  Ally,
-  Enemy,
-  EnemyLeader,
+    Ally,
+    Enemy,
+    EnemyLeader,
 }
 
 enum RoleType {
-  None,
-  President,
-  Governor,
+    None,
+    President,
+    Governor,
 }
 
 type DefaultRole = {
-  __typename: RoleType.None;
-};
+    __typename: RoleType.None
+}
 
 type President = {
-  __typename: RoleType.President;
-  hand: [Card, Card, Card];
-};
+    __typename: RoleType.President
+    hand: [Card, Card, Card]
+}
 
 type Governor = {
-  __typename: RoleType.Governor;
-  hand: [Card, Card];
-};
+    __typename: RoleType.Governor
+    hand: [Card, Card]
+}
 
-type Role = DefaultRole | President | Governor;
+type Role = DefaultRole | President | Governor
 
 type Player = {
-  faction: Faction;
-  currentRole: Role;
-  playHistory: Card[];
-};
+    faction: Faction
+    currentRole: Role
+    playHistory: Card[]
+}
 
 type GameState = {
-  deck: Deck;
-  players: Player[];
-  failedElectionCount: Number;
-};
+    deck: Deck
+    players: Player[]
+    failedElectionCount: Number
+}
 
 type InitialState = {
-  playerCount: Number;
-  config: {
-    termLimits: boolean;
-  };
-};
+    playerCount: Number
+    config: {
+        termLimits: boolean
+    }
+}
 
-const Game: React.FC<InitialState> = () => <></>;
+const Game: React.FC = () => <></>
 
-export default Game;
+export default Game
