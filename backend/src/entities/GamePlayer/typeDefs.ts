@@ -7,20 +7,9 @@ import { IGamePlayer } from './model'
 
 @ObjectType({ description: 'The current state of a game' })
 export class GamePlayer implements IGamePlayer {
-    public id: string
-
-    @Field(() => Game)
-    public game: IGame
-
-    @Field(() => ID)
     public gameId: string
-
-    @Field(() => Boolean)
     public host: boolean
-
-    @Field(() => Player)
-    public player: IPlayer
-
-    @Field(() => String)
+    public id: string
     public playerCode: string
+    public playerNickname?: string
 }

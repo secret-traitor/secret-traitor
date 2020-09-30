@@ -3,8 +3,8 @@ import { gql } from 'apollo-boost'
 import { useQuery } from '@apollo/react-hooks'
 import { useClipboard } from 'use-clipboard-copy'
 
+import LoadingScreen from 'Components/LoadingScreen'
 import { GameStatus } from 'types/Game'
-import { LoadingScreen } from 'Components/Loader'
 import { SuccessToast } from 'Components/Toast'
 import { usePageTitle } from 'hooks'
 

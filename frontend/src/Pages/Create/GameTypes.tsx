@@ -10,7 +10,6 @@ export const GameTypeCard: React.FC<
     const color = selected ? 'white' : 'none'
     return (
         <Box
-            key={gameClass.toString()}
             pad="small"
             margin="small"
             onClick={select}
@@ -35,6 +34,7 @@ export const GameTypes: React.FC<{
     <>
         {gameTypes.map((gameType) => (
             <GameTypeCard
+                key={gameType.gameClass.toString()}
                 {...gameType}
                 select={() => selectOption(gameType.gameClass)}
                 selected={selectedOption === gameType.gameClass}

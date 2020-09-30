@@ -1,10 +1,9 @@
 import React, { useState } from 'react'
-import { Box, Main, Text, TextInput } from 'grommet'
+import { Box, Main, Text, TextInput, Button } from 'grommet'
 import { CirclePlay } from 'grommet-icons'
 
 import BoxSection from 'Components/Box'
 import { LobbyCodeText } from 'Components/GameText'
-import { RouterButton } from 'Components/RouterButton'
 import { getPlayUrl } from 'links'
 
 type JoinProps = {
@@ -55,10 +54,10 @@ const Join: React.FC<JoinProps> = ({ gameCode, playerCode, join }) => {
                             />
                         </Box>
                         <Box align="center" justify="end" width="xsmall">
-                            <RouterButton
+                            <Button
                                 icon={<CirclePlay color="brand-4" />}
-                                path={getPlayUrl({ gameCode, playerCode })}
                                 disabled={joinDisabled}
+                                onClick={() => join(nickname)}
                             />
                         </Box>
                     </Box>

@@ -87,7 +87,7 @@ class GamePlayerDaoMock extends MockDaoMock implements IGamePlayerDao {
                 id: uuid(),
                 gameId: game.id,
                 playerCode: player.code,
-                host: true,
+                host,
             }
             return this.add(gamePlayer)
         } catch (err) {
@@ -105,7 +105,7 @@ class GamePlayerDaoMock extends MockDaoMock implements IGamePlayerDao {
                     return this.get(gamePlayer.id)
                 }
             }
-            throw new Error('Game not found')
+            return this.add(gamePlayer)
         } catch (err) {
             throw err
         }

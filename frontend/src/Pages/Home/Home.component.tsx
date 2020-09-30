@@ -7,7 +7,6 @@ import BoxSection from 'Components/Box'
 
 import Games, { EmptyGames } from './Games'
 import { GameResult } from './Home.container'
-import { Box as BoxBase } from 'grommet/components/Box'
 
 type HomeProps = {
     copy: (text: string) => void

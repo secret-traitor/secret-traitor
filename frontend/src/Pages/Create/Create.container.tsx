@@ -4,8 +4,8 @@ import { Redirect } from 'react-router-dom'
 import { useMutation, useQuery } from '@apollo/react-hooks'
 import get from 'lodash/get'
 
+import LoadingScreen from 'Components/LoadingScreen'
 import { getJoinUrl } from 'links'
-import { LoadingScreen } from 'Components/Loader'
 import { usePageTitle } from 'hooks'
 import { usePlayerCode } from 'types/Player'
 

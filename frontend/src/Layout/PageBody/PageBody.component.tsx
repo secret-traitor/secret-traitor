@@ -2,14 +2,13 @@ import React, { Suspense } from 'react'
 import { Box } from 'grommet'
 import { Redirect, Route, RouteComponentProps, Switch } from 'react-router-dom'
 
-import { getJoinUrl } from 'links'
-import { usePlayerCode } from 'types/Player'
-
 import Create from 'Pages/Create'
 import Home from 'Pages/Home'
-import Play from 'Pages/Play'
 import Join from 'Pages/Join'
-import { LoadingScreen } from '../../Components/Loader'
+import LoadingScreen from 'Components/LoadingScreen'
+import Play from 'Pages/Play'
+import { getJoinUrl } from 'links'
+import { usePlayerCode } from 'types/Player'
 
 const HomeRouter = () => <Home />
 

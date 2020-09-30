@@ -1,45 +1,34 @@
-import React, { Suspense } from 'react'
-import { useQuery } from '@apollo/react-hooks'
-import get from 'lodash/get'
+import React from 'react'
+
+import DelayedRedirect from 'Components/DelayedRedirect'
+import LoadingScreen from 'Components/LoadingScreen'
+import { ErrorToast, SuccessToast } from 'Components/Toast'
+import { getHomeUrl, getPlayUrl } from 'links'
 
 import Join from './Join.component'
-import { gql } from 'apollo-boost'
-import { LoadingScreen } from 'Components/Loader'
-import { ErrorToast } from 'Components/Toast'
-import DelayedRedirect from 'Components/DelayedRedirect'
-import { getHomeUrl } from 'links'
+import { useGameWithPlayers, useJoinGame } from './hooks'
+import { Redirect } from 'react-router'
+import { log } from 'util'
 
-type Game = {
-    code: string
-}
+const BadGameCodeRedirect: React.FC<{ gameCode: string }> = ({ gameCode }) => (
+    <>
+        <ErrorToast position="top">
+            A game with lobby code "{gameCode}" does not exist!
+        </ErrorToast>
+        <DelayedRedirect to={getHomeUrl()} delay={3000} />
+    </>
+)
 
-type Player = {
-    code: string
-    nickname: string
-}
-
-const GAME_PLAYERS_QUERY = gql`
-    query gameWithPlayers($gameCode: String!) {
-        game(code: $gameCode) {
-            code
-            players {
-                code
-                nickname
-            }
-        }
-    }
-`
-
-const useGameWithPlayers = (
+const JoiningGameRedirect: React.FC<{
+    playerCode: string
     gameCode: string
-): [{ game: Game; players: Player[] }, boolean, any] => {
-    const { data, loading, error } = useQuery(GAME_PLAYERS_QUERY, {
-        variables: { gameCode },
-    })
-    const game: Game = get(data, 'game') as Game
-    const players: Player[] = get(data, 'game.players') as Player[]
-    return [{ game, players }, loading, error]
-}
+}> = ({ playerCode, gameCode }) => (
+    <>
+        <SuccessToast position="top">Joining game...</SuccessToast>
+        <LoadingScreen />
+        <Redirect to={getPlayUrl({ playerCode, gameCode })} />
+    </>
+)
 
 type JoinContainerProps = {
     gameCode: string
@@ -51,37 +40,52 @@ const JoinContainer: React.FC<JoinContainerProps> = ({
     playerCode,
 }) => {
     const [
-        { game, players },
+        { game, player },
         loadingGameWithPlayers,
         errorInGameWithPlayers,
-    ] = useGameWithPlayers(gameCode)
-    if (loadingGameWithPlayers && !errorInGameWithPlayers) {
-        return <LoadingScreen />
+        refetchGameWithPlayers,
+    ] = useGameWithPlayers(gameCode, playerCode)
+
+    const {
+        error: errorJoin,
+        join: joinMutation,
+        loading: loadingJoin,
+    } = useJoinGame()
+
+    const join = async (nickname: string) => {
+        if (game && nickname) {
+            await joinMutation({
+                gameId: game.id,
+                playerCode: playerCode,
+                playerNickname: nickname,
+            })
+            refetchGameWithPlayers()
+        }
     }
+
+    const loading =
+        (loadingGameWithPlayers && !errorInGameWithPlayers) ||
+        (loadingJoin && !errorJoin)
+
     if (errorInGameWithPlayers) {
         return <>Uh Oh! {errorInGameWithPlayers}</>
     }
-    if (!game) {
-        return (
-            <>
-                <ErrorToast position="top">
-                    A game with lobby code "{gameCode}" does not exist!
-                </ErrorToast>
-                <DelayedRedirect to={getHomeUrl()} delay={3000} />
-            </>
-        )
+
+    if (errorJoin) {
+        return <>Uh Oh! {errorJoin}</>
     }
+
     return (
         <>
-            <Suspense fallback={<LoadingScreen />}>
-                <Join
+            {loading && <LoadingScreen />}
+            {!loading && !game && <BadGameCodeRedirect gameCode={gameCode} />}
+            {player?.nickname && (
+                <JoiningGameRedirect
                     gameCode={gameCode}
-                    join={(nickname) => {
-                        console.log(nickname)
-                    }}
                     playerCode={playerCode}
                 />
-            </Suspense>
+            )}
+            <Join gameCode={gameCode} playerCode={playerCode} join={join} />
         </>
     )
 }

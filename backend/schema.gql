@@ -25,6 +25,12 @@ enum GameClass {
   AlliesNEnemies
 }
 
+"""The current state of a game"""
+type GamePlayer {
+  game: Game!
+  player: Player!
+}
+
 """
 The current status of a game. Designates whether a game is complete, joinable, or playable.
 """
@@ -45,6 +51,7 @@ type GameType {
 type Mutation {
   createGame(input: CreateGameInput!): Game
   deleteGame(id: String!): Boolean!
+  joinGame(gameId: String!, playerCode: String!, playerNickname: String!): GamePlayer
 }
 
 """Player details"""

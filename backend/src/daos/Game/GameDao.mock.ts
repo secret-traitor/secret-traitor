@@ -65,12 +65,12 @@ const GameDaoMock = class extends MockDaoMock implements IGameDao {
         }
     }
 
-    public async find(args: SearchGames): Promise<IGame[]> {
+    public async find(search: SearchGames): Promise<IGame[]> {
         try {
             const matches: IGame[] = []
             const db = await super.openDb()
             for (const game of db.games) {
-                const isMatch = Object.entries(args.search)
+                const isMatch = Object.entries(search)
                     .map(([field, value]) => game[field] === value)
                     .every(Boolean)
                 if (isMatch) matches.push(game)

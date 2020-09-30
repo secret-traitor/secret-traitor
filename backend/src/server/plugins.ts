@@ -21,7 +21,7 @@ export const LoggingPlugin: PluginDefinition = {
                 )
             },
             didEncounterErrors(requestContext) {
-                logger.error(JSON.stringify(requestContext))
+                logger.error(JSON.stringify(requestContext.errors))
             },
         }
     },
