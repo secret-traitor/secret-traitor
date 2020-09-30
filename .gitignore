@@ -12,3 +12,4 @@ cdk.out
 
 # template.yml is a compilation target for CDK
 template.yml
+template-*.yml
