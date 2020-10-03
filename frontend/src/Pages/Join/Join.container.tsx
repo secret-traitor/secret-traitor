@@ -1,34 +1,10 @@
 import React from 'react'
-
-import DelayedRedirect from 'Components/DelayedRedirect'
 import LoadingScreen from 'Components/LoadingScreen'
-import { ErrorToast, SuccessToast } from 'Components/Toast'
-import { getHomeUrl, getPlayUrl } from 'links'
 
 import Join from './Join.component'
+import { BadGameCodeRedirect } from './BadGameCodeRedirect'
+import { JoiningGameRedirect } from './JoiningGameRedirect'
 import { useGameWithPlayers, useJoinGame } from './hooks'
-import { Redirect } from 'react-router'
-import { log } from 'util'
-
-const BadGameCodeRedirect: React.FC<{ gameCode: string }> = ({ gameCode }) => (
-    <>
-        <ErrorToast position="top">
-            A game with lobby code "{gameCode}" does not exist!
-        </ErrorToast>
-        <DelayedRedirect to={getHomeUrl()} delay={3000} />
-    </>
-)
-
-const JoiningGameRedirect: React.FC<{
-    playerCode: string
-    gameCode: string
-}> = ({ playerCode, gameCode }) => (
-    <>
-        <SuccessToast position="top">Joining game...</SuccessToast>
-        <LoadingScreen />
-        <Redirect to={getPlayUrl({ playerCode, gameCode })} />
-    </>
-)
 
 type JoinContainerProps = {
     gameCode: string
@@ -75,19 +51,13 @@ const JoinContainer: React.FC<JoinContainerProps> = ({
         return <>Uh Oh! {errorJoin}</>
     }
 
-    return (
-        <>
-            {loading && <LoadingScreen />}
-            {!loading && !game && <BadGameCodeRedirect gameCode={gameCode} />}
-            {player?.nickname && (
-                <JoiningGameRedirect
-                    gameCode={gameCode}
-                    playerCode={playerCode}
-                />
-            )}
-            <Join gameCode={gameCode} playerCode={playerCode} join={join} />
-        </>
-    )
+    if (loading) return <LoadingScreen />
+    if (!loading && !game) return <BadGameCodeRedirect gameCode={gameCode} />
+    if (player?.nickname)
+        return (
+            <JoiningGameRedirect gameCode={gameCode} playerCode={playerCode} />
+        )
+    return <Join gameCode={gameCode} playerCode={playerCode} join={join} />
 }
 
 export default JoinContainer

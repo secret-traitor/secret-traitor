@@ -1,5 +1,4 @@
 import React from 'react'
-
 import { Box, Button, Card, CardBody, CardFooter, Text } from 'grommet'
 import { AddCircle, More, CirclePlay, Link } from 'grommet-icons'
 
@@ -96,11 +95,12 @@ const Games: React.FC<GamesProps> = ({ games, copy, more }) => (
             <GameCard
                 key={game.id}
                 game={game}
-                copy={() =>
-                    copy(
-                        createAbsolutePath(getJoinUrl({ gameCode: game.code }))
+                copy={() => {
+                    const path = createAbsolutePath(
+                        getJoinUrl({ gameCode: game.code })
                     )
-                }
+                    copy(path)
+                }}
                 more={() => more(game.id)}
             />
         ))}

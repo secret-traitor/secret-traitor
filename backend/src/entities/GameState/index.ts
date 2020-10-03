@@ -1,5 +1,5 @@
-import { GamePlayer } from './typeDefs'
-export default GamePlayer
+import { GameState } from './typeDefs'
+export default GameState
 
 export * from './model'
 export * from './resolvers'

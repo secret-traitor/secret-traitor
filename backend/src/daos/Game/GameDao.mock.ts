@@ -1,10 +1,9 @@
 import { v4 as uuid } from 'uuid'
 
-import logger from '@shared/Logger'
+import { MockDaoMock } from '@daos/MockDb/MockDao.mock'
 
-import Game, { GameStatus, IGame } from '@entities/Game'
+import { GameStatus, IGame } from '@entities/Game'
 
-import { MockDaoMock } from '../MockDb/MockDao.mock'
 import {
     AddGame,
     AllGames,
@@ -15,7 +14,6 @@ import {
     PutGame,
     SearchGames,
 } from './GameDao'
-import { IPlayer } from '@entities/Player'
 
 function makeCode(length: number) {
     let result = ''
@@ -28,7 +26,7 @@ function makeCode(length: number) {
     return result
 }
 
-const GameDaoMock = class extends MockDaoMock implements IGameDao {
+class GameDaoMock extends MockDaoMock implements IGameDao {
     public async add(args: AddGame): Promise<IGame | null> {
         try {
             const db = await super.openDb()
@@ -40,7 +38,7 @@ const GameDaoMock = class extends MockDaoMock implements IGameDao {
         }
     }
 
-    public async all(args: AllGames): Promise<IGame[]> {
+    public async all(args: AllGames = {}): Promise<IGame[]> {
         try {
             const db = await super.openDb()
             return db.games
@@ -100,7 +98,7 @@ const GameDaoMock = class extends MockDaoMock implements IGameDao {
             const game: IGame = {
                 class: args.class,
                 code: makeCode(6),
-                host: args.host,
+                hostPlayerCode: args.hostPlayerCode,
                 id: uuid(),
                 status: GameStatus.InLobby,
             }

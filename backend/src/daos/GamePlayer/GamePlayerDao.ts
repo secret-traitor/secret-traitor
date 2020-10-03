@@ -1,17 +1,23 @@
 import { IGamePlayer } from '@entities/GamePlayer'
-import { IGame } from '@entities/Game'
-import { IPlayer } from '@entities/Player'
+
+export type AddGamePlayer = IGamePlayer
+export type AllGamePlayers = {}
+export type DeleteGamePlayer = GetGamePlayer
+export type FindGamePlayer = Partial<IGamePlayer>
+export type GetGamePlayer = { id: string }
+export type NewGamePlayer = {
+    gameId: string
+    playerCode: string
+    host: boolean
+}
+export type PutGamePlayer = IGamePlayer
 
 export interface IGamePlayerDao {
-    add: (game: IGamePlayer) => Promise<IGamePlayer | null>
-    all: () => Promise<IGamePlayer[]>
-    delete: (id: string) => Promise<void>
-    find: (search: Partial<IGamePlayer>) => Promise<IGamePlayer[]>
-    get: (id: string) => Promise<IGamePlayer | null>
-    new: (
-        game: IGame,
-        player: IPlayer,
-        host: boolean
-    ) => Promise<IGamePlayer | null>
-    put: (game: IGamePlayer) => Promise<IGamePlayer | null>
+    add: (args: AddGamePlayer) => Promise<IGamePlayer | null>
+    all: (args: AllGamePlayers) => Promise<IGamePlayer[]>
+    delete: (args: DeleteGamePlayer) => Promise<boolean>
+    find: (args: FindGamePlayer) => Promise<IGamePlayer[]>
+    get: (args: GetGamePlayer) => Promise<IGamePlayer | null>
+    new: (args: NewGamePlayer) => Promise<IGamePlayer | null>
+    put: (args: PutGamePlayer) => Promise<IGamePlayer | null>
 }

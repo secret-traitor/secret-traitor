@@ -1,12 +1,11 @@
 import React, { useState } from 'react'
 import { gql } from 'apollo-boost'
-import { useQuery } from '@apollo/react-hooks'
 import { useClipboard } from 'use-clipboard-copy'
 
 import LoadingScreen from 'Components/LoadingScreen'
 import { GameStatus } from 'types/Game'
 import { SuccessToast } from 'Components/Toast'
-import { usePageTitle } from 'hooks'
+import { usePageTitle, usePollingQuery } from 'hooks'
 
 import Home from './Home.component'
 
@@ -27,8 +26,11 @@ const GAMES_QUERY = gql`
 `
 
 const usePollGames = (): [GameResult[], boolean, any, () => void] => {
-    const results = useQuery(GAMES_QUERY)
-    const { data, loading, error, refetch } = results
+    const { data, loading, error, refetch } = usePollingQuery(
+        GAMES_QUERY,
+        {},
+        6000
+    )
     const games: GameResult[] = data?.games as GameResult[]
     return [games, loading, error, refetch]
 }

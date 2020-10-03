@@ -3,18 +3,24 @@
 # !!!   DO NOT MODIFY THIS FILE BY YOURSELF   !!!
 # -----------------------------------------------
 
-input CreateGameInput {
-  gameClass: GameClass!
-  playerCode: String!
+type AlliesAndEnemiesPlayerState implements GamePlayerState {
+  game: Game!
+  id: ID!
 }
 
-"""The current state of a game"""
+type AlliesAndEnemiesState implements GameState {
+  game: Game!
+  id: ID!
+  players: [Player!]!
+}
+
+"""Provides high level details about a game."""
 type Game {
   class: GameClass!
   code: String!
   host: Player!
   id: ID!
-  players: [Player!]
+  players: [Player!]!
   status: GameStatus!
 }
 
@@ -25,10 +31,22 @@ enum GameClass {
   AlliesNEnemies
 }
 
-"""The current state of a game"""
+"""Represents the relationship between a player and a game"""
 type GamePlayer {
   game: Game!
+  id: String!
   player: Player!
+}
+
+interface GamePlayerState {
+  game: Game!
+  id: ID!
+}
+
+interface GameState {
+  game: Game!
+  id: ID!
+  players: [Player!]!
 }
 
 """
@@ -41,7 +59,9 @@ enum GameStatus {
   InProgress
 }
 
-""""""
+"""
+Game types determine the games that are playable. Includes a display name, description and unique code.
+"""
 type GameType {
   description: String!
   displayName: String!
@@ -49,8 +69,8 @@ type GameType {
 }
 
 type Mutation {
-  createGame(input: CreateGameInput!): Game
-  deleteGame(id: String!): Boolean!
+  createGame(gameClass: GameClass!, playerCode: String!): Game
+  deleteGame(id: Boolean!): Boolean!
   joinGame(gameId: String!, playerCode: String!, playerNickname: String!): GamePlayer
 }
 
@@ -63,5 +83,13 @@ type Player {
 type Query {
   allGames: [Game!]!
   game(code: String!): Game
+  gamePlayer(gameCode: String!, playerCode: String!): GamePlayer
+  gameState(gameId: String!): GameState
   gameTypes: [GameType!]!
+  joinableGames: [Game!]!
+  playerGameState(playerGameId: String!): GamePlayerState
+}
+
+type Subscription {
+  play(gameId: ID!, gamePlayerId: ID!): GamePlayerState!
 }

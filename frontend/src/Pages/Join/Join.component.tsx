@@ -4,7 +4,6 @@ import { CirclePlay } from 'grommet-icons'
 
 import BoxSection from 'Components/Box'
 import { LobbyCodeText } from 'Components/GameText'
-import { getPlayUrl } from 'links'
 
 type JoinProps = {
     gameCode: string

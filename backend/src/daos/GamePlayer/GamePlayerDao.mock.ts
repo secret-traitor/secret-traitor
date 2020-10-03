@@ -1,28 +1,33 @@
 import { v4 as uuid } from 'uuid'
 
-import logger from '@shared/Logger'
-
 import { MockDaoMock } from '@daos/MockDb/MockDao.mock'
 
-import { GamePlayer, IGamePlayer } from '@entities/GamePlayer'
-import { IGame } from '@entities/Game'
-import { IPlayer } from '@entities/Player'
+import { IGamePlayer } from '@entities/GamePlayer'
 
-import { IGamePlayerDao } from './GamePlayerDao'
+import {
+    AddGamePlayer,
+    AllGamePlayers,
+    DeleteGamePlayer,
+    FindGamePlayer,
+    GetGamePlayer,
+    IGamePlayerDao,
+    NewGamePlayer,
+    PutGamePlayer,
+} from './GamePlayerDao'
 
 class GamePlayerDaoMock extends MockDaoMock implements IGamePlayerDao {
-    public async add(gamePlayer: IGamePlayer): Promise<IGamePlayer | null> {
+    public async add(args: AddGamePlayer): Promise<IGamePlayer | null> {
         try {
             const db = await super.openDb()
-            db.gamePlayers.push(gamePlayer)
+            db.gamePlayers.push(args)
             await super.saveDb(db)
-            return this.get(gamePlayer.id)
+            return this.get(args as GetGamePlayer)
         } catch (err) {
             throw err
         }
     }
 
-    public async all(): Promise<IGamePlayer[]> {
+    public async all(args: AllGamePlayers = {}): Promise<IGamePlayer[]> {
         try {
             const db = await super.openDb()
             return db.gamePlayers
@@ -31,28 +36,28 @@ class GamePlayerDaoMock extends MockDaoMock implements IGamePlayerDao {
         }
     }
 
-    public async delete(id: string): Promise<void> {
+    public async delete(args: DeleteGamePlayer): Promise<boolean> {
         try {
             const db = await super.openDb()
             for (let i = 0; i < db.gamePlayers.length; i++) {
-                if (db.gamePlayers[i].id === id) {
+                if (db.gamePlayers[i].id === args.id) {
                     db.gamePlayers.splice(i, 1)
                     await super.saveDb(db)
-                    return
+                    return true
                 }
             }
-            throw new Error('Game not found')
+            return false
         } catch (err) {
             throw err
         }
     }
 
-    public async find(search: Partial<IGamePlayer>): Promise<IGamePlayer[]> {
+    public async find(args: FindGamePlayer): Promise<IGamePlayer[]> {
         try {
             const matches: IGamePlayer[] = []
             const db = await super.openDb()
             for (const game of db.gamePlayers) {
-                const isMatch = Object.entries(search)
+                const isMatch = Object.entries(args)
                     .map(([field, value]) => game[field] === value)
                     .every(Boolean)
                 if (isMatch) matches.push(game)
@@ -63,11 +68,11 @@ class GamePlayerDaoMock extends MockDaoMock implements IGamePlayerDao {
         }
     }
 
-    public async get(id: string): Promise<IGamePlayer | null> {
+    public async get(args: GetGamePlayer): Promise<IGamePlayer | null> {
         try {
             const db = await super.openDb()
             for (const game of db.gamePlayers) {
-                if (game.id === id) {
+                if (game.id === args.id) {
                     return game
                 }
             }
@@ -77,17 +82,11 @@ class GamePlayerDaoMock extends MockDaoMock implements IGamePlayerDao {
         }
     }
 
-    public async new(
-        game: IGame,
-        player: IPlayer,
-        host: boolean
-    ): Promise<IGamePlayer | null> {
+    public async new(args: NewGamePlayer): Promise<IGamePlayer | null> {
         try {
             const gamePlayer: IGamePlayer = {
                 id: uuid(),
-                gameId: game.id,
-                playerCode: player.code,
-                host,
+                ...args,
             }
             return this.add(gamePlayer)
         } catch (err) {
@@ -95,17 +94,17 @@ class GamePlayerDaoMock extends MockDaoMock implements IGamePlayerDao {
         }
     }
 
-    public async put(gamePlayer: IGamePlayer): Promise<IGamePlayer | null> {
+    public async put(args: PutGamePlayer): Promise<IGamePlayer | null> {
         try {
             const db = await super.openDb()
             for (let i = 0; i < db.gamePlayers.length; i++) {
-                if (db.gamePlayers[i].id === gamePlayer.id) {
-                    db.gamePlayers[i] = gamePlayer
+                if (db.gamePlayers[i].id === args.id) {
+                    db.gamePlayers[i] = args
                     await super.saveDb(db)
-                    return this.get(gamePlayer.id)
+                    return this.get(args as GetGamePlayer)
                 }
             }
-            return this.add(gamePlayer)
+            return this.add(args as AddGamePlayer)
         } catch (err) {
             throw err
         }

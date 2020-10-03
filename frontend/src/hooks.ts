@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useClipboard } from 'use-clipboard-copy'
+import { useQuery } from '@apollo/react-hooks'
+import { OperationVariables, QueryResult } from '@apollo/react-common'
+import { DocumentNode } from 'graphql'
+import { QueryHookOptions } from '@apollo/react-hooks/lib/types'
 
 export const usePageTitle = (title: string): void => {
     useEffect(() => {
@@ -25,4 +29,22 @@ export const useAutoClose = (time: number) => {
         return () => clearTimeout(timeout)
     }, [setOpen, time])
     return [open, close]
+}
+
+export function usePollingQuery<TData = any, TVariables = OperationVariables>(
+    query: DocumentNode,
+    options?: QueryHookOptions<TData, TVariables>,
+    pollInterval: number = 1000
+): QueryResult<TData, TVariables> {
+    const results = useQuery<TData, TVariables>(query, {
+        ...options,
+        // using this poll interval will cause the component to continue to poll even after unmounting
+        pollInterval: undefined,
+    })
+    const { startPolling, stopPolling } = results
+    useEffect(() => {
+        startPolling(pollInterval)
+        return stopPolling
+    }, [pollInterval, startPolling, stopPolling])
+    return results
 }

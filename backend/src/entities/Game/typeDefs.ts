@@ -1,21 +1,8 @@
-import {
-    Field,
-    ID,
-    InputType,
-    ObjectType,
-    registerEnumType,
-} from 'type-graphql'
-import { Player } from '@entities/Player'
+import { Field, ID, ObjectType, registerEnumType } from 'type-graphql'
 
-import {
-    GameClass,
-    GameStatus,
-    IGame,
-    IGameType,
-    ICreateGameInput,
-} from './model'
+import { GameClass, GameStatus, IGame, IGameType } from './model'
 
-@ObjectType({ description: 'The current state of a game' })
+@ObjectType({ description: 'Provides high level details about a game.' })
 export class Game implements IGame {
     @Field(() => ID)
     public id: string
@@ -26,22 +13,16 @@ export class Game implements IGame {
     @Field(() => String)
     public code: string
 
-    @Field(() => Player)
-    public host: Player
+    hostPlayerCode: string
 
     @Field(() => GameStatus)
     public status: GameStatus
 }
 
-@InputType({})
-export class CreateGameInput implements ICreateGameInput {
-    @Field(() => String) // it's very important
-    playerCode: string
-    @Field(() => GameClass)
-    gameClass: GameClass
-}
-
-@ObjectType({ description: '' })
+@ObjectType({
+    description:
+        'Game types determine the games that are playable. Includes a display name, description and unique code.',
+})
 export class GameType implements IGameType {
     @Field(() => String)
     public description: string

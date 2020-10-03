@@ -1,5 +1,3 @@
-import { IPlayer } from '@entities/Player'
-
 export enum GameClass {
     AlliesNEnemies,
 }
@@ -14,7 +12,7 @@ export enum GameStatus {
 export interface IGame {
     class: GameClass
     code: string
-    host: IPlayer
+    hostPlayerCode: string
     id: string
     status: GameStatus
 }
@@ -22,10 +20,5 @@ export interface IGame {
 export interface IGameType {
     description: string
     displayName: string
-    gameClass: GameClass
-}
-
-export interface ICreateGameInput {
-    playerCode: string
     gameClass: GameClass
 }
