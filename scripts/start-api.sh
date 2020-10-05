@@ -60,5 +60,6 @@ template_has_changed || generate_template
 db_started || start_db
 
 # start the api; this will fail if it's already started
+echo "Starting the API locally, stop it with Ctrl+C"
 start_api
 

@@ -32,16 +32,14 @@ say-new-var:
 
 # set up the dependency graph of commands here, each calling an idempotent
 # script from scripts/
-start:
-	bash scripts/start-app.sh
+start-api:
+	bash scripts/start-api.sh
 
 create-dynamo:
 	docker run -d -v "$PWD":/$(DB_WD) -p $(DB_PORT):$(DB_PORT_IN_CONTAINER) --network $(LOCAL_NETWORK) --name $(DB_CONTAINER_NAME) $(DB_IMAGE)
 
 rm-dynamo:
-	docker stop $(DB_CONTAINER_NAME)
-	docker rm $(DB_CONTAINER_NAME)
-	echo
+	bash scripts/rm-dynamo.sh
 
 r:	run
 
