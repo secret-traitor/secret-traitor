@@ -1,5 +1,10 @@
 const { DynamoDB, Endpoint, Lambda } = require("aws-sdk");
 
+// the variable SAM_MODE set to this value means that we are running locally
+// with AWS's sam cli
+const SAM_MODE_LOCAL = "local";
+const HITS_TABLE_NAME = "Hits";
+
 exports.handler = async function (event: {
   path: string;
   requestContext: { requestId: string };
@@ -7,10 +12,14 @@ exports.handler = async function (event: {
   console.log("request:", JSON.stringify(event, undefined, 2));
 
   // create AWS SDK clients
-  const dynamo = new DynamoDB({
-    // modified for local
-    endpoint: new Endpoint("http://dynamodb:8000/"), // modified for local
-  }); // modified for local
+
+  const dynamo =
+    process.env.SAM_MODE && process.env.SAM_MODE === SAM_MODE_LOCAL
+      ? new DynamoDB({
+          // modified for local
+          endpoint: new Endpoint("http://dynamodb:8000/"), // modified for local
+        })
+      : new DynamoDB(); // modified for local
   const dynamoDocClient = new DynamoDB.DocumentClient({ service: dynamo });
   const lambda = new Lambda();
   console.log(`1: executing..., request ${event.requestContext?.requestId}`);
@@ -39,7 +48,10 @@ exports.handler = async function (event: {
   await dynamo
     .updateItem(
       {
-        TableName: "Hits" /*process.env.HITS_TABLE_NAME*/,
+        TableName:
+          process.env.SAM_MODE && process.env.SAM_MODE === SAM_MODE_LOCAL
+            ? HITS_TABLE_NAME
+            : process.env.HITS_TABLE_NAME,
         Key: { path: { S: event.path } },
         UpdateExpression: "ADD hits :incr",
         ExpressionAttributeValues: { ":incr": { N: "1" } },
@@ -61,7 +73,10 @@ exports.handler = async function (event: {
   const updateResponse = await new Promise((resolve, reject) => {
     dynamo.updateItem(
       {
-        TableName: "Hits" /*process.env.HITS_TABLE_NAME*/,
+        TableName:
+          process.env.SAM_MODE && process.env.SAM_MODE === SAM_MODE_LOCAL
+            ? HITS_TABLE_NAME
+            : process.env.HITS_TABLE_NAME,
         Key: { path: { S: event.path } },
         UpdateExpression: "ADD hits2 :incr",
         ExpressionAttributeValues: { ":incr": { N: "1" } },

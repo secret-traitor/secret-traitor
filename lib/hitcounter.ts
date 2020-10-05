@@ -28,6 +28,7 @@ export class HitCounter extends cdk.Construct {
       code: lambda.Code.fromAsset("lambda"),
       environment: {
         MY_VAR_X: process.env.SOME_VAR_X || "some_var_y",
+        SAM_MODE: process.env.SAM_MODE || "",
         DOWNSTREAM_FUNCTION_NAME: props.downstream.functionName,
         HITS_TABLE_NAME: table.tableName,
       },
