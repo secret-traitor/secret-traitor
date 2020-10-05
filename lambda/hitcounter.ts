@@ -25,25 +25,6 @@ exports.handler = async function (event: {
   console.log(`1: executing..., request ${event.requestContext?.requestId}`);
   // console.log(event);
 
-  await dynamo
-    .listTables({}, function (err: { stack: any }, data: any) {
-      if (err) {
-        console.log("dynamodb listTables error!!!!");
-        console.log(err, err.stack);
-      }
-      // an error occurred
-      else console.log(data); // successful response
-    })
-    .promise();
-
-  // const listTablesResponse =
-
-  // const dbResponse = await new Promise((resolve, reject) => {
-  //   dynamoDocClient.query(res.locals[paramsName], (err, data) => {
-  //     resolve({err: err, data: data});
-  //   });
-  // });
-
   // update dynamo entry for "path" with hits++
   await dynamo
     .updateItem(
