@@ -31,8 +31,8 @@ const JoinContainer: React.FC<JoinContainerProps> = ({
     const join = async (nickname: string) => {
         if (game && nickname) {
             await joinMutation({
-                gameId: game.id,
-                playerCode: playerCode,
+                gameCode,
+                playerCode,
                 playerNickname: nickname,
             })
             refetchGameWithPlayers()

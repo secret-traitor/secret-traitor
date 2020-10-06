@@ -2,17 +2,17 @@ import React, { useState } from 'react'
 import { Box, Main, Button, Text } from 'grommet'
 import { Add } from 'grommet-icons'
 
-import { GameClass, GameType } from 'types/GameType'
+import { GameType, GameDescription } from 'types/GameDescription'
 import BoxSection from 'Components/Box'
 
 import { GameTypes } from './GameTypes'
 
 type CreateProps = {
-    gameTypes: GameType[]
-    create: (gameClass: GameClass) => void
+    descriptions: GameDescription[]
+    create: (type: GameType) => void
 }
 
-const Create: React.FC<CreateProps> = ({ create, gameTypes }) => {
+const Create: React.FC<CreateProps> = ({ create, descriptions }) => {
     const [selectedOption, selectOption] = useState()
     return (
         <Main fill flex align="center" justify="center">
@@ -33,7 +33,7 @@ const Create: React.FC<CreateProps> = ({ create, gameTypes }) => {
                     height={{ min: 'xsmall', max: 'large' }}
                 >
                     <GameTypes
-                        gameTypes={gameTypes}
+                        descriptions={descriptions}
                         selectedOption={selectedOption}
                         selectOption={selectOption}
                     />

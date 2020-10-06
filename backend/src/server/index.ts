@@ -2,8 +2,8 @@ import express from 'express'
 import { ApolloServer } from 'apollo-server-express'
 import { createServer } from 'http'
 
-import schema from './schema'
 import plugins from './plugins'
+import schema from './schema'
 
 const app = express()
 const server = createServer(app)

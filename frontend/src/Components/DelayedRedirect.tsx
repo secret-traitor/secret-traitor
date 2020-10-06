@@ -1,14 +1,16 @@
 import React, { useEffect } from 'react'
 import { RedirectProps, useHistory } from 'react-router'
 
-type DelayedRedirectProps = RedirectProps & {
-    delay: number
+const DEFAULT_DELAY = 3000
+
+export type DelayedRedirectProps = RedirectProps & {
+    delay?: number
     replace?: boolean
 }
 
 const DelayedRedirect: React.FC<DelayedRedirectProps> = ({
     replace = false,
-    delay,
+    delay = DEFAULT_DELAY,
     to,
 }) => {
     const history = useHistory()

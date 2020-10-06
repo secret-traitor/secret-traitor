@@ -4,3 +4,8 @@ export enum GameStatus {
     InLobby = 'InLobby',
     InProgress = 'InProgress',
 }
+
+export type Game = {
+    id: string
+    status: GameStatus
+}

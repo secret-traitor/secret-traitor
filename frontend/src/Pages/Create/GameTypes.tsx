@@ -1,11 +1,11 @@
 import React from 'react'
 import { Box, Text } from 'grommet'
 
-import { GameClass, GameType } from 'types/GameType'
+import { GameType, GameDescription } from 'types/GameDescription'
 
 export const GameTypeCard: React.FC<
-    GameType & { selected: boolean; select: () => void }
-> = ({ description, displayName, gameClass, select, selected }) => {
+    GameDescription & { selected: boolean; select: () => void }
+> = ({ description, displayName, select, selected }) => {
     const background = selected ? 'brand-2' : 'light-1'
     const color = selected ? 'white' : 'none'
     return (
@@ -27,17 +27,17 @@ export const GameTypeCard: React.FC<
 }
 
 export const GameTypes: React.FC<{
-    gameTypes: GameType[]
-    selectedOption: GameClass
-    selectOption: (gameClass: GameClass) => void
-}> = ({ gameTypes, selectedOption, selectOption }) => (
+    descriptions: GameDescription[]
+    selectedOption: GameType
+    selectOption: (type: GameType) => void
+}> = ({ descriptions, selectedOption, selectOption }) => (
     <>
-        {gameTypes.map((gameType) => (
+        {descriptions.map((description) => (
             <GameTypeCard
-                key={gameType.gameClass.toString()}
-                {...gameType}
-                select={() => selectOption(gameType.gameClass)}
-                selected={selectedOption === gameType.gameClass}
+                key={description.type.toString()}
+                {...description}
+                select={() => selectOption(description.type)}
+                selected={selectedOption === description.type}
             />
         ))}
     </>

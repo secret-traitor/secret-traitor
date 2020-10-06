@@ -5,8 +5,9 @@ import { Refresh, Add } from 'grommet-icons'
 import { CreateRouterButton } from 'links'
 import BoxSection from 'Components/Box'
 
-import Games, { EmptyGames } from './Games'
-import { GameResult } from './Home.container'
+import Games from './Games'
+import { GameResult } from './types'
+import { EmptyGames } from './EmptyGames'
 
 type HomeProps = {
     copy: (text: string) => void

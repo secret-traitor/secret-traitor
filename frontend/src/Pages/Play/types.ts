@@ -1,12 +1,5 @@
-import { GameStatus } from 'types/Game'
-
-export type Game = {
-    status: GameStatus
-}
-
-export type Player = {
-    nickname: string
-}
+import { Game } from 'types/Game'
+import { Player } from 'types/Player'
 
 export type GamePlayer = {
     game: Game

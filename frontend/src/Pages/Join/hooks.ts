@@ -9,8 +9,9 @@ const GAME_PLAYERS_QUERY = gql`
     query gameWithPlayers($gameCode: String!) {
         game(code: $gameCode) {
             id
-            code
+            status
             players {
+                id
                 code
                 nickname
             }
@@ -23,24 +24,25 @@ export const useGameWithPlayers = (
     playerCode: string
 ): [{ game: Game; player: Player | null }, boolean, any, () => void] => {
     const { data, loading, error, refetch } = useQuery(GAME_PLAYERS_QUERY, {
-        variables: { gameCode },
+        variables: { gameCode, playerCode },
+        fetchPolicy: 'no-cache',
     })
-    const game: Game = get(data, 'game') as Game
-    const players: Player[] = get(data, 'game.players', []) as Player[]
+    const game = get(data, 'game') as Game
+    const players = get(data, 'game.players', []) as Player[]
     const player = find(players, (player) => player.code === playerCode) || null
     return [{ game, player }, loading, error, refetch]
 }
 
 const JOIN_GAME_MUTATION = gql`
     mutation joinGame(
-        $playerNickname: String!
+        $gameCode: String!
         $playerCode: String!
-        $gameId: String!
+        $playerNickname: String!
     ) {
         joinGame(
-            playerNickname: $playerNickname
+            gameCode: $gameCode
             playerCode: $playerCode
-            gameId: $gameId
+            playerNickname: $playerNickname
         ) {
             game {
                 code
@@ -55,7 +57,7 @@ const JOIN_GAME_MUTATION = gql`
 `
 
 export type JoinGameProps = {
-    gameId: string
+    gameCode: string
     playerCode: string
     playerNickname: string
 }
@@ -64,6 +66,6 @@ export const useJoinGame = () => {
     const [createMutation, { called, loading, error, data }] = useMutation(
         JOIN_GAME_MUTATION
     )
-    const join = (args: JoinGameProps) => createMutation({ variables: args })
+    const join = (variables: JoinGameProps) => createMutation({ variables })
     return { join, data, loading, error, called }
 }

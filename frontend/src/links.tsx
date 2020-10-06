@@ -1,6 +1,7 @@
 import React from 'react'
-import { RouterButton } from 'Components/RouterButton'
 import { ButtonProps } from 'grommet'
+
+import { RouterButton } from 'Components/RouterButton'
 
 export const getHomeUrl = () => '/'
 export const HomeRouterButton: React.FC<ButtonProps> = ({

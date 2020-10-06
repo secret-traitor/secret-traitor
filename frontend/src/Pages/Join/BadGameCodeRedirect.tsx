@@ -1,29 +1,23 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
-import { Text } from 'grommet'
+import { Box, Text } from 'grommet'
 
-import DelayedRedirect from 'Components/DelayedRedirect'
-import Popup from 'Components/Popup'
 import { getHomeUrl } from 'links'
 import { LobbyCodeText } from 'Components/GameText'
+import ConfirmRedirect from 'Components/ConfirmRedirect'
 
 export const BadGameCodeRedirect: React.FC<{ gameCode: string }> = ({
     gameCode,
 }) => (
-    <Popup align="center">
-        <Text size="large" weight="bold">
-            Uh Oh!
-        </Text>
-        <Text>
-            We can not find a game with lobby code "
-            <LobbyCodeText code={gameCode} />
-            "!
-        </Text>
-        <Text size="small" weight={200}>
-            <Link to={getHomeUrl()} style={{ textDecoration: 'none' }}>
-                Click here if you are not redirected.
-            </Link>
-        </Text>
-        <DelayedRedirect to={getHomeUrl()} delay={3000} />
-    </Popup>
+    <ConfirmRedirect to={getHomeUrl()} delay={30000}>
+        <Box align="center" gap="medium">
+            <Text size="large" weight="bold" textAlign="center">
+                Uh Oh!
+            </Text>
+            <Text textAlign="center">
+                We can not find a game with lobby code "
+                <LobbyCodeText code={gameCode} />
+                "!
+            </Text>
+        </Box>
+    </ConfirmRedirect>
 )

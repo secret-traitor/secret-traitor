@@ -20,6 +20,9 @@
       "@entities/*": [
         "src/entities/*"
       ],
+      "@graphql/*": [
+        "src/graphql/*"
+      ],
       "@shared/*": [
         "src/shared/*"
       ],

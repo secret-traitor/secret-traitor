@@ -1,21 +1,5 @@
-import fs from 'fs'
-import glob from 'glob'
-import path from 'path'
-import { ApolloError, gql } from 'apollo-server'
+import { ApolloError } from 'apollo-server'
 import { GraphQLError as BaseGraphQLError } from 'graphql'
-
-export const loadSchemaFromFile = (...filenames: string[]) => gql`
-    ${filenames
-        .map((filename) => fs.readFileSync(filename, 'utf8').toString())
-        .join('\n')}
-`
-
-export const loadSchemaFromDir = (...dirs: string[]) =>
-    dirs.flatMap((dir: string) =>
-        glob
-            .sync('**/*.graphql', { cwd: dir })
-            .map((f: string) => loadSchemaFromFile(path.join(dir, f)))
-    )
 
 export type GraphQlResponse<T> = T | BaseGraphQLError
 export type GraphQlPromiseResponse<T> = Promise<GraphQlResponse<T>>

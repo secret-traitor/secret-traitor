@@ -34,7 +34,8 @@ export const useAutoClose = (time: number) => {
 export function usePollingQuery<TData = any, TVariables = OperationVariables>(
     query: DocumentNode,
     options?: QueryHookOptions<TData, TVariables>,
-    pollInterval: number = 1000
+    pollInterval: number = 3000,
+    stopPollingAfter: number = 60000
 ): QueryResult<TData, TVariables> {
     const results = useQuery<TData, TVariables>(query, {
         ...options,
@@ -44,7 +45,14 @@ export function usePollingQuery<TData = any, TVariables = OperationVariables>(
     const { startPolling, stopPolling } = results
     useEffect(() => {
         startPolling(pollInterval)
+        if (stopPollingAfter && stopPollingAfter > 0) {
+            const timeout = setTimeout(stopPolling, stopPollingAfter)
+            return () => {
+                stopPolling()
+                clearTimeout(timeout)
+            }
+        }
         return stopPolling
-    }, [pollInterval, startPolling, stopPolling])
+    }, [pollInterval, startPolling, stopPolling, stopPollingAfter])
     return results
 }

@@ -1,8 +1,4 @@
-import { v4 as uuid } from 'uuid'
-
 import { MockDaoMock } from '@daos/MockDb/MockDao.mock'
-
-import { GameStatus, IGame } from '@entities/Game'
 
 import {
     AddGame,
@@ -14,6 +10,8 @@ import {
     PutGame,
     SearchGames,
 } from './GameDao'
+import { UUID } from '@shared/uuid'
+import { GameStatus, IGame } from '@entities/Game'
 
 function makeCode(length: number) {
     let result = ''
@@ -96,10 +94,9 @@ class GameDaoMock extends MockDaoMock implements IGameDao {
     public async new(args: NewGame): Promise<IGame | null> {
         try {
             const game: IGame = {
-                class: args.class,
+                ...args,
                 code: makeCode(6),
-                hostPlayerCode: args.hostPlayerCode,
-                id: uuid(),
+                id: UUID(),
                 status: GameStatus.InLobby,
             }
             return this.add({ game })
@@ -118,7 +115,7 @@ class GameDaoMock extends MockDaoMock implements IGameDao {
                     return this.get({ id: args.game.id })
                 }
             }
-            throw new Error('Game not found')
+            return this.add(args as AddGame)
         } catch (err) {
             throw err
         }

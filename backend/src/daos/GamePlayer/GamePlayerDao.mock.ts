@@ -1,8 +1,8 @@
-import { v4 as uuid } from 'uuid'
+import filter from 'lodash/filter'
+import find from 'lodash/find'
+import findIndex from 'lodash/findIndex'
 
 import { MockDaoMock } from '@daos/MockDb/MockDao.mock'
-
-import { IGamePlayer } from '@entities/GamePlayer'
 
 import {
     AddGamePlayer,
@@ -14,100 +14,79 @@ import {
     NewGamePlayer,
     PutGamePlayer,
 } from './GamePlayerDao'
+import { UUID } from '@shared/uuid'
+import { IGamePlayer } from '@entities/GamePlayer'
 
-class GamePlayerDaoMock extends MockDaoMock implements IGamePlayerDao {
-    public async add(args: AddGamePlayer): Promise<IGamePlayer | null> {
-        try {
-            const db = await super.openDb()
+type DB = {
+    gamePlayers: IGamePlayer[]
+}
+
+class GamePlayerDaoMock extends MockDaoMock<DB> implements IGamePlayerDao {
+    public async add(args: AddGamePlayer): Promise<IGamePlayer> {
+        const db = await this.db()
+        const exists = find(
+            db.gamePlayers,
+            (gp: IGamePlayer) =>
+                gp.playerId === args.playerId && gp.gameId === args.gameId
+        )
+        if (!exists) {
             db.gamePlayers.push(args)
             await super.saveDb(db)
-            return this.get(args as GetGamePlayer)
-        } catch (err) {
-            throw err
+            return args as IGamePlayer
         }
+        throw Error('Resource already exists!')
     }
 
-    public async all(args: AllGamePlayers = {}): Promise<IGamePlayer[]> {
-        try {
-            const db = await super.openDb()
-            return db.gamePlayers
-        } catch (err) {
-            throw err
-        }
+    public async all({}: AllGamePlayers = {}): Promise<IGamePlayer[]> {
+        const { gamePlayers } = await this.db()
+        return gamePlayers
     }
 
     public async delete(args: DeleteGamePlayer): Promise<boolean> {
-        try {
-            const db = await super.openDb()
-            for (let i = 0; i < db.gamePlayers.length; i++) {
-                if (db.gamePlayers[i].id === args.id) {
-                    db.gamePlayers.splice(i, 1)
-                    await super.saveDb(db)
-                    return true
-                }
-            }
+        const db = await this.db()
+        const i = findIndex(db.gamePlayers, (gp: IGamePlayer) => gp === args)
+        if (i < 0) {
             return false
-        } catch (err) {
-            throw err
         }
+        db.gamePlayers.splice(i, 1)
+        await super.saveDb(db)
+        return true
     }
 
     public async find(args: FindGamePlayer): Promise<IGamePlayer[]> {
-        try {
-            const matches: IGamePlayer[] = []
-            const db = await super.openDb()
-            for (const game of db.gamePlayers) {
-                const isMatch = Object.entries(args)
-                    .map(([field, value]) => game[field] === value)
-                    .every(Boolean)
-                if (isMatch) matches.push(game)
-            }
-            return matches
-        } catch (err) {
-            throw err
-        }
+        const { gamePlayers } = await this.db()
+        return filter(gamePlayers, (gp: any) =>
+            Object.entries(args)
+                .map(([field, value]) => gp[field] === value)
+                .every(Boolean)
+        )
     }
 
-    public async get(args: GetGamePlayer): Promise<IGamePlayer | null> {
-        try {
-            const db = await super.openDb()
-            for (const game of db.gamePlayers) {
-                if (game.id === args.id) {
-                    return game
-                }
-            }
-            return null
-        } catch (err) {
-            throw err
-        }
+    public async get({ id }: GetGamePlayer): Promise<IGamePlayer | null> {
+        const db = await this.db()
+        return find(db.gamePlayers, (gp) => gp.id === id) || null
     }
 
-    public async new(args: NewGamePlayer): Promise<IGamePlayer | null> {
-        try {
-            const gamePlayer: IGamePlayer = {
-                id: uuid(),
-                ...args,
-            }
-            return this.add(gamePlayer)
-        } catch (err) {
-            throw err
-        }
+    public async new(args: NewGamePlayer): Promise<IGamePlayer> {
+        return this.add({
+            ...args,
+            host: args.host || false,
+            id: UUID(),
+        })
     }
 
-    public async put(args: PutGamePlayer): Promise<IGamePlayer | null> {
-        try {
-            const db = await super.openDb()
-            for (let i = 0; i < db.gamePlayers.length; i++) {
-                if (db.gamePlayers[i].id === args.id) {
-                    db.gamePlayers[i] = args
-                    await super.saveDb(db)
-                    return this.get(args as GetGamePlayer)
-                }
-            }
+    public async put(args: PutGamePlayer): Promise<IGamePlayer> {
+        const db = await this.db()
+        const i = findIndex(
+            db.gamePlayers,
+            (gp) => gp.playerId === args.playerId && gp.gameId === args.gameId
+        )
+        if (i < 0) {
             return this.add(args as AddGamePlayer)
-        } catch (err) {
-            throw err
         }
+        db.gamePlayers[i] = args as IGamePlayer
+        await super.saveDb(db)
+        return args as IGamePlayer
     }
 }
 

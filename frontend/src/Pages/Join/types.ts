@@ -1,6 +1,8 @@
+import { GameStatus } from 'types/Game'
+
 export type Game = {
-    id: string
     code: string
+    status: GameStatus
 }
 
 export type Player = {

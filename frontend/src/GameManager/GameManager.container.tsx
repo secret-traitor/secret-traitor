@@ -7,10 +7,7 @@ type GameManagerContainerProps = {
     gameCode: string
 }
 
-const GameManagerContainer: React.FC<GameManagerContainerProps> = ({
-    gameCode,
-    playerCode,
-}) => {
+const GameManagerContainer: React.FC = () => {
     return <AlliesNEnemies />
 }
 

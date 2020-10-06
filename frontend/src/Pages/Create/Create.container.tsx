@@ -10,30 +10,28 @@ import { usePageTitle } from 'hooks'
 import { usePlayerCode } from 'types/Player'
 
 import Create from './Create.component'
-import { GameClass, GameType } from '../../types/GameType'
+import { GameType, GameDescription } from '../../types/GameDescription'
 
 const GAME_TYPES_QUERY = gql`
     query gameTypes {
         gameTypes {
-            gameClass
+            type
             displayName
             description
         }
     }
 `
 
-const useGameTypes = (): [any, boolean, any] => {
+const useGameTypes = (): [GameDescription[], boolean, any] => {
     const results = useQuery(GAME_TYPES_QUERY)
     const { data, loading, error } = results
-    const gameTypes: GameType[] = data?.gameTypes as GameType[]
+    const gameTypes = data?.gameTypes as GameDescription[]
     return [gameTypes, loading, error]
 }
 
 const CREATE_MUTATION = gql`
-    mutation createGame($playerCode: String!, $gameClass: GameClass!) {
-        game: createGame(
-            input: { playerCode: $playerCode, gameClass: $gameClass }
-        ) {
+    mutation createGame($playerCode: String!, $gameType: GameType!) {
+        game: createGame(playerCode: $playerCode, gameType: $gameType) {
             code
         }
     }
@@ -43,16 +41,16 @@ const useCreateGame = (playerCode: string) => {
     const [createMutation, { called, loading, error, data }] = useMutation(
         CREATE_MUTATION
     )
-    const create = (gameClass: GameClass) =>
+    const create = (type: GameType) =>
         createMutation({
-            variables: { playerCode, gameClass },
+            variables: { playerCode, gameType: type },
         })
     return { create, called, data, error, loading }
 }
 
 const CreateContainer = () => {
     usePageTitle('Create | Secret Traitor')
-    const [gameTypes, loadingGameTypes, errorGameTypes] = useGameTypes()
+    const [gameDescriptions, loadingGameTypes, errorGameTypes] = useGameTypes()
     const playerCode = usePlayerCode()
     const {
         create,
@@ -76,20 +74,20 @@ const CreateContainer = () => {
     if (errorCreate) {
         return <>Uh oh!</>
     }
-    return <Create create={create} gameTypes={gameTypes} />
+    return <Create create={create} descriptions={gameDescriptions} />
 }
 
 /*
 [
-                ...gameTypes,
+                ...descriptions,
                 {
                     displayName: 'Game Title',
-                    gameClass: GameClass.DemoType,
+                    gameClass: GameType.DemoType,
                     description: 'Description of game.',
                 },
                 {
                     displayName: 'Another Game Title',
-                    gameClass: GameClass.AnotherDemoType,
+                    gameClass: GameType.AnotherDemoType,
                     description: 'Description of another game.',
                 },
             ]

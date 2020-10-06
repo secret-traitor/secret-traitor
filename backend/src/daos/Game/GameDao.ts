@@ -1,11 +1,11 @@
-import { GameClass, IGame } from '@entities/Game'
+import { GameType, IGame } from '@entities/Game'
 
 export type AddGame = { game: IGame }
 export type AllGames = {}
 export type DeleteGame = GetGame
 export type SearchGames = Partial<IGame>
 export type GetGame = { id: string }
-export type NewGame = { hostPlayerCode: string; class: GameClass }
+export type NewGame = { type: GameType }
 export type PutGame = { game: IGame }
 
 export interface IGameDao {

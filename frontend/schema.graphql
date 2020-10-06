@@ -1,0 +1,107 @@
+# This file was generated based on ".graphqlconfig". Do not edit manually.
+
+schema {
+    query: Query
+    mutation: Mutation
+    subscription: Subscription
+}
+
+interface Event {
+    source: String!
+    timestamp: DateTime!
+}
+
+interface GamePlayerState {
+    game: Game!
+    id: ID!
+}
+
+interface PlayEvent {
+    game: Game!
+    player: Player!
+    source: String!
+    timestamp: DateTime!
+}
+
+"Provides high level details about a game."
+type Game {
+    code: String!
+    hosts: [Player!]!
+    id: ID!
+    players: [Player!]!
+    status: GameStatus!
+    type: GameType!
+}
+
+"Game types determine the games that are playable. Includes a display name, description and unique code."
+type GameDescription {
+    description: String!
+    displayName: String!
+    type: GameType!
+}
+
+"Represents the relationship between a player and a game"
+type GamePlayer {
+    game: Game!
+    id: ID!
+    isHost: Boolean!
+    player: Player!
+}
+
+type JoinGameEvent implements Event & PlayEvent {
+    game: Game!
+    id: ID!
+    player: Player!
+    source: String!
+    timestamp: DateTime!
+}
+
+type Mutation {
+    createGame(gameType: GameType!, playerCode: String!): Game
+    deleteGame(id: Boolean!): Boolean!
+    joinGame(gameCode: String!, playerCode: String!, playerNickname: String!): JoinGameEvent
+}
+
+type Notification {
+    date: DateTime!
+    id: ID!
+    message: String
+}
+
+"Player details"
+type Player {
+    code: String!
+    id: ID!
+    nickname: String
+}
+
+type Query {
+    allGames: [Game!]!
+    currentDate: DateTime!
+    game(code: String!): Game
+    gamePlayer(gameCode: String!, playerCode: String!): GamePlayer
+    gameTypes: [GameDescription!]!
+    joinableGames: [Game!]!
+    play(gameId: ID!, playerId: ID!): PlayEvent
+}
+
+type Subscription {
+    play(gameId: ID!, playerId: ID!): PlayEvent!
+}
+
+"The current status of a game. Designates whether a game is complete, joinable, or playable."
+enum GameStatus {
+    Archived
+    Closed
+    InLobby
+    InProgress
+}
+
+"This property is used to determine other more specific properties of a specific game."
+enum GameType {
+    AlliesNEnemies
+}
+
+
+"The javascript `Date` as string. Type represents date and time as the ISO Date string."
+scalar DateTime
