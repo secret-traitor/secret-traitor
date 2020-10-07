@@ -7,7 +7,6 @@ const Box: React.FC<BoxProps> = ({ children, ...props }) => (
         pad="medium"
         justify="start"
         round="medium"
-        wrap
         overflow="scroll"
         height={{ min: 'small', max: 'large' }}
         {...props}

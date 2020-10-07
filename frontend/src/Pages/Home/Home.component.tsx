@@ -22,9 +22,9 @@ const Home: React.FC<HomeProps> = ({
     refresh,
     showGameDetails,
 }) => (
-    <Main fill flex align="center" justify="center">
-        <Box flex direction="column" pad="medium" width="large">
-            <Box direction="row-responsive" justify="between">
+    <Main fill align="center" justify="center">
+        <Box pad="medium" width="large" fill="vertical">
+            <Box direction="row" justify="between">
                 <Box align="center" justify="start" width="xsmall">
                     <CreateRouterButton icon={<Add />} />
                 </Box>
@@ -32,7 +32,7 @@ const Home: React.FC<HomeProps> = ({
                     <Button onClick={refresh} icon={<Refresh />} />
                 </Box>
             </Box>
-            <BoxSection direction="row-responsive">
+            <BoxSection direction="row">
                 {games.length > 0 ? (
                     <Games games={games} copy={copy} more={showGameDetails} />
                 ) : (

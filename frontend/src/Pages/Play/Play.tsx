@@ -7,7 +7,7 @@ import GameManager from 'GameManager'
 import LobbyManager from 'LobbyManager'
 import { usePageTitle } from 'hooks'
 import { getHomeUrl, getJoinUrl } from 'links'
-import { GameStatus, Game } from 'types/Game'
+import { GameStatus } from 'types/Game'
 import { Player } from 'types/Player'
 
 import { useGamePlayer, usePlayGame } from './hooks'
@@ -26,12 +26,10 @@ const Play: React.FC<{
         loading: loadingGamePlayer,
     } = useGamePlayer(gameCode, playerCode)
 
-    const {
-        game,
-        players,
-        called: calledPlayGame,
-        loading: loadingPlayGame,
-    } = usePlayGame(gameId, playerId)
+    const { game, players, hosts, loading: loadingPlayGame } = usePlayGame(
+        gameId,
+        playerId
+    )
 
     console.log({
         game: { id: gameId, code: gameCode },
@@ -44,7 +42,7 @@ const Play: React.FC<{
 
     if (calledGamePlayer && !loadingGamePlayer && !playerNickname) {
         console.log('I would redirect here!')
-        // return <Redirect push to={getJoinUrl({ gameCode, playerCode })} />
+        return <Redirect push to={getJoinUrl({ gameCode, playerCode })} />
     }
 
     const currentPlayer = {
@@ -68,6 +66,7 @@ const Play: React.FC<{
                 <LobbyManager
                     currentPlayer={currentPlayer as Player}
                     players={players as Player[]}
+                    hosts={hosts as Player[]}
                     game={game}
                 />
             )}

@@ -15,20 +15,19 @@ export type GameCardProps = {
     more: () => void
 }
 export const GameCard: React.FC<GameCardProps> = ({
-    game: { code, status },
     copy,
+    game: { code, status },
     more,
 }) => (
     <Card
-        height="small"
-        width="small"
         background="light-1"
-        margin="small"
         color="brand-5"
-        wrap
+        height="small"
+        margin="small"
+        width="small"
     >
         <CardBody pad="small">
-            <Box flex direction="row-responsive" justify="between">
+            <Box flex direction="row" justify="between">
                 <Box flex justify="evenly">
                     <Box>
                         <Text size="xsmall">Lobby Code:</Text>
@@ -50,10 +49,10 @@ export const GameCard: React.FC<GameCardProps> = ({
         </CardBody>
         <CardFooter pad={{ horizontal: 'small' }} background="brand-2">
             <RouterButton
+                disabled={status in [GameStatus.Archived, GameStatus.Closed]}
                 hoverIndicator
                 icon={<CirclePlay color="brand-4" />}
                 path={getJoinUrl({ gameCode: code })}
-                disabled={status in [GameStatus.Archived, GameStatus.Closed]}
             />
             <Button
                 hoverIndicator
