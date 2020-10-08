@@ -2,8 +2,10 @@ import * as cdk from "@aws-cdk/core";
 import * as lambda from "@aws-cdk/aws-lambda";
 import * as apigw from "@aws-cdk/aws-apigateway";
 import * as route53 from "@aws-cdk/aws-route53";
+import * as targets from "@aws-cdk/aws-route53-targets";
 import * as acm from "@aws-cdk/aws-certificatemanager";
 import { HitCounter } from "./hitcounter";
+import { domain } from "process";
 
 export class SecretTraitorStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
@@ -32,7 +34,7 @@ export class SecretTraitorStack extends cdk.Stack {
     //   domainName: "pssvr.com",
     // });
 
-    new acm.Certificate(this, "Certificate", {
+    const certificate = new acm.Certificate(this, "Certificate", {
       domainName: zoneName,
       subjectAlternativeNames: [
         `*.${zoneName}`,
@@ -55,8 +57,30 @@ export class SecretTraitorStack extends cdk.Stack {
     });
 
     // define an API Gateway REST API resource backed by our "helloWithCounter" function.
-    new apigw.LambdaRestApi(this, "Endpoint", {
+    const lambdaApi = new apigw.LambdaRestApi(this, "Endpoint", {
       handler: helloWithCounter.handler,
+    });
+
+    const apigwDomainName = new apigw.DomainName(this, "GraphQLDomainName", {
+      domainName: `${graphqlSubdomainDomain}.${zoneName}`,
+      certificate,
+      endpointType: apigw.EndpointType.EDGE,
+      securityPolicy: apigw.SecurityPolicy.TLS_1_2,
+    });
+
+    apigwDomainName.addBasePathMapping(lambdaApi);
+    new route53.TxtRecord(this, "Txt3Record", {
+      zone: hostedZone,
+      values: ["fromTemplate,Txt3"],
+      recordName: "txt3",
+    });
+
+    new route53.ARecord(this, "GraphQLAlias", {
+      zone: hostedZone,
+      target: route53.RecordTarget.fromAlias(
+        new targets.ApiGatewayDomain(apigwDomainName)
+      ),
+      recordName: `${graphqlSubdomainDomain}`,
     });
   }
 }

@@ -13,3 +13,6 @@ cdk.out
 # template.yml is a compilation target for CDK
 template.yml
 template-*.yml
+
+# Using context like process.env.CDK_DEFAULT_ACCOUNT seems to generate this
+cdk.context.json
