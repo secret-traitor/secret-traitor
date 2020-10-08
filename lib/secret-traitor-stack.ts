@@ -9,6 +9,9 @@ export class SecretTraitorStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    console.log(process.env.CDK_DEFAULT_ACCOUNT);
+    console.log(process.env.CDK_DEFAULT_REGION);
+
     const zoneName = this.node.tryGetContext("domain") as string;
     const appDescriptor = this.node.tryGetContext("appDescriptor") as string;
     const graphqlSubdomainDomain = this.node.tryGetContext(
@@ -18,6 +21,19 @@ export class SecretTraitorStack extends cdk.Stack {
     const hostedZone = new route53.HostedZone(this, `${appDescriptor}Zone`, {
       zoneName,
     });
+    const hostedZoneResource = hostedZone.node.findChild(
+      "Resource"
+    ) as cdk.CfnResource;
+    hostedZoneResource.applyRemovalPolicy(cdk.RemovalPolicy.RETAIN);
+    // const hostedZone = route53.HostedZone.fromLookup(
+    //   this,
+    //   `${appDescriptor}Zone`,
+    //   { domainName: zoneName }
+    // );
+
+    // const zone2 = route53.HostedZone.fromLookup(this, "Zone2", {
+    //   domainName: "pssvr.com",
+    // });
 
     new acm.Certificate(this, "Certificate", {
       domainName: zoneName,
