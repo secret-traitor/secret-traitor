@@ -41,7 +41,7 @@ install:
 	npm install
 
 build:
-	npm build
+	npm run build
 
 tests:
 	npm test
