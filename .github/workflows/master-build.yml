@@ -36,19 +36,11 @@ jobs:
         run: |
           make install
 
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
       - name: test
         run: |
           ls
           make tests
 
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
       - name: Check for aws tools
         run: |
           aws --version
