@@ -40,5 +40,8 @@ deploy:	bootstrap
 install:
 	npm install
 
+build:
+	npm build
+
 tests:
 	npm test
