@@ -32,5 +32,5 @@ deploy:
 install:
 	npm install
 
-test:
+tests:
 	npm test

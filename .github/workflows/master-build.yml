@@ -43,7 +43,7 @@ jobs:
       - name: test
         run: |
           ls
-          make test
+          make tests
 
   deploy:
     runs-on: ubuntu-latest
@@ -52,5 +52,4 @@ jobs:
       - name: Check for aws tools
         run: |
           aws --version
-          type cdk
           npx cdk --version
