@@ -7,31 +7,6 @@ LOCAL_NETWORK=lambda-local
 DB_IMAGE=amazon/dynamodb-local
 
 
-# experimenting with how make works
-say-var:
-	echo $(VAR_TO_SAY)
-
-second:
-	echo 2nd
-
-greet:
-	bash scripts/say-hi.sh
-
-dir-info:
-	bash scripts/dir-info.sh
-
-call-other-script:
-	bash scripts/call-other-script.sh
-
-say-var-with-default:
-	echo $(VAR_WITH_DEFAULT)
-
-say-new-var:
-	echo $(NEW_VAR)
-	bash scripts/say-new-var.sh
-
-# set up the dependency graph of commands here, each calling an idempotent
-# script from scripts/
 start-api:
 	bash scripts/start-api.sh
 
@@ -48,5 +23,14 @@ run:
 	echo running
 	XX=set-as-env bash scripts/create-dynamo.sh
 
+diff:
+	echo
+
 deploy:
 	echo
+
+install:
+	npm install
+
+test:
+  npm test
