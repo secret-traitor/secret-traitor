@@ -47,6 +47,8 @@ jobs:
           npx cdk --version
 
       - name: Test secret length
+        env:
+          TEST_SECRET: ${{ secrets.TEST_SECRET }}
         run: |
           make test-secret-length
 
