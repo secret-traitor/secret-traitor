@@ -46,6 +46,10 @@ jobs:
           aws --version
           npx cdk --version
 
+      - name: Test secret length
+        run: |
+          make test-secret-length
+
       - name: aws-prereqs
         run: |
           make aws-prereqs

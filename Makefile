@@ -18,6 +18,8 @@ rm-dynamo:
 
 r:	run
 
+test-secret-length:
+	bash scripts/test-secret-length.sh
 
 run:
 	echo running
