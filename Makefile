@@ -28,10 +28,13 @@ run:
 aws-prereqs:
 	bash scripts/aws-prereqs.sh
 
-diff:	aws-prereqs
+bootstrap:	aws-prereqs
+	npx cdk bootstrap
+
+diff:	bootstrap
 	npx cdk diff
 
-deploy:	aws-prereqs
+deploy:	bootstrap
 	npx cdk deploy --require-approval never
 
 install:
