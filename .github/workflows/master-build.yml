@@ -45,3 +45,7 @@ jobs:
         run: |
           aws --version
           npx cdk --version
+
+      - name: aws-prereqs
+        run: |
+          make aws-prereqs

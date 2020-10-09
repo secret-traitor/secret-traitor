@@ -23,11 +23,14 @@ run:
 	echo running
 	XX=set-as-env bash scripts/create-dynamo.sh
 
-diff:
-	echo
+aws-prereqs:
+	bash scripts/aws-prereqs.sh
 
-deploy:
-	echo
+diff:	aws-prereqs
+	npx cdk diff
+
+deploy:	aws-prereqs
+	npx cdk deploy --require-approval never
 
 install:
 	npm install
