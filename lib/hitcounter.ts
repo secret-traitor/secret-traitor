@@ -2,10 +2,7 @@ import * as cdk from "@aws-cdk/core";
 import * as lambda from "@aws-cdk/aws-lambda";
 import * as dynamodb from "@aws-cdk/aws-dynamodb";
 
-export interface HitCounterProps {
-  /** the function for which we want to count url hits **/
-  downstream: lambda.IFunction;
-}
+export interface HitCounterProps {}
 
 export class HitCounter extends cdk.Construct {
   /** allows accessing the counter function **/
@@ -27,9 +24,7 @@ export class HitCounter extends cdk.Construct {
       handler: "hitcounter.handler",
       code: lambda.Code.fromAsset("lambda"),
       environment: {
-        MY_VAR_X: process.env.SOME_VAR_X || "some_var_y",
         SAM_MODE: process.env.SAM_MODE || "",
-        DOWNSTREAM_FUNCTION_NAME: props.downstream.functionName,
         HITS_TABLE_NAME: table.tableName,
       },
       timeout: cdk.Duration.seconds(20),
@@ -37,8 +32,5 @@ export class HitCounter extends cdk.Construct {
 
     // grant the lambda role read/write permissions to our table
     table.grantReadWriteData(this.handler);
-
-    // grant the lambda role invoke permissions to the downstream function
-    props.downstream.grantInvoke(this.handler);
   }
 }

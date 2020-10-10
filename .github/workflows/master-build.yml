@@ -45,17 +45,6 @@ jobs:
           ls
           make tests
 
-      - name: Check for aws tools
-        run: |
-          aws --version
-          npx cdk --version
-
-      - name: Test secret length
-        env:
-          TEST_SECRET: ${{ secrets.TEST_SECRET }}
-        run: |
-          make test-secret-length
-
       - name: Deploy to prod
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
