@@ -67,20 +67,38 @@ export class SecretTraitorStack extends cdk.Stack {
       endpointType: apigw.EndpointType.EDGE,
       securityPolicy: apigw.SecurityPolicy.TLS_1_2,
     });
-
     apigwDomainName.addBasePathMapping(lambdaApi);
-    new route53.TxtRecord(this, "Txt3Record", {
-      zone: hostedZone,
-      values: ["fromTemplate,Txt3"],
-      recordName: "txt3",
-    });
-
     new route53.ARecord(this, "GraphQLAlias", {
       zone: hostedZone,
       target: route53.RecordTarget.fromAlias(
         new targets.ApiGatewayDomain(apigwDomainName)
       ),
       recordName: `${graphqlSubdomainDomain}`,
+    });
+
+    const apigwHitCounterDomainName = new apigw.DomainName(
+      this,
+      "HitCounterDomainName",
+      {
+        domainName: `hitc.${zoneName}`,
+        certificate,
+        endpointType: apigw.EndpointType.EDGE,
+        securityPolicy: apigw.SecurityPolicy.TLS_1_2,
+      }
+    );
+    apigwHitCounterDomainName.addBasePathMapping(lambdaApi);
+    new route53.ARecord(this, "HitCounterAlias", {
+      zone: hostedZone,
+      target: route53.RecordTarget.fromAlias(
+        new targets.ApiGatewayDomain(apigwHitCounterDomainName)
+      ),
+      recordName: `hitc`,
+    });
+
+    new route53.TxtRecord(this, "Txt3Record", {
+      zone: hostedZone,
+      values: ["fromTemplate,Txt3"],
+      recordName: "txt3",
     });
   }
 }
