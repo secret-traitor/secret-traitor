@@ -23,6 +23,15 @@ const mapHostPlayers = (data?: any): HostPlayer[] => {
 
 const FRAG = gql`
     fragment AlliesNEnemiesGameStateFragment on AlliesNEnemiesGameState {
+        team {
+            playerRole
+            teammates {
+                id
+                code
+                nickname
+                role
+            }
+        }
         currentTurn {
             number
             status
@@ -48,6 +57,8 @@ const FRAG = gql`
         }
         player {
             id
+            code
+            nickname
         }
         game {
             id

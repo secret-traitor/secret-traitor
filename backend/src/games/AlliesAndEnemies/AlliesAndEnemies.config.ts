@@ -9,7 +9,7 @@ export type ConfigurationOptions = {
     }
     victory: {
         allyCards: number
-        election: boolean
+        election: number
         enemyCards: number
     }
     enemies: number
@@ -27,7 +27,7 @@ const DefaultConfiguration = {
     },
     victory: {
         allyCards: 5,
-        election: true,
+        election: 3,
         enemyCards: 6,
     },
 }

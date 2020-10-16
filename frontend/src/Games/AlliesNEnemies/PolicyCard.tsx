@@ -1,16 +1,15 @@
 import React, { ReactElement } from 'react'
 import { Box } from 'grommet'
-import { Trophy } from 'grommet-icons'
 import { CardSuit } from './types'
 
-export const Card: React.FC<{ suit: CardSuit; active: boolean }> = ({
+export const PolicyCard: React.FC<{ suit: CardSuit; active: boolean }> = ({
     active,
     children,
     suit,
 }) => (
     <Box
         background={{
-            color: suit === CardSuit.Ally ? 'ally' : 'enemy',
+            color: suit === CardSuit.Ally ? 'ally-1' : 'enemy-1',
             opacity: active ? 'strong' : 'medium',
         }}
         width="xsmall"
@@ -23,7 +22,7 @@ export const Card: React.FC<{ suit: CardSuit; active: boolean }> = ({
     </Box>
 )
 
-export const CardRow: React.FC<{
+export const PolicyCardRow: React.FC<{
     cards: {
         active: boolean
         icon?: ReactElement
@@ -32,10 +31,9 @@ export const CardRow: React.FC<{
 }> = ({ cards }) => (
     <>
         {cards.map((c, i) => (
-            <Card key={c.suit.toString() + i} {...c}>
-                {console.log(i === cards.length - 1)}
+            <PolicyCard key={c.suit.toString() + i} {...c}>
                 {c.icon}
-            </Card>
+            </PolicyCard>
         ))}
     </>
 )

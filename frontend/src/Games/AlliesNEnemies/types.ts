@@ -1,4 +1,4 @@
-import { Component } from 'react'
+import { Player } from 'types/Player'
 
 export enum BoardAction {
     None,
@@ -36,9 +36,10 @@ export enum PlayerAction {
     TakeBoardAction,
 }
 
-export type Player = {
-    id: string
-    nickname: string
+export enum PlayerRole {
+    Ally = 'Ally',
+    Enemy = 'Enemy',
+    EnemyLeader = 'EnemyLeader',
 }
 
 export enum TurnStatus {
@@ -54,9 +55,18 @@ export type TurnState = {
     status: TurnStatus
 }
 
+export type TeamPlayer = Player & { role: PlayerRole }
+
+export type TeamState = {
+    playerRole: PlayerRole
+    teammates: TeamPlayer[]
+}
+
 export type AlliesAndEnemiesState = {
-    currentTurn: TurnState
+    board: BoardState
+    currentTurn?: TurnState
     player: Player
     playerAction: PlayerAction
-    board: BoardState
+    team: TeamState
+    playId: string
 }

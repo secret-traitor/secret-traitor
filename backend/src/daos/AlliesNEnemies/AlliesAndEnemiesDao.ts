@@ -13,7 +13,6 @@ export type Get = { gameId: GameId }
 export type New = {
     board: BoardState
     deck: Card[]
-    firstRound: TurnState
     gameId: GameId
     leaderIsSecret: boolean
     players: PlayerState[]

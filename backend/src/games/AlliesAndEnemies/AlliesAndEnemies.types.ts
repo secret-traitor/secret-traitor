@@ -1,5 +1,5 @@
 import { GameId } from '@entities/Game'
-import { PlayerId } from '@entities/Player'
+import { IPlayer, PlayerId } from '@entities/Player'
 
 export enum PlayerActionType {
     None,
@@ -15,9 +15,7 @@ export enum PlayerRole {
     EnemyLeader,
 }
 
-export type PlayerState = {
-    readonly id: PlayerId
-    readonly name: string
+export type PlayerState = IPlayer & {
     readonly position: number
     readonly role: PlayerRole
 }

@@ -26,13 +26,14 @@ interface GameStateEvent {
 
 type AlliesNEnemiesGameState implements GameState {
     board: BoardState!
-    currentTurn: CurrentTurn!
+    currentTurn: CurrentTurn
     game: Game!
     player: Player!
+    team: TeamDetails!
 }
 
 type BoardRow {
-    cards: Card!
+    cards: [Card!]!
     maxCards: Float!
 }
 
@@ -127,6 +128,18 @@ type Subscription {
     play(gameId: ID!, playId: ID!): GameStateEvent
 }
 
+type TeamDetails {
+    playerRole: PlayerRole!
+    teammates: [TeamPlayer!]
+}
+
+type TeamPlayer {
+    code: String!
+    id: ID!
+    nickname: String
+    role: PlayerRole!
+}
+
 enum BoardActionType {
     Execution
     InvestigateLoyalty
@@ -151,6 +164,12 @@ enum GameStatus {
 "This property is used to determine other more specific properties of a specific game."
 enum GameType {
     AlliesNEnemies
+}
+
+enum PlayerRole {
+    Ally
+    Enemy
+    EnemyLeader
 }
 
 enum TurnStatus {

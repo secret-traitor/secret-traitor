@@ -21,7 +21,7 @@ function useComponentState(gameCode: string, playerCode: string) {
         if (playId) await startGameMutation()
     }
     const loading = loadingDetails || loadingPlay
-    return { game, loading, player, players, startGame, state }
+    return { game, loading, player, players, startGame, state, playId }
 }
 
 const Play: React.FC<{
@@ -37,6 +37,7 @@ const Play: React.FC<{
         players,
         startGame,
         state,
+        playId,
     } = useComponentState(gameCode, playerCode)
 
     // if (!loading && !player?.nickname) {
@@ -46,6 +47,9 @@ const Play: React.FC<{
     if (!loading && !(player || game || state)) {
         return <>Uh Oh!</>
     }
+
+    console.log(state)
+
     return (
         <>
             {loading && <LoadingScreen />}
@@ -60,8 +64,8 @@ const Play: React.FC<{
                         startGame={startGame}
                     />
                 )}
-            {game?.status === GameStatus.InProgress && (
-                <GameManager {...state} />
+            {game?.status === GameStatus.InProgress && playId && (
+                <GameManager {...state} playId={playId} />
             )}
             {game?.status === GameStatus.Closed && (
                 <ConfirmRedirect push to={getHomeUrl()}>

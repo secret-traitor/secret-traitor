@@ -28,7 +28,14 @@ class AlliesAndEnemiesDaoMock
             draw: args.deck,
             discard: [],
             failedElections: 0,
-            rounds: [args.firstRound],
+            rounds: [
+                {
+                    vetoIsEnabled: false,
+                    position: 0,
+                    number: 1,
+                    status: TurnStatus.Nomination,
+                },
+            ],
         } as Add)
     }
 

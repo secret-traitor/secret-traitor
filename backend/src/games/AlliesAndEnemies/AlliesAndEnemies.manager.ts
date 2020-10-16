@@ -71,12 +71,6 @@ export class AlliesAndEnemiesGameManager implements IGameManager {
                     configuration.victory.enemyCards
                 ),
                 players: buildPlayers(players, configuration.enemies),
-                firstRound: {
-                    status: TurnStatus.Nomination,
-                    number: 1,
-                    position: 0,
-                    vetoIsEnabled: false,
-                },
             })
             return !!state
         } catch (Error) {
@@ -117,8 +111,8 @@ function buildBoard(
 function buildPlayers(players: IPlayer[], enemies: number): PlayerState[] {
     if (players.length / 2 < enemies + 1) {
         throw new ApiError(
-            'you have too many enemies!',
-            `you cant have ${enemies} enemies for ${players.length} players`
+            'Invalid game configuration.',
+            `You can not have ${enemies} enemies for ${players.length} players.`
         )
     }
     const roles = shuffle([
@@ -127,8 +121,7 @@ function buildPlayers(players: IPlayer[], enemies: number): PlayerState[] {
         ...range(players.length - enemies - 1).map(() => PlayerRole.Ally),
     ])
     return shuffle(players).map((player, position) => ({
-        id: player.id,
-        name: player.nickname as string,
+        ...player,
         role: roles[position],
         position,
     }))
