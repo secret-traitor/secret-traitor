@@ -1,1 +1,6 @@
-{"games": [], "gamePlayers":  [], "players":  []}
+{
+  "alliesAndEnemies":  [],
+  "gamePlayers":  [],
+  "games": [],
+  "players":  []
+}

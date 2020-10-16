@@ -16,7 +16,7 @@ export const LoggingPlugin: PluginDefinition = {
         return {
             willSendResponse(requestContext) {
                 // logger.debug(
-                //     'Sending Response:\n' +
+                //     'Sending ApiResponse:\n' +
                 //         JSON.stringify(requestContext.response.data)
                 // )
             },

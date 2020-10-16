@@ -30,12 +30,14 @@ const JoinContainer: React.FC<JoinContainerProps> = ({
 
     const join = async (nickname: string) => {
         if (game && nickname) {
-            await joinMutation({
+            const result = await joinMutation({
                 gameCode,
                 playerCode,
                 playerNickname: nickname,
             })
-            refetchGameWithPlayers()
+            if (result && !loadingJoin) {
+                refetchGameWithPlayers()
+            }
         }
     }
 
@@ -57,7 +59,7 @@ const JoinContainer: React.FC<JoinContainerProps> = ({
         return (
             <JoiningGameRedirect gameCode={gameCode} playerCode={playerCode} />
         )
-    return <Join gameCode={gameCode} playerCode={playerCode} join={join} />
+    return <Join gameCode={gameCode} join={join} />
 }
 
 export default JoinContainer

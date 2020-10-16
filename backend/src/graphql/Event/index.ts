@@ -1,1 +1,1 @@
-export * from './Event.types'
+export * from './Event'

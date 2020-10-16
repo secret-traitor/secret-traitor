@@ -1,7 +1,8 @@
 import React from 'react'
 import { Box, Text } from 'grommet'
 
-import { GameType, GameDescription } from 'types/GameDescription'
+import { GameDescription } from 'types/GameDescription'
+import { GameType } from 'types/Game'
 
 export const GameTypeCard: React.FC<
     GameDescription & { selected: boolean; select: () => void }

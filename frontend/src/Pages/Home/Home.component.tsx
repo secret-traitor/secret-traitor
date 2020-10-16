@@ -3,7 +3,6 @@ import { Main, Button, Box } from 'grommet'
 import { Refresh, Add } from 'grommet-icons'
 
 import { CreateRouterButton } from 'links'
-import BoxSection from 'Components/Box'
 
 import Games from './Games'
 import { GameResult } from './types'
@@ -32,13 +31,22 @@ const Home: React.FC<HomeProps> = ({
                     <Button onClick={refresh} icon={<Refresh />} />
                 </Box>
             </Box>
-            <BoxSection direction="row">
+            <Box
+                border={{ color: 'brand-1', size: 'small' }}
+                direction="row"
+                height={{ min: 'small', max: 'large' }}
+                justify="start"
+                overflow="scroll"
+                pad="medium"
+                round="medium"
+                wrap
+            >
                 {games.length > 0 ? (
                     <Games games={games} copy={copy} more={showGameDetails} />
                 ) : (
                     <EmptyGames />
                 )}
-            </BoxSection>
+            </Box>
         </Box>
     </Main>
 )

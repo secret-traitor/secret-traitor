@@ -2,27 +2,30 @@ import React, { useState } from 'react'
 import { Box, Main, Text, TextInput, Button } from 'grommet'
 import { CirclePlay } from 'grommet-icons'
 
-import BoxSection from 'Components/Box'
 import { LobbyCodeText } from 'Components/GameText'
 
 type JoinProps = {
     gameCode: string
-    playerCode: string
     join: (nickname: string) => void
 }
 
-const Join: React.FC<JoinProps> = ({ gameCode, playerCode, join }) => {
+const Join: React.FC<JoinProps> = ({ gameCode, join }) => {
     const [nickname, setNickname] = useState<string>('')
     const joinDisabled = !nickname
     return (
         <Main fill flex align="center" justify="center">
             <Box flex pad="medium" width="large">
-                <BoxSection
+                <Box
+                    border={{ color: 'brand-1', size: 'small' }}
+                    height={{ min: 'small', max: 'large' }}
+                    justify="start"
+                    overflow="scroll"
+                    pad="medium"
+                    round="medium"
+                    wrap
                     direction="row-responsive"
-                    height={{ min: 'xsmall', max: 'large' }}
                     flex
                     align="center"
-                    justify="center"
                 >
                     <Box align="center">
                         <Box
@@ -60,7 +63,7 @@ const Join: React.FC<JoinProps> = ({ gameCode, playerCode, join }) => {
                             />
                         </Box>
                     </Box>
-                </BoxSection>
+                </Box>
             </Box>
         </Main>
     )

@@ -1,6 +1,4 @@
-export enum GameType {
-    AllisNEnemies,
-}
+import { GameType } from './Game'
 
 export type GameDescription = {
     description: string

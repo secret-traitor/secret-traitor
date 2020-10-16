@@ -1,20 +1,20 @@
 import { FieldResolver, Resolver, Root } from 'type-graphql'
-import { Inject, Service } from 'typedi'
+import { Inject } from 'typedi'
 
-import { Game } from '@graphql/Game'
-
-import { GraphQlPromiseResponse, UnexpectedGraphQLError } from '@shared/graphql'
-import { IGame } from '@entities/Game'
 import { IGameDao } from '@daos/Game'
 import { IGamePlayerDao } from '@daos/GamePlayer'
-import { IPlayer } from '@entities/Player'
 import { IPlayerDao } from '@daos/Player'
+
+import { Game } from '@graphql/Game'
+import { GamePlayer } from '@graphql/GamePlayer'
 import { Player } from '@graphql/Player'
 
-import { GamePlayer } from './GamePlayer.types'
+import { IGame } from '@entities/Game'
 import { IGamePlayer } from '@entities/GamePlayer'
+import { IPlayer } from '@entities/Player'
 
-@Service()
+import { ApiResponse, UnexpectedApiError } from '@shared/api'
+
 @Resolver(() => GamePlayer)
 export class GamePlayerResolver {
     @Inject('GamePlayers') private readonly gamePlayerDao: IGamePlayerDao
@@ -34,10 +34,10 @@ export class GamePlayerResolver {
     @FieldResolver(() => Player)
     async player(
         @Root() gamePlayer: IGamePlayer
-    ): GraphQlPromiseResponse<IPlayer> {
+    ): Promise<ApiResponse<IPlayer>> {
         const player = await this.playerDao.get({ id: gamePlayer.playerId })
         if (!player) {
-            return new UnexpectedGraphQLError(
+            return new UnexpectedApiError(
                 'Unable to look up player.',
                 'No player with this id found.'
             )
@@ -46,10 +46,10 @@ export class GamePlayerResolver {
     }
 
     @FieldResolver(() => Game)
-    async game(@Root() gamePlayer: IGamePlayer): GraphQlPromiseResponse<IGame> {
+    async game(@Root() gamePlayer: IGamePlayer): Promise<ApiResponse<IGame>> {
         const game = await this.gameDao.get({ id: gamePlayer.gameId })
         if (!game) {
-            return new UnexpectedGraphQLError(
+            return new UnexpectedApiError(
                 'Unable to look up game.',
                 'No game with this id found.'
             )

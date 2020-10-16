@@ -44,13 +44,15 @@ const JOIN_GAME_MUTATION = gql`
             playerCode: $playerCode
             playerNickname: $playerNickname
         ) {
-            game {
-                code
-                status
-            }
-            player {
-                code
-                nickname
+            gameState {
+                game {
+                    code
+                    status
+                }
+                player {
+                    code
+                    nickname
+                }
             }
         }
     }

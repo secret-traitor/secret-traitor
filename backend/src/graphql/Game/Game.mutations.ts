@@ -1,14 +1,16 @@
-import { Inject, Service } from 'typedi'
+import { Inject } from 'typedi'
 import { Arg, Mutation, Resolver } from 'type-graphql'
 
-import { Game } from '@graphql/Game/Game.types'
-import { GraphQlPromiseResponse, UnexpectedGraphQLError } from '@shared/graphql'
 import { IGameDao } from '@daos/Game'
 import { IGamePlayerDao } from '@daos/GamePlayer'
 import { IPlayerDao } from '@daos/Player'
-import { GameType, IGame } from '@entities/Game'
 
-@Service()
+import { IGame, GameType } from '@entities/Game'
+
+import { Game } from '@graphql/Game'
+
+import { ApiResponse, UnexpectedApiError } from '@shared/api'
+
 @Resolver()
 export class GameMutations {
     @Inject('GamePlayers') private readonly gamePlayers: IGamePlayerDao
@@ -29,14 +31,14 @@ export class GameMutations {
     async createGame(
         @Arg('playerCode') playerCode: string,
         @Arg('gameType', () => GameType) gameType: GameType
-    ): GraphQlPromiseResponse<IGame | null> {
+    ): Promise<ApiResponse<IGame | null>> {
         const player = await this.players.new({ code: playerCode })
         if (!player) {
-            return new UnexpectedGraphQLError('Unable to create new player.')
+            return new UnexpectedApiError('Unable to create new player.')
         }
         const game = await this.games.new({ type: gameType })
         if (!game) {
-            return new UnexpectedGraphQLError('Unable to create new game.')
+            return new UnexpectedApiError('Unable to create new game.')
         }
         await this.gamePlayers.new({
             gameId: game.id,
@@ -49,7 +51,7 @@ export class GameMutations {
     @Mutation(() => Boolean)
     async deleteGame(
         @Arg('id', () => Boolean) id: string
-    ): GraphQlPromiseResponse<boolean> {
+    ): Promise<ApiResponse<boolean>> {
         return (await this.games.delete({ id })) || false
     }
 }

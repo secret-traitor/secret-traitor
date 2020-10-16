@@ -1,3 +1,3 @@
-export interface IGamePlayerState {
-    gamePlayerId: string
-}
+// export interface IGamePlayerState {
+//     gamePlayerId: string
+// }

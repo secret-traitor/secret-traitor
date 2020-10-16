@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useClipboard } from 'use-clipboard-copy'
-import { useQuery } from '@apollo/react-hooks'
-import { OperationVariables, QueryResult } from '@apollo/react-common'
+import {
+    useQuery,
+    QueryResult,
+    OperationVariables,
+    QueryHookOptions,
+} from '@apollo/react-hooks'
 import { DocumentNode } from 'graphql'
-import { QueryHookOptions } from '@apollo/react-hooks/lib/types'
 
 export const usePageTitle = (title: string): void => {
     useEffect(() => {

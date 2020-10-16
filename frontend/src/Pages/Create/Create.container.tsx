@@ -1,16 +1,17 @@
+import get from 'lodash/get'
 import React from 'react'
 import { gql } from 'apollo-boost'
 import { Redirect } from 'react-router-dom'
 import { useMutation, useQuery } from '@apollo/react-hooks'
-import get from 'lodash/get'
 
 import LoadingScreen from 'Components/LoadingScreen'
+import { GameDescription } from 'types/GameDescription'
+import { GameType } from 'types/Game'
 import { getJoinUrl } from 'links'
 import { usePageTitle } from 'hooks'
 import { usePlayerCode } from 'types/Player'
 
 import Create from './Create.component'
-import { GameType, GameDescription } from '../../types/GameDescription'
 
 const GAME_TYPES_QUERY = gql`
     query gameTypes {

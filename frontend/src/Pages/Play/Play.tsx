@@ -2,15 +2,27 @@ import React from 'react'
 import { Redirect } from 'react-router'
 
 import ConfirmRedirect from 'Components/ConfirmRedirect'
-import LoadingScreen from 'Components/LoadingScreen'
 import GameManager from 'GameManager'
+import LoadingScreen from 'Components/LoadingScreen'
 import LobbyManager from 'LobbyManager'
-import { usePageTitle } from 'hooks'
-import { getHomeUrl, getJoinUrl } from 'links'
 import { GameStatus } from 'types/Game'
-import { Player } from 'types/Player'
+import { getHomeUrl, getJoinUrl } from 'links'
+import { usePageTitle } from 'hooks'
 
-import { useGamePlayer, usePlayGame } from './hooks'
+import { useGameDetails, usePlayGame, useStartGame } from './hooks'
+
+function useComponentState(gameCode: string, playerCode: string) {
+    const details = useGameDetails(gameCode, playerCode)
+    const { gameId, playId, loading: loadingDetails } = details
+    const play = usePlayGame(gameId, playId)
+    const { game, players, state, player, loading: loadingPlay } = play
+    const { startGame: startGameMutation } = useStartGame(playId)
+    const startGame = async () => {
+        if (playId) await startGameMutation()
+    }
+    const loading = loadingDetails || loadingPlay
+    return { game, loading, player, players, startGame, state }
+}
 
 const Play: React.FC<{
     playerCode: string
@@ -19,58 +31,38 @@ const Play: React.FC<{
     usePageTitle('Play | Secret Traitor')
     const { gameCode, playerCode } = props
     const {
-        gameId,
-        playerId,
-        playerNickname,
-        called: calledGamePlayer,
-        loading: loadingGamePlayer,
-    } = useGamePlayer(gameCode, playerCode)
+        game,
+        loading,
+        player,
+        players,
+        startGame,
+        state,
+    } = useComponentState(gameCode, playerCode)
 
-    const { game, players, hosts, loading: loadingPlayGame } = usePlayGame(
-        gameId,
-        playerId
-    )
-
-    console.log({
-        game: { id: gameId, code: gameCode },
-        player: {
-            id: playerId,
-            code: playerCode,
-            nickname: playerNickname,
-        },
-    })
-
-    if (calledGamePlayer && !loadingGamePlayer && !playerNickname) {
-        console.log('I would redirect here!')
-        return <Redirect push to={getJoinUrl({ gameCode, playerCode })} />
+    // if (!loading && !player?.nickname) {
+    //     //<Redirect push to={getJoinUrl({ gameCode, playerCode })} />
+    //     return <>{player?.nickname}</>
+    // }
+    if (!loading && !(player || game || state)) {
+        return <>Uh Oh!</>
     }
-
-    const currentPlayer = {
-        id: playerId,
-        code: playerCode,
-        nickname: playerNickname,
-    }
-
-    const loading = loadingGamePlayer || loadingPlayGame
-    const ok =
-        playerId &&
-        playerCode &&
-        playerNickname &&
-        game &&
-        players !== undefined
-
     return (
         <>
             {loading && <LoadingScreen />}
-            {ok && game?.status === GameStatus.InLobby && (
-                <LobbyManager
-                    currentPlayer={currentPlayer as Player}
-                    players={players as Player[]}
-                    hosts={hosts as Player[]}
-                    game={game}
-                />
+            {game?.status === GameStatus.InLobby &&
+                player &&
+                players &&
+                game && (
+                    <LobbyManager
+                        currentPlayer={player}
+                        game={game}
+                        players={players}
+                        startGame={startGame}
+                    />
+                )}
+            {game?.status === GameStatus.InProgress && (
+                <GameManager {...state} />
             )}
-            {game?.status === GameStatus.InProgress && <GameManager />}
             {game?.status === GameStatus.Closed && (
                 <ConfirmRedirect push to={getHomeUrl()}>
                     This game has been closed.

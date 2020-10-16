@@ -18,11 +18,11 @@
 // import {
 //     GamePlayerState,
 //     GamePlayerStateSubArgs,
-// } from '@entities/PlayerGameState/typeDefs'
-// import { GraphQlPromiseResponse, UnexpectedGraphQLError } from '@shared/graphql'
+// } from '@entities/GameState/typeDefs'
+// import { GraphQlPromiseResponse, UnexpectedApiError } from '@shared/graphql'
 // import { IGameDao } from '@daos/Game'
 // import { IGamePlayerDao } from '@daos/GamePlayer'
-// import { IGamePlayerState } from '@entities/PlayerGameState/model'
+// import { IGamePlayerState } from '@entities/GameState/model'
 //
 // @Resolver(() => GamePlayerState)
 // export class GamePlayerStateResolver {
@@ -33,14 +33,14 @@
 //         id: state.gamePlayerId,
 //     })
 //     if (!gamePlayer) {
-//         return new UnexpectedGraphQLError(
+//         return new UnexpectedApiError(
 //             'Unable to look up game player.',
 //             'No game player with this id found.'
 //         )
 //     }
 //     const game = await this.gameDao.get({ id: gamePlayer?.gameId })
 //     if (!game) {
-//         return new UnexpectedGraphQLError(
+//         return new UnexpectedApiError(
 //             'Unable to look up game.',
 //             'No game with this id found.'
 //         )
@@ -54,7 +54,7 @@
 // ): GraphQlPromiseResponse<GamePlayerState | null> {
 //     const gamePlayer = await this.gamePlayerDao.get({gameId: id: playerGameId })
 //     if (!gamePlayer) {
-//         return new UnexpectedGraphQLError(
+//         return new UnexpectedApiError(
 //             'Unable to look up game player.',
 //             'No game player with this id found.'
 //         )
@@ -63,7 +63,7 @@
 //     if (game?.class === GameClass.AlliesNEnemies) {
 //         return new AlliesAndEnemiesPlayerState(playerGameId)
 //     }
-//     return new UnexpectedGraphQLError(
+//     return new UnexpectedApiError(
 //         'Unable to look up game.',
 //         'No game with this id found.'
 //     )
@@ -83,7 +83,7 @@
 // ) {
 //     const gamePlayer = await this.gamePlayerDao.get({ id: gamePlayerId })
 //     if (!gamePlayer) {
-//         return new UnexpectedGraphQLError(
+//         return new UnexpectedApiError(
 //             'Unable to look up game player.',
 //             'No game player with this id found.'
 //         )

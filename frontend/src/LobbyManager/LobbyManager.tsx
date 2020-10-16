@@ -1,50 +1,58 @@
 import React from 'react'
-import { Box, Button, Main } from 'grommet'
+import { Box, Button, Main, Text } from 'grommet'
 import { Deploy, More } from 'grommet-icons'
 
 import { Game } from 'types/Game'
-import { Player } from 'types/Player'
+import { HostPlayer } from 'types/Player'
 
 import Players from './Players'
+import { LobbyCodeText } from '../Components/GameText'
 
-type LobbyProps = {
+export type LobbyProps = {
     game: Game
-    players: Player[]
-    hosts: Player[]
-    currentPlayer: Player
+    players: HostPlayer[]
+    currentPlayer: HostPlayer
+    startGame: () => void
 }
 
-const LobbyManager: React.FC<LobbyProps> = ({ players, hosts }) => (
+const LobbyManager: React.FC<LobbyProps> = ({
+    currentPlayer,
+    game,
+    players,
+    startGame,
+}) => (
     <Main fill align="center" justify="center">
         <Box pad="medium" width="large" fill="vertical">
-            <Box direction="row" justify="end" gap="medium">
-                <Button onClick={() => {}} icon={<Deploy />} />
-                <Button onClick={() => {}} icon={<More />} />
+            <Box direction="row" justify="between" gap="medium" align="center">
+                <Box direction="row" pad={{ horizontal: 'medium' }}>
+                    <Text>
+                        Game Lobby <LobbyCodeText code={game.code} />
+                    </Text>
+                </Box>
+                <Box direction="row">
+                    <Button
+                        onClick={() => startGame()}
+                        icon={<Deploy />}
+                        disabled={!currentPlayer.host}
+                    />
+                    <Button
+                        onClick={() => {}}
+                        icon={<More />}
+                        disabled={!currentPlayer.host}
+                    />
+                </Box>
             </Box>
             <Box
                 border={{ color: 'brand-1', size: 'small' }}
-                direction="row-responsive"
                 gap="small"
-                justify="evenly"
+                pad="medium"
+                round="medium"
             >
-                <Players
-                    players={players.map((player) => ({
-                        ...player,
-                        host: hosts.includes(player),
-                    }))}
-                />
+                <Text>Players in this game:</Text>
+                <Players players={players} />
             </Box>
         </Box>
     </Main>
 )
 
 export default LobbyManager
-
-/*
-<Players
-    players={players.map((player) => ({
-        ...player,
-        host: hosts.includes(player),
-    }))}
-/>
- */

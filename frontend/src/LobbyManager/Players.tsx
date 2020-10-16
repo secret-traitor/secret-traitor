@@ -1,16 +1,14 @@
 import React from 'react'
-import { Button } from 'grommet'
+import { Box, Text } from 'grommet'
 
-import { Player } from 'types/Player'
-
-type HostPlayer = Player & { host: boolean }
+import { HostPlayer } from 'types/Player'
 
 type PlayerCardProps = {
     player: HostPlayer
 }
 
 const PlayerCard: React.FC<PlayerCardProps> = ({ player }) => (
-    <Button primary color="brand-1" label={player.nickname} />
+    <Box pad="xxsmall">{player.nickname}</Box>
 )
 
 type PlayersProps = {
@@ -19,6 +17,7 @@ type PlayersProps = {
 
 const Players: React.FC<PlayersProps> = ({ players }) => (
     <>
+        {/*{console.log(players)}*/}
         {players.map((player) => (
             <PlayerCard key={player.id} player={player} />
         ))}

@@ -10,6 +10,8 @@ const theme: ThemeType = {
             'brand-3': '#228BE6',
             'brand-4': '#373F51',
             'brand-5': '#1B1B1E',
+            ally: '#7689A9',
+            enemy: '#D4796A',
         },
         font: {
             family: 'Roboto',

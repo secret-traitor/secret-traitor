@@ -1,1 +1,1 @@
-export * from './Join.resolver'
+export * from './Join'

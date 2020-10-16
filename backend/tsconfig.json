@@ -20,6 +20,9 @@
       "@entities/*": [
         "src/entities/*"
       ],
+      "@games/*": [
+        "src/games/*"
+      ],
       "@graphql/*": [
         "src/graphql/*"
       ],
@@ -27,7 +30,7 @@
         "src/shared/*"
       ],
       "@server": [
-        "src/Server"
+        "src/server"
       ]
     },
     "types": [

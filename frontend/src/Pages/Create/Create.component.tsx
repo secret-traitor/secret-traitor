@@ -2,8 +2,8 @@ import React, { useState } from 'react'
 import { Box, Main, Button, Text } from 'grommet'
 import { Add } from 'grommet-icons'
 
-import { GameType, GameDescription } from 'types/GameDescription'
-import BoxSection from 'Components/Box'
+import { GameDescription } from 'types/GameDescription'
+import { GameType } from 'types/Game'
 
 import { GameTypes } from './GameTypes'
 
@@ -28,16 +28,22 @@ const Create: React.FC<CreateProps> = ({ create, descriptions }) => {
                         />
                     </Box>
                 </Box>
-                <BoxSection
-                    direction="column"
+                <Box
+                    border={{ color: 'brand-1', size: 'small' }}
                     height={{ min: 'xsmall', max: 'large' }}
+                    justify="start"
+                    overflow="scroll"
+                    pad="medium"
+                    round="medium"
+                    wrap
+                    direction="column"
                 >
                     <GameTypes
                         descriptions={descriptions}
                         selectedOption={selectedOption}
                         selectOption={selectOption}
                     />
-                </BoxSection>
+                </Box>
                 <Box align="center" pad="large">
                     <Text color="dark-4">
                         More games and game re-skins coming soon...

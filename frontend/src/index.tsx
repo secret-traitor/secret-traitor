@@ -1,13 +1,17 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import './index.css'
-import App from './App'
-import * as serviceWorker from './serviceWorker'
+import { ApolloProvider } from '@apollo/react-hooks'
 
+import * as serviceWorker from './serviceWorker'
+import { bootstrapClient } from './ApolloClient'
+import App from './App'
 ;(async () => {
+    const ApolloClient = await bootstrapClient()
     ReactDOM.render(
         <React.StrictMode>
-            <App />
+            <ApolloProvider client={ApolloClient}>
+                <App />
+            </ApolloProvider>
         </React.StrictMode>,
         document.getElementById('root')
     )

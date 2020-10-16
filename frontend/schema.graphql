@@ -9,18 +9,47 @@ schema {
 interface Event {
     source: String!
     timestamp: DateTime!
+    type: String!
 }
 
-interface GamePlayerState {
-    game: Game!
-    id: ID!
-}
-
-interface PlayEvent {
+interface GameState {
     game: Game!
     player: Player!
+}
+
+interface GameStateEvent {
+    gameState: GameState!
     source: String!
     timestamp: DateTime!
+    type: String!
+}
+
+type AlliesNEnemiesGameState implements GameState {
+    board: BoardState!
+    currentTurn: CurrentTurn!
+    game: Game!
+    player: Player!
+}
+
+type BoardRow {
+    cards: Card!
+    maxCards: Float!
+}
+
+type BoardState {
+    actions: [BoardActionType!]!
+    ally: BoardRow!
+    enemy: BoardRow!
+}
+
+type Card {
+    suit: CardSuit!
+}
+
+type CurrentTurn {
+    number: Float!
+    status: TurnStatus!
+    waitingOn: Player!
 }
 
 "Provides high level details about a game."
@@ -48,18 +77,27 @@ type GamePlayer {
     player: Player!
 }
 
-type JoinGameEvent implements Event & PlayEvent {
-    game: Game!
-    id: ID!
-    player: Player!
+type GameStatusEvent implements Event & GameStateEvent {
+    gameState: GameState!
+    new: GameStatus!
+    old: GameStatus!
     source: String!
     timestamp: DateTime!
+    type: String!
+}
+
+type JoinGameEvent implements Event & GameStateEvent {
+    gameState: GameState!
+    source: String!
+    timestamp: DateTime!
+    type: String!
 }
 
 type Mutation {
     createGame(gameType: GameType!, playerCode: String!): Game
     deleteGame(id: Boolean!): Boolean!
     joinGame(gameCode: String!, playerCode: String!, playerNickname: String!): JoinGameEvent
+    setGameStatus(playId: ID!, status: GameStatus!): GameStatusEvent
 }
 
 type Notification {
@@ -82,11 +120,24 @@ type Query {
     gamePlayer(gameCode: String!, playerCode: String!): GamePlayer
     gameTypes: [GameDescription!]!
     joinableGames: [Game!]!
-    play(gameId: ID!, playerId: ID!): PlayEvent
+    play(playId: ID!): GameState
 }
 
 type Subscription {
-    play(gameId: ID!, playerId: ID!): PlayEvent!
+    play(gameId: ID!, playId: ID!): GameStateEvent
+}
+
+enum BoardActionType {
+    Execution
+    InvestigateLoyalty
+    None
+    PolicyPeak
+    SpecialElection
+}
+
+enum CardSuit {
+    Ally
+    Enemy
 }
 
 "The current status of a game. Designates whether a game is complete, joinable, or playable."
@@ -100,6 +151,13 @@ enum GameStatus {
 "This property is used to determine other more specific properties of a specific game."
 enum GameType {
     AlliesNEnemies
+}
+
+enum TurnStatus {
+    Election
+    FirstHand
+    Nomination
+    SecondHand
 }
 
 

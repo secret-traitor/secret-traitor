@@ -1,3 +1,9 @@
+import { AlliesAndEnemiesState } from 'Games/AlliesNEnemies/types'
+
+export enum GameType {
+    AllisNEnemies,
+}
+
 export enum GameStatus {
     Archived = 'Archived',
     Closed = 'Closed',
@@ -7,5 +13,9 @@ export enum GameStatus {
 
 export type Game = {
     id: string
+    code: string
     status: GameStatus
+    type: GameType
 }
+
+export type GameState = AlliesAndEnemiesState

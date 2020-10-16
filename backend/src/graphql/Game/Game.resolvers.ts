@@ -2,7 +2,7 @@ import { FieldResolver, Resolver, Root } from 'type-graphql'
 import map from 'lodash/map'
 import { Inject } from 'typedi'
 
-import { GraphQlPromiseResponse, UnexpectedGraphQLError } from '@shared/graphql'
+import { ApiResponse, UnexpectedApiError } from '@shared/api'
 import { IGamePlayerDao } from '@daos/GamePlayer'
 import { IPlayerDao } from '@daos/Player'
 import { IPlayer } from '@entities/Player'
@@ -29,26 +29,25 @@ export class GameResolver {
     }
 
     @FieldResolver(() => [Player])
-    async hosts(@Root() game: IGame): GraphQlPromiseResponse<IPlayer[]> {
+    async hosts(@Root() game: IGame): Promise<ApiResponse<IPlayer[]>> {
         const gamePlayers = await this.gamePlayerDao.find({
             gameId: game.id,
             host: true,
         })
         if (!gamePlayers) {
-            return new UnexpectedGraphQLError(
+            return new UnexpectedApiError(
                 'Unable to look up host players.',
                 'No players have joined this game.'
             )
         }
-        return await this.playerDao.list({
-            ids: gamePlayers.map((gp) => gp.playerId),
-        })
+        const playerIds = map(gamePlayers, (gp) => gp.playerId)
+        return await this.playerDao.list({ ids: playerIds })
     }
 
     @FieldResolver(() => [Player], { name: 'players' })
-    async players(@Root() game: IGame): GraphQlPromiseResponse<IPlayer[]> {
+    async players(@Root() game: IGame): Promise<ApiResponse<IPlayer[]>> {
         const gamePlayers = await this.gamePlayerDao.find({ gameId: game.id })
-        const playerId = map(gamePlayers, (gp) => gp.playerId)
-        return await this.playerDao.list({ ids: playerId })
+        const playerIds = map(gamePlayers, (gp) => gp.playerId)
+        return await this.playerDao.list({ ids: playerIds })
     }
 }

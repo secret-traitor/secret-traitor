@@ -1,15 +1,14 @@
 import head from 'lodash/head'
 import { Arg, Query, Resolver } from 'type-graphql'
-import { Inject, Service } from 'typedi'
+import { Inject } from 'typedi'
 
-import { GamePlayer } from '@graphql/GamePlayer'
-import { GraphQlPromiseResponse } from '@shared/graphql'
 import { IGameDao } from '@daos/Game'
-import { IGamePlayer } from '@entities/GamePlayer'
 import { IGamePlayerDao } from '@daos/GamePlayer'
 import { IPlayerDao } from '@daos/Player'
+import { IGamePlayer } from '@entities/GamePlayer'
+import { GamePlayer } from '@graphql/GamePlayer'
+import { ApiResponse } from '@shared/api'
 
-@Service()
 @Resolver()
 export class GamePlayerQueries {
     @Inject('GamePlayers') private readonly gamePlayerDao: IGamePlayerDao
@@ -30,7 +29,7 @@ export class GamePlayerQueries {
     async gamePlayer(
         @Arg('gameCode', () => String) gameCode: string,
         @Arg('playerCode', () => String) playerCode: string
-    ): GraphQlPromiseResponse<IGamePlayer | null> {
+    ): Promise<ApiResponse<IGamePlayer | null>> {
         const game = head(
             await this.gameDao.find({ code: gameCode.toLowerCase() })
         )
