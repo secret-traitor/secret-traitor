@@ -6,6 +6,6 @@
     "@aws-cdk/core:stackRelativeExports": "true",
     "appDescriptor": "SecretTraitor",
     "domain": "secrettraitor.com",
-    "graphqlSubdomainDomain": "graphql"
+    "graphqlSubdomain": "graphql"
   }
 }

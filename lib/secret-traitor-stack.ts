@@ -11,8 +11,8 @@ export class SecretTraitorStack extends cdk.Stack {
 
     const zoneName = this.node.tryGetContext("domain") as string;
     const appDescriptor = this.node.tryGetContext("appDescriptor") as string;
-    const graphqlSubdomainDomain = this.node.tryGetContext(
-      "graphqlSubdomainDomain"
+    const graphqlSubdomain = this.node.tryGetContext(
+      "graphqlSubdomain"
     ) as string;
 
     const hostedZone = route53.HostedZone.fromLookup(
@@ -25,7 +25,7 @@ export class SecretTraitorStack extends cdk.Stack {
       domainName: zoneName,
       subjectAlternativeNames: [
         `*.${zoneName}`,
-        `${graphqlSubdomainDomain}.${zoneName}`,
+        `${graphqlSubdomain}.${zoneName}`,
         `www.${zoneName}`,
       ],
       validation: acm.CertificateValidation.fromDns(hostedZone),
@@ -41,7 +41,7 @@ export class SecretTraitorStack extends cdk.Stack {
     // const graphqlApi =
 
     const apigwDomainName = new apigw.DomainName(this, "GraphQLDomainName", {
-      domainName: `${graphqlSubdomainDomain}.${zoneName}`,
+      domainName: `${graphqlSubdomain}.${zoneName}`,
       certificate,
       endpointType: apigw.EndpointType.EDGE,
       securityPolicy: apigw.SecurityPolicy.TLS_1_2,
@@ -52,7 +52,7 @@ export class SecretTraitorStack extends cdk.Stack {
       target: route53.RecordTarget.fromAlias(
         new targets.ApiGatewayDomain(apigwDomainName)
       ),
-      recordName: `${graphqlSubdomainDomain}`,
+      recordName: `${graphqlSubdomain}`,
     });
 
     const apigwHitCounterDomainName = new apigw.DomainName(
