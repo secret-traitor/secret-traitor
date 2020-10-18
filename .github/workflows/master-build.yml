@@ -46,3 +46,4 @@ jobs:
       - name: Verify prod deployment
         run: | # this will actually be calling something in the itest/ folder
           PROD_URL=https://$(cat cdk.json | jq '.context.graphqlSubdomain').$(cat cdk.json | jq '.context.domain')
+          echo ${PROD_URL}
