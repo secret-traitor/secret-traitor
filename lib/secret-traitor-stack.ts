@@ -83,20 +83,20 @@ export class SecretTraitorStack extends cdk.Stack {
 
     // example lifted from:
     // https://medium.com/tysonworks/introduction-to-aws-cdk-with-ec2-example-2355505c70b3
-    const ec2Vpc = new ec2.Vpc(this, "TestEC2VPC", {
-      cidr: "10.0.0.0/16",
-      natGateways: 0,
-    });
-    const awsAMI = new ec2.AmazonLinuxImage({
-      generation: ec2.AmazonLinuxGeneration.AMAZON_LINUX_2,
-    });
-    new ec2.Instance(this, "TestEC2Instance", {
-      vpc: ec2Vpc,
-      instanceType: ec2.InstanceType.of(
-        ec2.InstanceClass.T3,
-        ec2.InstanceSize.NANO
-      ),
-      machineImage: awsAMI,
-    });
+    // const ec2Vpc = new ec2.Vpc(this, "TestEC2VPC", {
+    //   cidr: "10.0.0.0/16",
+    //   natGateways: 0,
+    // });
+    // const awsAMI = new ec2.AmazonLinuxImage({
+    //   generation: ec2.AmazonLinuxGeneration.AMAZON_LINUX_2,
+    // });
+    // new ec2.Instance(this, "TestEC2Instance", {
+    //   vpc: ec2Vpc,
+    //   instanceType: ec2.InstanceType.of(
+    //     ec2.InstanceClass.T3,
+    //     ec2.InstanceSize.NANO
+    //   ),
+    //   machineImage: awsAMI,
+    // });
   }
 }
