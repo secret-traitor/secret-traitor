@@ -1,5 +1,8 @@
 TEMPLATE_YML=template.yml
 
+watch:
+	npm run watch
+
 synth:	aws-prereqs
 	npx cdk synth --no-staging > $(TEMPLATE_YML)
 
