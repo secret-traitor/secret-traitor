@@ -27,7 +27,7 @@ const mapEnemyCards = (row: BoardRow, actions: BoardAction[]) =>
     Array(row.maxCards)
         .fill({})
         .map((_, index) => ({
-            active: !!row.cards[index],
+            active: index < 3, //!!row.cards[index],
             icon:
                 index === row.maxCards - 1 ? (
                     <Trophy size="large" />
@@ -41,7 +41,7 @@ const mapAllyCards = (row: BoardRow) =>
     Array(row.maxCards)
         .fill({})
         .map((_, index) => ({
-            active: !!row.cards[index],
+            active: index < 3, //!!row.cards[index],
             icon:
                 index === row.maxCards - 1 ? (
                     <Trophy size="large" />

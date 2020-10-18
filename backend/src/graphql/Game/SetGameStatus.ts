@@ -16,38 +16,39 @@ import { IGameDao } from '@daos/Game'
 import { GamePlayerId, IGamePlayer } from '@entities/GamePlayer'
 import { GameId, GameStatus, GameType, IGame } from '@entities/Game'
 
-import { Event } from '@graphql/Event'
-import { GameStateEvent, IGameStateEvent } from '@graphql/GameStateEvent'
+import { Event, IEvent } from '@graphql/Event'
+import { GameEvent, IGameEvent } from '@graphql/GameEvent'
 
 import { ApiError, ApiResponse, UnexpectedApiError } from '@shared/api'
 import { getTopicName, Topics } from '@shared/topics'
 import GameManager from '@games/GameManager'
+import { IPlayer, PlayerId } from '@entities/Player'
+import { IPlayerDao } from '@daos/Player'
 
-type GameStateEventPayload = {
+type GameStateEvent = {
     gamePlayerId: GamePlayerId
     gameType: GameType
     newStatus: GameStatus
     oldStatus: GameStatus
+    source: PlayerId
 }
 
-export type IGameStatusEvent = GameStateEvent
-
-@ObjectType({ implements: [Event, GameStateEvent] })
-export class GameStatusEvent
-    extends GameStateEvent
-    implements IGameStatusEvent, IGameStateEvent {
-    @Field(() => GameStatus, { name: 'new' })
+@ObjectType({ implements: [Event, GameEvent] })
+export class GameStatusEvent extends GameEvent implements IEvent {
+    @Field(() => GameStatus, { name: 'changedTo' })
     public readonly newStatus: GameStatus
-    @Field(() => GameStatus, { name: 'old' })
+    @Field(() => GameStatus, { name: 'changedFrom' })
     public readonly oldStatus: GameStatus
 
     constructor({
         gamePlayerId,
         gameType,
+        source,
         newStatus,
         oldStatus,
-    }: GameStateEventPayload) {
-        super(gamePlayerId, gameType, GameStatusEvent.name)
+    }: GameStateEvent) {
+        const state = { gamePlayerId, gameType }
+        super(state, source, GameStatusEvent.name)
         this.newStatus = newStatus
         this.oldStatus = oldStatus
     }
@@ -55,13 +56,10 @@ export class GameStatusEvent
 
 @Resolver()
 export class SetGameStatusResolver {
-    @Inject('GamePlayers') private readonly gamePlayerDao: IGamePlayerDao
-    @Inject('Games') private readonly gameDao: IGameDao
-
-    constructor(gamePlayerDao: IGamePlayerDao, gameDao: IGameDao) {
-        this.gamePlayerDao = gamePlayerDao
-        this.gameDao = gameDao
-    }
+    constructor(
+        @Inject('GamePlayers') private readonly gamePlayerDao: IGamePlayerDao,
+        @Inject('Games') private readonly gameDao: IGameDao
+    ) {}
 
     private async getGamePlayer(id: GamePlayerId): Promise<IGamePlayer> {
         const gamePlayer = await this.gamePlayerDao.get({ id })
@@ -90,13 +88,13 @@ export class SetGameStatusResolver {
         @Arg('playId', () => ID) gamePlayerId: GamePlayerId,
         @Arg('status', () => GameStatus) status: GameStatus,
         @PubSub() pubSub: PubSubEngine
-    ): Promise<ApiResponse<IGameStatusEvent | null>> {
+    ): Promise<ApiResponse<GameStatusEvent | null>> {
         try {
             const gamePlayer = await this.getGamePlayer(gamePlayerId)
             const oldGame = await this.getGame(gamePlayer.gameId)
             const newGame = await this.gameDao.put({ ...oldGame, status })
 
-            const gameManager = new GameManager(newGame)
+            const gameManager = new GameManager(newGame.id, newGame.type)
             if (
                 oldGame.status === GameStatus.InLobby &&
                 newGame.status === GameStatus.InProgress
@@ -114,6 +112,7 @@ export class SetGameStatusResolver {
                 gameType: newGame.type,
                 newStatus: newGame.status,
                 oldStatus: oldGame.status,
+                source: gamePlayer.playerId,
             })
             await pubSub.publish(getTopicName(Topics.Play, newGame.id), payload)
             return payload

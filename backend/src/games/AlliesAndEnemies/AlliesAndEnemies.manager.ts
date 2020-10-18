@@ -3,12 +3,12 @@ import range from 'lodash/range'
 import shuffle from 'lodash/shuffle'
 import { inject } from '../../server/container'
 
-import { IAlliesAndEnemiesDao } from '@daos/AlliesNEnemies'
+import { IAlliesAndEnemiesDao } from '@daos/AlliesAndEnemies'
 import { IGameDao } from '@daos/Game'
 import { IGamePlayerDao } from '@daos/GamePlayer'
 import { IPlayerDao } from '@daos/Player'
 
-import { IGame } from '@entities/Game'
+import { GameId, IGame } from '@entities/Game'
 import { IPlayer } from '@entities/Player'
 
 import { IGameManager, Start } from '@games/GameManager'
@@ -35,15 +35,20 @@ export class AlliesAndEnemiesGameManager implements IGameManager {
         'AlliesAndEnemies'
     )
 
-    private game: IGame
+    constructor(private readonly gameId: GameId) {
+        this.gameId = gameId
+    }
 
-    constructor(game: IGame) {
-        this.game = game
+    async exists(): Promise<boolean> {
+        const state = await this.alliesAndEnemiesDao.get({
+            gameId: this.gameId,
+        })
+        return !!state
     }
 
     async start(args: Start): Promise<boolean> {
         const gamePlayers = await this.gamePlayerDao.find({
-            gameId: this.game.id,
+            gameId: this.gameId,
         })
         if (!gamePlayers) {
             throw new ApiError('no players for game')
@@ -59,7 +64,7 @@ export class AlliesAndEnemiesGameManager implements IGameManager {
         }
         try {
             const state = await this.alliesAndEnemiesDao.new({
-                gameId: this.game.id,
+                gameId: this.gameId,
                 leaderIsSecret: configuration.leaderIsSecret,
                 deck: buildDeck(
                     configuration.deck.totalCards,
@@ -75,7 +80,7 @@ export class AlliesAndEnemiesGameManager implements IGameManager {
             return !!state
         } catch (Error) {
             const state = await this.alliesAndEnemiesDao.get({
-                gameId: this.game.id,
+                gameId: this.gameId,
             })
             return !!state
         }

@@ -1,7 +1,7 @@
 import { Field, FieldResolver, ObjectType, Resolver, Root } from 'type-graphql'
 import { Inject } from 'typedi'
 
-import { IAlliesAndEnemiesDao } from '@daos/AlliesNEnemies'
+import { IAlliesAndEnemiesDao } from '@daos/AlliesAndEnemies'
 import { IGamePlayerDao } from '@daos/GamePlayer'
 import { IGameDao } from '@daos/Game'
 import { IPlayerDao } from '@daos/Player'

@@ -26,8 +26,8 @@ const getLink = () =>
 const getCache = async () =>
     new InMemoryCache({
         possibleTypes: {
-            GameStateEvent: ['JoinGameEvent'],
-            Event: ['JoinGameEvent'],
+            GameEvent: ['JoinGameEvent', 'GameStatusEvent'],
+            Event: ['JoinGameEvent', 'GameStatusEvent'],
         },
         typePolicies: {},
     })

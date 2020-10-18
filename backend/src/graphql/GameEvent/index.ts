@@ -1,1 +1,1 @@
-export * from './GameStateEvent'
+export * from './GameEvent'

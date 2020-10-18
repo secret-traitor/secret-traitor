@@ -1,6 +1,6 @@
 import { Container } from 'typedi'
 
-import AlliesAndEnemiesDaoMock from '@daos/AlliesNEnemies/AlliesAndEnemiesDao.mock'
+import AlliesAndEnemiesDaoMock from '@daos/AlliesAndEnemies/AlliesAndEnemiesDao.mock'
 import GameDaoMock from '@daos/Game/GameDao.mock'
 import GamePlayerDaoMock from '@daos/GamePlayer/GamePlayerDao.mock'
 import PlayerDaoMock from '@daos/Player/PlayerDao.mock'

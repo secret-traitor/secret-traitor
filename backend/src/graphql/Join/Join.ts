@@ -1,10 +1,11 @@
 import {
     Arg,
-    Field,
+    FieldResolver,
     Mutation,
     ObjectType,
     PubSub,
     Resolver,
+    Root,
 } from 'type-graphql'
 import { PubSubEngine } from 'graphql-subscriptions'
 import head from 'lodash/head'
@@ -13,47 +14,46 @@ import { Inject } from 'typedi'
 import { IGameDao } from '@daos/Game'
 import { IGamePlayerDao } from '@daos/GamePlayer'
 import { IPlayerDao } from '@daos/Player'
-import { GameStatus, IGame } from '@entities/Game'
+
+import { IGame, GameStatus, GameId } from '@entities/Game'
+import { GamePlayerId, IGamePlayer } from '@entities/GamePlayer'
+
 import { Event } from '@graphql/Event'
-import { GameStateEvent, IGameStateEvent } from '@graphql/GameStateEvent'
+import { GameEvent, IGameEvent } from '@graphql/GameEvent'
+
 import { ApiError, ApiResponse } from '@shared/api'
 import { getTopicName, Topics } from '@shared/topics'
-import { IGamePlayer } from '@entities/GamePlayer'
+import { IPlayer, PlayerId } from '@entities/Player'
+import { Player } from '@graphql/Player'
 
-export type IJoinGameEvent = GameStateEvent
-
-@ObjectType({ implements: [Event, GameStateEvent] })
-export class JoinGameEvent
-    extends GameStateEvent
-    implements IJoinGameEvent, IGameStateEvent {
-    constructor(gamePlayer: IGamePlayer, game: IGame) {
-        super(gamePlayer.id, game.type, JoinGameEvent.name)
+@ObjectType({ implements: [Event, GameEvent] })
+export class JoinGameEvent extends GameEvent {
+    constructor(gamePlayerId: GamePlayerId, game: IGame, player: IPlayer) {
+        const state = { gamePlayerId, gameType: game.type }
+        super(state, player.id, JoinGameEvent.name)
     }
 }
 
 @Resolver(() => JoinGameEvent)
-export class JoinResolver {
-    @Inject('GamePlayers') private readonly gamePlayerDao: IGamePlayerDao
-    @Inject('Games') private readonly gameDao: IGameDao
-    @Inject('Players') private readonly playerDao: IPlayerDao
-
+class JoinResolver {
     constructor(
-        gameDao: IGameDao,
-        gamePlayerDao: IGamePlayerDao,
-        playerDao: IPlayerDao
-    ) {
-        this.gameDao = gameDao
-        this.gamePlayerDao = gamePlayerDao
-        this.playerDao = playerDao
+        @Inject('GamePlayers') private readonly gamePlayerDao: IGamePlayerDao,
+        @Inject('Games') private readonly gameDao: IGameDao,
+        @Inject('Players') private readonly playerDao: IPlayerDao
+    ) {}
+
+    @FieldResolver(() => Player)
+    async joined(@Root() event: IGameEvent): Promise<IPlayer | null> {
+        return await this.playerDao.get({ id: event.source })
     }
 
-    @Mutation(() => JoinGameEvent, { nullable: true })
+    @Mutation(() => JoinGameEvent)
     async joinGame(
         @Arg('gameCode', () => String) gameCode: string,
         @Arg('playerCode', () => String) playerCode: string,
         @Arg('playerNickname', () => String) playerNickname: string,
         @PubSub() pubSub: PubSubEngine
-    ): Promise<ApiResponse<IJoinGameEvent>> {
+    ): Promise<ApiResponse<JoinGameEvent>> {
         const game = head(
             await this.gameDao.find({ code: gameCode.toLowerCase() })
         )
@@ -71,6 +71,17 @@ export class JoinResolver {
                 'Please join games from the home page or using recently copied links.'
             )
         }
+        const player = await this.getAndUpdatePlayer(playerCode, playerNickname)
+        const gamePlayer = await this.getGamePlayer(game.id, player.id)
+        const payload = new JoinGameEvent(gamePlayer.id, game, player)
+        await pubSub.publish(getTopicName(Topics.Play, game.id), payload)
+        return payload
+    }
+
+    private async getAndUpdatePlayer(
+        playerCode: string,
+        playerNickname: string
+    ) {
         let player = head(await this.playerDao.find({ code: playerCode }))
         if (!player) {
             player = await this.playerDao.new({
@@ -83,21 +94,22 @@ export class JoinResolver {
                 nickname: playerNickname,
             })
         }
-        let gamePlayer = head(
-            await this.gamePlayerDao.find({
-                gameId: game.id,
-                playerId: player.id,
-            })
-        )
-        if (!gamePlayer) {
-            gamePlayer = await this.gamePlayerDao.new({
-                gameId: game.id,
-                playerId: player.id,
+        return player
+    }
+
+    private async getGamePlayer(gameId: GameId, playerId: PlayerId) {
+        return (
+            head(
+                await this.gamePlayerDao.find({
+                    gameId,
+                    playerId,
+                })
+            ) ||
+            (await this.gamePlayerDao.new({
+                gameId,
+                playerId,
                 host: false,
-            })
-        }
-        const payload = new JoinGameEvent(gamePlayer, game)
-        await pubSub.publish(getTopicName(Topics.Play, game.id), payload)
-        return payload
+            }))
+        )
     }
 }

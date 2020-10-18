@@ -1,21 +1,22 @@
 import { Field, InterfaceType } from 'type-graphql'
 
+export interface IEvent {
+    readonly eventType: Required<string>
+    readonly timestamp: Required<Date>
+}
+
 @InterfaceType({
     resolveType: (args: Event) => args.eventType,
 })
-export abstract class Event {
+export abstract class Event implements IEvent {
     @Field(() => Date)
-    public readonly timestamp: Date
-
-    @Field(() => String)
-    public readonly source: string
+    public readonly timestamp: Required<Date>
 
     @Field(() => String, { name: 'type' })
-    public readonly eventType: string
+    public readonly eventType: Required<string>
 
-    protected constructor(eventType: string, source?: string) {
-        this.timestamp = new Date()
-        this.source = source || eventType
+    protected constructor(eventType: Required<string>, timestamp?: Date) {
         this.eventType = eventType
+        this.timestamp = timestamp || new Date()
     }
 }
