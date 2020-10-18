@@ -3,7 +3,6 @@ import * as apigw from "@aws-cdk/aws-apigateway";
 import * as route53 from "@aws-cdk/aws-route53";
 import * as targets from "@aws-cdk/aws-route53-targets";
 import * as acm from "@aws-cdk/aws-certificatemanager";
-import * as ec2 from "@aws-cdk/aws-ec2";
 import { HitCounter } from "./hitcounter";
 
 export class SecretTraitorStack extends cdk.Stack {
@@ -79,24 +78,6 @@ export class SecretTraitorStack extends cdk.Stack {
       zone: hostedZone,
       values: ["fromTemplate,Txt3"],
       recordName: "txt3",
-    });
-
-    // example lifted from:
-    // https://medium.com/tysonworks/introduction-to-aws-cdk-with-ec2-example-2355505c70b3
-    const ec2Vpc = new ec2.Vpc(this, "TestEC2VPC", {
-      cidr: "10.0.0.0/16",
-      natGateways: 0,
-    });
-    const awsAMI = new ec2.AmazonLinuxImage({
-      generation: ec2.AmazonLinuxGeneration.AMAZON_LINUX_2,
-    });
-    new ec2.Instance(this, "TestEC2Instance", {
-      vpc: ec2Vpc,
-      instanceType: ec2.InstanceType.of(
-        ec2.InstanceClass.T3,
-        ec2.InstanceSize.MICRO
-      ),
-      machineImage: awsAMI,
     });
   }
 }

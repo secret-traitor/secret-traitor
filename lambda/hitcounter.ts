@@ -40,6 +40,6 @@ exports.handler = async function (event: {
   return {
     statusCode: 200,
     headers: { "Content-Type": "text/plain" },
-    body: `Hello! You have hit the path ${event.path}\n`,
+    body: `Hello! You requested the path ${event.path}\n`,
   };
 };
