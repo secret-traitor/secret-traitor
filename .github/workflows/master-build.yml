@@ -48,3 +48,4 @@ jobs:
           PROD_URL=https://$(cat cdk.json | jq '.context.graphqlSubdomain' | tr -d \").$(cat cdk.json | jq '.context.domain' | tr -d \")
           echo ${PROD_URL}
           curl ${PROD_URL}/test-from-build
+          bash itest/verify-hit-counter.sh ${PROD_URL}
