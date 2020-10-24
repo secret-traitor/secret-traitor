@@ -3,23 +3,23 @@ import { InterfaceType } from 'type-graphql'
 import { GameType } from '@entities/Game'
 import { GamePlayerId } from '@entities/GamePlayer'
 
-import { AlliesNEnemiesGameState } from '@graphql/AlliesAndEnemies'
+import { AlliesAndEnemiesGameState } from '@graphql/AlliesAndEnemies'
 
-import { ApiError } from '@shared/api'
+import { DescriptiveError } from '@shared/api'
 
 export interface IGameState {
-    gamePlayerId: Required<GamePlayerId>
-    gameType: Required<GameType>
+    readonly gamePlayerId: Required<GamePlayerId>
+    readonly gameType: Required<GameType>
 }
 
 @InterfaceType({
     resolveType: (args: IGameState) => {
         const GameStateResolutionTypeRecord: Record<GameType, string> = {
-            [GameType.AlliesNEnemies]: AlliesNEnemiesGameState.name,
+            [GameType.AlliesNEnemies]: AlliesAndEnemiesGameState.name,
         }
         const type = GameStateResolutionTypeRecord[args.gameType]
         if (!type) {
-            throw new ApiError(
+            throw new DescriptiveError(
                 'Unable to resolve game state type.',
                 `"${args.gameType}" is not a recognized game type.`
             )

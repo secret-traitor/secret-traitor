@@ -6,12 +6,12 @@ import { getPlayUrl } from 'links'
 import { SuccessToast } from 'Components/Toast'
 
 export const JoiningGameRedirect: React.FC<{
-    playerCode: string
-    gameCode: string
-}> = ({ playerCode, gameCode }) => (
+    playerId: string
+    gameId: string
+}> = ({ playerId, gameId }) => (
     <>
         <SuccessToast position="top">Joining game...</SuccessToast>
         <LoadingScreen />
-        <Redirect to={getPlayUrl({ playerCode, gameCode })} />
+        <Redirect to={getPlayUrl({ playerId, gameId })} />
     </>
 )

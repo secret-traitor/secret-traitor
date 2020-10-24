@@ -14,9 +14,9 @@ const map = {
     [GameStatus.Closed]: { color: 'status-disabled', text: 'Closed' },
 }
 
-export const LobbyCodeText: React.FC<{ code: string }> = ({ code }) => (
+export const LobbyCodeText: React.FC<{ gameId: string }> = ({ gameId }) => (
     <Text color="brand-3" weight="bold">
-        {code?.toUpperCase()}
+        {gameId?.toUpperCase()}
     </Text>
 )
 

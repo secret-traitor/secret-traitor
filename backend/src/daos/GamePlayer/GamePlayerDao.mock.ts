@@ -34,7 +34,7 @@ class GamePlayerDaoMock extends MockDaoMock<DB> implements IGamePlayerDao {
             await super.saveDb(db)
             return args as IGamePlayer
         }
-        throw Error('Resource already exists!')
+        throw Error('This player is already in this game.')
     }
 
     public async all({}: AllGamePlayers = {}): Promise<IGamePlayer[]> {
@@ -55,11 +55,14 @@ class GamePlayerDaoMock extends MockDaoMock<DB> implements IGamePlayerDao {
 
     public async find(args: FindGamePlayer): Promise<IGamePlayer[]> {
         const { gamePlayers } = await this.db()
-        return filter(gamePlayers, (gp: any) =>
-            Object.entries(args)
-                .map(([field, value]) => gp[field] === value)
-                .every(Boolean)
-        )
+        return filter(gamePlayers, (gp: any) => {
+            const f = Object.entries(args).map(
+                ([field, value]) => gp[field] === value
+            )
+            const b = f.every(Boolean)
+            // console.log(args, f, b)
+            return b
+        })
     }
 
     public async get({ id }: GetGamePlayer): Promise<IGamePlayer | null> {
@@ -68,9 +71,10 @@ class GamePlayerDaoMock extends MockDaoMock<DB> implements IGamePlayerDao {
     }
 
     public async new(args: NewGamePlayer): Promise<IGamePlayer> {
+        const isHost = args.host ?? false
         return this.add({
             ...args,
-            host: args.host || false,
+            host: isHost,
             id: UUID(),
         })
     }

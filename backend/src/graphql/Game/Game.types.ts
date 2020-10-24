@@ -15,9 +15,6 @@ export class Game implements IGame {
     @Field(() => Type)
     public type: Type
 
-    @Field(() => String)
-    public code: string
-
     @Field(() => GameStatus)
     public status: GameStatus
 }

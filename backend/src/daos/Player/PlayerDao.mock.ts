@@ -34,7 +34,7 @@ class PlayerDaoMock extends MockDaoMock<DB> implements IPlayerDao {
             await super.saveDb(db)
             return args as IPlayer
         }
-        throw Error('Resource already exists!')
+        throw Error('Player already exists.')
     }
 
     public async all({}: AllPlayers = {}): Promise<IPlayer[]> {
@@ -73,7 +73,7 @@ class PlayerDaoMock extends MockDaoMock<DB> implements IPlayerDao {
     }
 
     public async new(args: NewPlayer): Promise<IPlayer> {
-        return this.add({ ...args, id: UUID() })
+        return this.add({ ...args })
     }
 
     public async put(args: PutPlayer): Promise<IPlayer> {

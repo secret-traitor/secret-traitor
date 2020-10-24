@@ -1,18 +1,19 @@
-import find from 'lodash/find'
-import get from 'lodash/get'
 import { gql } from 'apollo-boost'
 import { useMutation, useQuery } from '@apollo/react-hooks'
 
-import { Game, Player } from './types'
+import { Game } from 'types/Game'
+import { Player } from 'types/Player'
+import { MutationResult, QueryResult } from '@apollo/client/react/types/types'
+import { FetchResult } from '@apollo/client/link/core'
 
 const GAME_PLAYERS_QUERY = gql`
-    query gameWithPlayers($gameCode: String!) {
-        game(code: $gameCode) {
+    query gameWithPlayers($gameId: ID!) {
+        game(id: $gameId) {
             id
             status
+            type
             players {
                 id
-                code
                 nickname
             }
         }
@@ -20,37 +21,42 @@ const GAME_PLAYERS_QUERY = gql`
 `
 
 export const useGameWithPlayers = (
-    gameCode: string,
-    playerCode: string
-): [{ game: Game; player: Player | null }, boolean, any, () => void] => {
-    const { data, loading, error, refetch } = useQuery(GAME_PLAYERS_QUERY, {
-        variables: { gameCode, playerCode },
+    gameId: string,
+    playerId: string
+): QueryResult & { game?: Game; player?: Player } => {
+    const result = useQuery(GAME_PLAYERS_QUERY, {
+        variables: { gameId, playerId },
         fetchPolicy: 'no-cache',
     })
-    const game = get(data, 'game') as Game
-    const players = get(data, 'game.players', []) as Player[]
-    const player = find(players, (player) => player.code === playerCode) || null
-    return [{ game, player }, loading, error, refetch]
+    const game = result.data?.game as Game
+    const players = (result.data?.game?.players as Player[]) || []
+    const player = players.find((player) => player.id === playerId)
+
+    console.log({ game, players, player, playerId })
+    return {
+        ...result,
+        game,
+        player,
+    }
 }
 
 const JOIN_GAME_MUTATION = gql`
     mutation joinGame(
-        $gameCode: String!
-        $playerCode: String!
+        $gameId: String!
+        $playerId: String!
         $playerNickname: String!
     ) {
         joinGame(
-            gameCode: $gameCode
-            playerCode: $playerCode
+            gameId: $gameId
+            playerId: $playerId
             playerNickname: $playerNickname
         ) {
-            gameState {
-                game {
-                    code
-                    status
-                }
-                player {
-                    code
+            game {
+                id
+                status
+                type
+                players {
+                    id
                     nickname
                 }
             }
@@ -59,15 +65,16 @@ const JOIN_GAME_MUTATION = gql`
 `
 
 export type JoinGameProps = {
-    gameCode: string
-    playerCode: string
+    gameId: string
+    playerId: string
     playerNickname: string
 }
 
-export const useJoinGame = () => {
-    const [createMutation, { called, loading, error, data }] = useMutation(
-        JOIN_GAME_MUTATION
-    )
+export const useJoinGame = (): [
+    (variables: JoinGameProps) => Promise<FetchResult>,
+    MutationResult
+] => {
+    const [createMutation, results] = useMutation(JOIN_GAME_MUTATION)
     const join = (variables: JoinGameProps) => createMutation({ variables })
-    return { join, data, loading, error, called }
+    return [join, results]
 }

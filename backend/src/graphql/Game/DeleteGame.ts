@@ -1,4 +1,4 @@
-import { Arg, Mutation, Resolver } from 'type-graphql'
+import { Arg, ID, Mutation, Resolver } from 'type-graphql'
 import { Game } from '@graphql/Game/Game.types'
 import { Inject } from 'typedi'
 import { IGamePlayerDao } from '@daos/GamePlayer'
@@ -16,7 +16,7 @@ export class DeleteGameResolver {
 
     @Mutation(() => Boolean)
     async deleteGame(
-        @Arg('id', () => Boolean) id: string
+        @Arg('id', () => ID) id: string
     ): Promise<ApiResponse<boolean>> {
         return (await this.gameDao.delete({ id })) || false
     }

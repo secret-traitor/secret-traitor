@@ -5,11 +5,11 @@ import { CirclePlay } from 'grommet-icons'
 import { LobbyCodeText } from 'Components/GameText'
 
 type JoinProps = {
-    gameCode: string
+    gameId: string
     join: (nickname: string) => void
 }
 
-const Join: React.FC<JoinProps> = ({ gameCode, join }) => {
+const Join: React.FC<JoinProps> = ({ gameId, join }) => {
     const [nickname, setNickname] = useState<string>('')
     const joinDisabled = !nickname
     return (
@@ -35,7 +35,7 @@ const Join: React.FC<JoinProps> = ({ gameCode, join }) => {
                             height="xxsmall"
                         >
                             <Text>
-                                Joining lobby <LobbyCodeText code={gameCode} />
+                                Joining lobby <LobbyCodeText gameId={gameId} />
                             </Text>
                         </Box>
                     </Box>

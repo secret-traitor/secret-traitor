@@ -10,158 +10,125 @@ import find from 'lodash/find'
 
 import { Game, GameState } from 'types/Game'
 import { HostPlayer, Player } from 'types/Player'
+import { AlliesAndEnemiesGameStateFragment } from 'Games/AlliesAndEnemies'
 
-const mapHostPlayers = (data?: any): HostPlayer[] => {
-    const players = data?.play?.game.players as Player[]
-    const hosts = data?.play?.game.hosts as Player[]
-    const hostIds = hosts?.map((h) => h.id)
+const mapHostPlayers = (game?: any): HostPlayer[] => {
+    const players = game?.players as Player[]
+    const hostIds = game?.hosts?.map((host: Partial<Player>) => host?.id)
     return players?.map((p) => ({
         ...p,
         host: hostIds.includes(p.id) as boolean,
     })) as HostPlayer[]
 }
 
-const FRAG = gql`
-    fragment AlliesNEnemiesGameStateFragment on AlliesNEnemiesGameState {
-        team {
-            playerRole
-            teammates {
-                id
-                code
-                nickname
-                role
-            }
-        }
-        currentTurn {
-            number
-            status
-            waitingOn {
-                id
-                nickname
-            }
-        }
-        board {
-            actions
-            ally {
-                cards {
-                    suit
-                }
-                maxCards
-            }
-            enemy {
-                cards {
-                    suit
-                }
-                maxCards
-            }
-        }
-        player {
+const GameFragment = gql`
+    fragment GameFragment on Game {
+        id
+        type
+        status
+        hosts {
             id
-            code
+        }
+        players {
+            id
             nickname
         }
-        game {
-            id
-            code
-            type
-            status
-            hosts {
-                id
-                code
-                nickname
-            }
-            players {
-                id
-                code
-                nickname
-            }
-        }
     }
 `
 
-const PLAY_QUERY = gql`
-    query playQuery($playId: ID!) {
-        play(playId: $playId) {
-            ...AlliesNEnemiesGameStateFragment
+const GameQuery = gql`
+    query playQuery($gameId: ID!, $playId: ID!) {
+        game(id: $gameId) {
+            ...GameFragment
+            state(playId: $playId) {
+                ...AlliesAndEnemiesGameStateFragment
+            }
         }
     }
-    ${FRAG}
+    ${GameFragment}
+    ${AlliesAndEnemiesGameStateFragment}
 `
 
-const PLAY_SUBSCRIPTION = gql`
-    subscription playSubscription($playId: ID!, $gameId: ID!) {
-        play(playId: $playId, gameId: $gameId) {
+const GameSubscription = gql`
+    subscription playSubscription($gameId: ID!, $playId: ID!) {
+        play(gameId: $gameId) {
+            game {
+                ...GameFragment
+                state(playId: $playId) {
+                    ...AlliesAndEnemiesGameStateFragment
+                }
+            }
             timestamp
-            gameState {
-                ...AlliesNEnemiesGameStateFragment
+            ... on JoinGameEvent {
+                joined {
+                    nickname
+                }
             }
+            ... on GameStatusEvent {
+                changedFrom
+                changedTo
+            }
+            __typename
         }
     }
-    ${FRAG}
+    ${GameFragment}
+    ${AlliesAndEnemiesGameStateFragment}
 `
 
 type PlayGame = QueryResult & {
     game?: Game
     players?: HostPlayer[]
     player?: HostPlayer
-    state: GameState
+    state?: GameState
 }
 
-export const usePlayGame = (gameId?: string, playId?: string): PlayGame => {
-    const result = useQuery(PLAY_QUERY, {
-        variables: { playId },
+export const usePlayGame = (
+    gameId: string,
+    playerId: string,
+    playId?: string
+): PlayGame => {
+    const result = useQuery(GameQuery, {
+        variables: { gameId, playId },
         skip: !gameId || !playId,
     })
-
     useEffect(() => {
         let unsubscribe: (() => void) | undefined
         if (gameId && playId) {
             unsubscribe = result?.subscribeToMore({
-                document: PLAY_SUBSCRIPTION,
+                document: GameSubscription,
                 variables: { gameId, playId },
                 updateQuery: (prev, { subscriptionData }) => {
-                    let data = {
-                        ...prev,
-                        play: {
-                            ...prev?.play,
-                            ...subscriptionData?.data?.play?.gameState,
-                        },
-                    }
-                    console.log({ prev, data })
-                    return data
+                    console.log('subscriptionData:', subscriptionData?.data)
+                    const { game, state } = subscriptionData?.data?.play
+                    return { game, state }
                 },
             })
         }
         if (unsubscribe) return unsubscribe
     }, [gameId, playId, result])
-
-    const game = result?.data?.play?.game
-    const player = result?.data?.play?.player
-    const players = mapHostPlayers(result?.data)
-    const state = result?.data?.play
-
+    const game = result?.data?.game
+    const state = result?.data?.game?.state
+    const players = mapHostPlayers(result?.data?.game)
     return {
         ...result,
         game: game as Game,
-        player: find(players, (p) => p.id === player?.id),
+        player: find(players, (p) => p.id === playerId) as HostPlayer,
         players: players as HostPlayer[],
         state: state as GameState,
     }
 }
 
 const GAME_PLAYER_QUERY = gql`
-    query gamePlayer($playerCode: String!, $gameCode: String!) {
-        gamePlayer(playerCode: $playerCode, gameCode: $gameCode) {
+    query gamePlayer($playerId: String!, $gameId: String!) {
+        gamePlayer(playerId: $playerId, gameId: $gameId) {
             id
             isHost
             player {
                 id
-                code
                 nickname
             }
             game {
                 id
-                code
                 type
                 status
             }
@@ -170,29 +137,27 @@ const GAME_PLAYER_QUERY = gql`
 `
 
 type GamePlayer = QueryResult & {
-    gameId?: string
     playId?: string
 }
 
-export const useGameDetails = (
-    gameCode: string,
-    playerCode: string
-): GamePlayer => {
+export const usePlayId = (gameId: string, playerId: string): GamePlayer => {
     const result = useQuery(GAME_PLAYER_QUERY, {
-        variables: { gameCode, playerCode },
-        skip: !gameCode || !playerCode,
+        variables: { gameId, playerId },
+        skip: !gameId || !playerId,
         fetchPolicy: 'no-cache',
     })
-    const gameId = result?.data?.gamePlayer?.game?.id
     const playId = result?.data?.gamePlayer?.id as string
-    return { ...result, gameId, playId }
+    return { ...result, playId }
 }
 
 const START_GAME_MUTATION = gql`
     mutation startGame($playId: ID!) {
         setGameStatus(playId: $playId, status: InProgress) {
             timestamp
-            status: new
+            ... on GameStatusEvent {
+                changedFrom
+                changedTo
+            }
         }
     }
 `

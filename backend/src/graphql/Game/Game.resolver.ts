@@ -13,9 +13,10 @@ import { IPlayer } from '@entities/Player'
 import { GameState, IGameState } from '@graphql/GameState'
 import { Player } from '@graphql/Player'
 
-import { ApiResponse, UnexpectedApiError } from '@shared/api'
+import { ApiResponse, UnexpectedError } from '@shared/api'
 
 import { Game, GameDescription, GameDescriptions } from './Game.types'
+import GameManager from '@games/GameManager'
 
 @Resolver(() => Game)
 export class GameResolver {
@@ -32,7 +33,7 @@ export class GameResolver {
             host: true,
         })
         if (!gamePlayers) {
-            return new UnexpectedApiError(
+            return new UnexpectedError(
                 'Unable to look up host players.',
                 'No players have joined this game.'
             )
@@ -49,9 +50,25 @@ export class GameResolver {
         return players || []
     }
 
+    @FieldResolver(() => GameState, { nullable: true })
+    async state(
+        @Arg('playId', () => ID) gamePlayerId: GamePlayerId,
+        @Root() game: IGame
+    ): Promise<IGameState | null> {
+        const gm = new GameManager(game.id, game.type)
+        const exists = await gm.exists()
+        if (!exists) {
+            return null
+        }
+        return {
+            gameType: game.type,
+            gamePlayerId,
+        } as IGameState
+    }
+
     @Query(() => Game, { nullable: true })
-    async game(@Arg('code', () => String) code: string): Promise<IGame | null> {
-        const game = head(await this.gameDao.find({ code: code.toLowerCase() }))
+    async game(@Arg('id', () => ID) id: string): Promise<IGame | null> {
+        const game = head(await this.gameDao.find({ id: id.toLowerCase() }))
         return game || null
     }
 
@@ -72,16 +89,5 @@ export class GameResolver {
     @Query(() => [GameDescription])
     gameTypes(): IGameDescription[] {
         return GameDescriptions
-    }
-
-    @FieldResolver(() => GameState, { nullable: true })
-    state(
-        @Arg('playId', () => ID) gamePlayerId: GamePlayerId,
-        @Root() game: IGame
-    ): IGameState {
-        return {
-            gameType: game.type,
-            gamePlayerId,
-        } as IGameState
     }
 }

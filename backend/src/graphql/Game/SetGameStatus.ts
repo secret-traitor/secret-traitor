@@ -13,17 +13,17 @@ import { Inject } from 'typedi'
 import { IGamePlayerDao } from '@daos/GamePlayer'
 import { IGameDao } from '@daos/Game'
 
-import { GamePlayerId, IGamePlayer } from '@entities/GamePlayer'
 import { GameId, GameStatus, GameType, IGame } from '@entities/Game'
+import { GamePlayerId, IGamePlayer } from '@entities/GamePlayer'
+import { PlayerId } from '@entities/Player'
 
-import { Event, IEvent } from '@graphql/Event'
-import { GameEvent, IGameEvent } from '@graphql/GameEvent'
-
-import { ApiError, ApiResponse, UnexpectedApiError } from '@shared/api'
-import { getTopicName, Topics } from '@shared/topics'
 import GameManager from '@games/GameManager'
-import { IPlayer, PlayerId } from '@entities/Player'
-import { IPlayerDao } from '@daos/Player'
+
+import { Event } from '@graphql/Event'
+import { GameEvent } from '@graphql/GameEvent'
+
+import { DescriptiveError, ApiResponse, UnexpectedError } from '@shared/api'
+import { getTopicName, Topics } from '@shared/topics'
 
 type GameStateEvent = {
     gamePlayerId: GamePlayerId
@@ -34,7 +34,7 @@ type GameStateEvent = {
 }
 
 @ObjectType({ implements: [Event, GameEvent] })
-export class GameStatusEvent extends GameEvent implements IEvent {
+export class GameStatusEvent extends GameEvent {
     @Field(() => GameStatus, { name: 'changedTo' })
     public readonly newStatus: GameStatus
     @Field(() => GameStatus, { name: 'changedFrom' })
@@ -64,7 +64,7 @@ export class SetGameStatusResolver {
     private async getGamePlayer(id: GamePlayerId): Promise<IGamePlayer> {
         const gamePlayer = await this.gamePlayerDao.get({ id })
         if (!gamePlayer) {
-            throw new ApiError(
+            throw new DescriptiveError(
                 'Unable to look up player for this game.',
                 'No game and player with this id found.'
             )
@@ -75,7 +75,7 @@ export class SetGameStatusResolver {
     private async getGame(id: GameId): Promise<IGame> {
         const game = await this.gameDao.get({ id })
         if (!game) {
-            throw new ApiError(
+            throw new DescriptiveError(
                 'Unable to look up game.',
                 'No game with this code found.'
             )
@@ -104,7 +104,7 @@ export class SetGameStatusResolver {
                 })
                 if (!state) {
                     await this.gameDao.put(oldGame)
-                    return new UnexpectedApiError('Something happened!')
+                    return new UnexpectedError('Something happened!')
                 }
             }
             const payload = new GameStatusEvent({
@@ -117,7 +117,7 @@ export class SetGameStatusResolver {
             await pubSub.publish(getTopicName(Topics.Play, newGame.id), payload)
             return payload
         } catch (e) {
-            if (e instanceof UnexpectedApiError) {
+            if (e instanceof UnexpectedError) {
                 return e
             }
             throw e

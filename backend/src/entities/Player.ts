@@ -1,7 +1,6 @@
 export type PlayerId = string
 
 export interface IPlayer {
-    id: PlayerId
-    code: string
-    nickname?: string
+    readonly id: PlayerId
+    readonly nickname?: string
 }

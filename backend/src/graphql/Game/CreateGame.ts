@@ -1,11 +1,12 @@
-import { Arg, Mutation, Resolver } from 'type-graphql'
+import { Arg, ID, Mutation, Resolver } from 'type-graphql'
 import { Game } from '@graphql/Game/Game.types'
 import { Inject } from 'typedi'
 import { IGamePlayerDao } from '@daos/GamePlayer'
 import { IGameDao } from '@daos/Game'
 import { IPlayerDao } from '@daos/Player'
-import { ApiResponse, UnexpectedApiError } from '@shared/api'
-import { GameType, IGame } from '@entities/Game'
+import { ApiResponse, UnexpectedError } from '@shared/api'
+import { GameId, GameType, IGame } from '@entities/Game'
+import { PlayerId } from '@entities/Player'
 
 @Resolver(() => Game)
 export class DeleteGameResolver {
@@ -17,22 +18,39 @@ export class DeleteGameResolver {
 
     @Mutation(() => Game, { nullable: true })
     async createGame(
-        @Arg('playerCode') playerCode: string,
+        @Arg('playerId', () => ID) playerId: PlayerId,
         @Arg('gameType', () => GameType) gameType: GameType
     ): Promise<ApiResponse<IGame | null>> {
-        const player = await this.playerDao.new({ code: playerCode })
-        if (!player) {
-            return new UnexpectedApiError('Unable to create new player.')
-        }
+        const player = await this.playerDao.put({ id: playerId })
         const game = await this.gameDao.new({ type: gameType })
-        if (!game) {
-            return new UnexpectedApiError('Unable to create new game.')
-        }
         await this.gamePlayerDao.new({
             gameId: game.id,
             playerId: player.id,
             host: true,
         })
+
+        // TODO: remove me!
+        await this.seedPlayers(game.id)
+
         return game
+    }
+
+    private async seedPlayers(gameId: GameId) {
+        const seed = async (id: string, nickname: string) => {
+            const player = await this.playerDao.put({
+                id,
+                nickname,
+            })
+            await this.gamePlayerDao.new({
+                gameId,
+                playerId: player.id,
+            })
+        }
+        await seed('aaa', 'Arnold')
+        await seed('bbb', 'Bonnie')
+        await seed('ccc', 'Charles')
+        await seed('ddd', 'David')
+        await seed('eee', 'Emily')
+        await seed('fff', 'Frankie')
     }
 }

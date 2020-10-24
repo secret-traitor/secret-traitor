@@ -12,7 +12,6 @@ export enum GameStatus {
 export type GameId = string
 
 export interface IGame {
-    code: string
     id: GameId
     status: GameStatus
     type: GameType

@@ -1,5 +1,6 @@
 import { GameId } from '@entities/Game'
 import { IPlayer, PlayerId } from '@entities/Player'
+import { ConfigurationOptions } from '@games/AlliesAndEnemies/AlliesAndEnemies.config'
 
 export enum PlayerActionType {
     None,
@@ -15,9 +16,23 @@ export enum PlayerRole {
     EnemyLeader,
 }
 
+export enum VoteValue {
+    No,
+    Yes,
+}
+
+export type PlayerVote = {
+    playerId: PlayerId
+    vote: VoteValue
+}
+
 export type PlayerState = IPlayer & {
     readonly position: number
     readonly role: PlayerRole
+}
+
+export type ViewingPlayerState = Omit<PlayerState, 'role'> & {
+    readonly role?: PlayerRole
 }
 
 export type CardState = Card & {
@@ -32,17 +47,20 @@ export enum TurnStatus {
     Election,
     FirstHand,
     SecondHand,
+    TakeAction,
 }
 
 export type TurnState = {
+    readonly consecutiveFailedElections: number
+    readonly elected: boolean
+    readonly firstHand?: FirstHand
+    readonly nomination?: PlayerId
     readonly number: number
     readonly position: number
-    readonly status: TurnStatus
-    readonly nomination?: PlayerId
-    readonly election?: boolean
-    readonly firstHand?: FirstHand
     readonly secondHand?: SecondHand
+    readonly status: TurnStatus
     readonly vetoIsEnabled: boolean
+    readonly votes: PlayerVote[]
 }
 
 export enum CardSuit {
@@ -75,11 +93,10 @@ export type BoardState = {
 
 export type AlliesAndEnemiesState = {
     readonly board: BoardState
+    readonly config: ConfigurationOptions
     readonly discard: Card[]
     readonly draw: Card[]
-    readonly failedElections: number
     readonly gameId: GameId
-    readonly leaderIsSecret: boolean
     readonly players: PlayerState[]
     readonly rounds: TurnState[]
 }

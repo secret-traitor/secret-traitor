@@ -1,7 +1,9 @@
 import find from 'lodash/find'
 import { MockDaoMock } from '@daos/MockDb/MockDao.mock'
 import { AlliesAndEnemiesState, TurnStatus } from '@games/AlliesAndEnemies'
-import { Add, Get, IAlliesAndEnemiesDao, New } from './AlliesAndEnemiesDao'
+import { Add, Get, IAlliesAndEnemiesDao, New, Put } from './AlliesAndEnemiesDao'
+import { AddGame, PutGame } from '@daos/Game'
+import { IGame } from '@entities/Game'
 
 class AlliesAndEnemiesDaoMock
     extends MockDaoMock<{
@@ -30,10 +32,13 @@ class AlliesAndEnemiesDaoMock
             failedElections: 0,
             rounds: [
                 {
-                    vetoIsEnabled: false,
-                    position: 0,
+                    consecutiveFailedElections: 0,
+                    elected: false,
                     number: 1,
+                    position: 0,
                     status: TurnStatus.Nomination,
+                    vetoIsEnabled: false,
+                    votes: [],
                 },
             ],
         } as Add)
@@ -45,6 +50,18 @@ class AlliesAndEnemiesDaoMock
             find(alliesAndEnemies, (state) => state.gameId === args.gameId) ||
             null
         )
+    }
+
+    public async put(args: Put): Promise<AlliesAndEnemiesState> {
+        const db = await super.openDb()
+        for (let i = 0; i < db.alliesAndEnemies.length; i++) {
+            if (db.alliesAndEnemies[i].gameId === args.gameId) {
+                db.alliesAndEnemies[i] = args
+                await super.saveDb(db)
+                return args
+            }
+        }
+        return this.add(args as Add)
     }
 }
 

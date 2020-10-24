@@ -21,10 +21,11 @@ import { GamePlayerId, IGamePlayer } from '@entities/GamePlayer'
 import { Event } from '@graphql/Event'
 import { GameEvent, IGameEvent } from '@graphql/GameEvent'
 
-import { ApiError, ApiResponse } from '@shared/api'
+import { DescriptiveError, ApiResponse } from '@shared/api'
 import { getTopicName, Topics } from '@shared/topics'
 import { IPlayer, PlayerId } from '@entities/Player'
 import { Player } from '@graphql/Player'
+import { Game } from '@graphql/Game/Game.types'
 
 @ObjectType({ implements: [Event, GameEvent] })
 export class JoinGameEvent extends GameEvent {
@@ -49,43 +50,38 @@ class JoinResolver {
 
     @Mutation(() => JoinGameEvent)
     async joinGame(
-        @Arg('gameCode', () => String) gameCode: string,
-        @Arg('playerCode', () => String) playerCode: string,
+        @Arg('gameId', () => String) gameId: GameId,
+        @Arg('playerId', () => String) playerId: PlayerId,
         @Arg('playerNickname', () => String) playerNickname: string,
         @PubSub() pubSub: PubSubEngine
     ): Promise<ApiResponse<JoinGameEvent>> {
-        const game = head(
-            await this.gameDao.find({ code: gameCode.toLowerCase() })
-        )
+        const game = head(await this.gameDao.find({ id: gameId.toLowerCase() }))
         if (!game) {
-            return new ApiError(
+            return new DescriptiveError(
                 'Unable to look up game.',
                 'No game with this code found.',
                 'Please make sure a game exists before joining.'
             )
         }
         if (game.status !== GameStatus.InLobby) {
-            return new ApiError(
+            return new DescriptiveError(
                 'Unable to join this game.',
                 'Games are only joinable when they are in the lobby.',
                 'Please join games from the home page or using recently copied links.'
             )
         }
-        const player = await this.getAndUpdatePlayer(playerCode, playerNickname)
+        const player = await this.getAndUpdatePlayer(playerId, playerNickname)
         const gamePlayer = await this.getGamePlayer(game.id, player.id)
         const payload = new JoinGameEvent(gamePlayer.id, game, player)
         await pubSub.publish(getTopicName(Topics.Play, game.id), payload)
         return payload
     }
 
-    private async getAndUpdatePlayer(
-        playerCode: string,
-        playerNickname: string
-    ) {
-        let player = head(await this.playerDao.find({ code: playerCode }))
+    private async getAndUpdatePlayer(playerId: string, playerNickname: string) {
+        let player = head(await this.playerDao.find({ id: playerId }))
         if (!player) {
             player = await this.playerDao.new({
-                code: playerCode,
+                id: playerId,
                 nickname: playerNickname,
             })
         } else {

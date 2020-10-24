@@ -1,5 +1,7 @@
 import { Player } from 'types/Player'
 
+export type CurrentOffice = 'president' | 'governor'
+
 export enum BoardAction {
     None,
     InvestigateLoyalty = 'InvestigateLoyalty',
@@ -29,11 +31,11 @@ export type BoardState = {
 }
 
 export enum PlayerAction {
-    None,
-    Nominate,
-    Vote,
-    PlayCard,
-    TakeBoardAction,
+    None = 'None',
+    Nominate = 'Nominate',
+    Vote = 'Vote',
+    PlayCard = 'PlayCard',
+    TakeBoardAction = 'TakeBoardAction',
 }
 
 export enum PlayerRole {
@@ -42,31 +44,33 @@ export enum PlayerRole {
     EnemyLeader = 'EnemyLeader',
 }
 
+export type PlayerState = Player & {
+    role?: PlayerRole
+    position: Required<number>
+}
+
 export enum TurnStatus {
-    Nomination,
-    Election,
-    FirstHand,
-    SecondHand,
+    Nomination = 'Nomination',
+    Election = 'Election',
+    FirstHand = 'FirstHand',
+    SecondHand = 'SecondHand',
+    TakeAction = 'TakeAction',
 }
 
 export type TurnState = {
+    currentPlayer: Required<PlayerState>
+    nominatedPlayer?: PlayerState
     number: number
-    waitingOn: Player
-    status: TurnStatus
-}
-
-export type TeamPlayer = Player & { role: PlayerRole }
-
-export type TeamState = {
-    playerRole: PlayerRole
-    teammates: TeamPlayer[]
+    position: Required<number>
+    status: Required<TurnStatus>
+    disabledNominations: PlayerState[]
 }
 
 export type AlliesAndEnemiesState = {
     board: BoardState
-    currentTurn?: TurnState
-    player: Player
+    currentTurn: TurnState
     playerAction: PlayerAction
-    team: TeamState
+    players: PlayerState[]
     playId: string
+    viewingPlayer: PlayerState
 }

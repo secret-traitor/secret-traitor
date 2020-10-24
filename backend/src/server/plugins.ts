@@ -7,6 +7,7 @@ export const LoggingPlugin: PluginDefinition = {
         // logger.debug('LoggingPlugin initialized')
     },
     requestDidStart(requestContext) {
+        const start = new Date().getTime()
         // logger.debug(
         //     'Received Query:\n' +
         //         JSON.stringify(requestContext.request.query) +
@@ -15,6 +16,7 @@ export const LoggingPlugin: PluginDefinition = {
         // )
         return {
             willSendResponse(requestContext) {
+                logger.debug(`Request took: ${new Date().getTime() - start}ms`)
                 // logger.debug(
                 //     'Sending ApiResponse:\n' +
                 //         JSON.stringify(requestContext.response.data)
@@ -22,6 +24,11 @@ export const LoggingPlugin: PluginDefinition = {
             },
             didEncounterErrors(requestContext) {
                 logger.error(JSON.stringify(requestContext.errors))
+                logger.debug(
+                    JSON.stringify(
+                        requestContext.errors.flatMap((e) => e.stack)
+                    )
+                )
             },
         }
     },

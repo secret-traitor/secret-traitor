@@ -1,20 +1,22 @@
 import { gql } from 'apollo-boost'
-import { GameResult } from './types'
-import { usePollingQuery } from '../../hooks'
+
+import { usePollingQuery } from 'hooks'
+import { Game } from 'types/Game'
+import { QueryResult } from '@apollo/react-hooks'
 
 const GAMES_QUERY = gql`
     query joinableGames {
         games: joinableGames {
             id
-            code
             status
+            type
         }
     }
 `
-export const usePollGames = (): [GameResult[], boolean, any, () => void] => {
-    const { data, loading, error, refetch } = usePollingQuery(GAMES_QUERY, {
+export const usePollGames = (): QueryResult & { games: Game[] } => {
+    const result = usePollingQuery(GAMES_QUERY, {
         fetchPolicy: 'no-cache',
     })
-    const games: GameResult[] = data?.games as GameResult[]
-    return [games, loading, error, refetch]
+    const games: Game[] = result.data?.games as Game[]
+    return { ...result, games }
 }

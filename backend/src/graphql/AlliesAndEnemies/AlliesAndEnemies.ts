@@ -5,181 +5,63 @@ import {
     Resolver,
     Root,
 } from 'type-graphql'
-import { Inject } from 'typedi'
+import { Inject, Service } from 'typedi'
 
 import { IAlliesAndEnemiesDao } from '@daos/AlliesAndEnemies'
 import { IGameDao } from '@daos/Game'
 import { IGamePlayerDao } from '@daos/GamePlayer'
 import { IPlayerDao } from '@daos/Player'
 
+import { GameType } from '@entities/Game'
+
 import {
-    AlliesAndEnemiesState,
     BoardActionType,
     CardSuit,
     PlayerRole,
     TurnStatus,
 } from '@games/AlliesAndEnemies'
 
+import {
+    AlliesAndEnemiesPlayer,
+    CurrentTurn,
+    BoardState,
+} from '@graphql/AlliesAndEnemies'
 import { GameState, IGameState } from '@graphql/GameState'
 
-import { GameId, GameType } from '@entities/Game'
-import { GamePlayerId, IGamePlayer } from '@entities/GamePlayer'
+import { DescriptiveError, ApiResponse } from '@shared/api'
 
-import { ApiError, ApiResponse } from '@shared/api'
-
-import { BoardState } from './BoardState'
-import { AlliesAndEnemiesPlayer } from '@graphql/AlliesAndEnemies/Player'
-import { Player } from '@graphql/Player'
-import { IPlayer, PlayerId } from '@entities/Player'
+import { BaseAlliesAndEnemiesResolver } from './resolver'
 
 @ObjectType({ implements: [GameState] })
-export class AlliesNEnemiesGameState extends GameState {
+export class AlliesAndEnemiesGameState extends GameState {
     constructor(gamePlayerId: string) {
         super(gamePlayerId, GameType.AlliesNEnemies)
     }
 }
 
-function filterRoleForPlayer(
-    playerRole: PlayerRole,
-    filteredRole: PlayerRole,
-    leaderIsSecret: boolean
-): PlayerRole | null {
-    if (playerRole === PlayerRole.Ally) {
-        return null
-    }
-    if (playerRole === PlayerRole.EnemyLeader && leaderIsSecret) {
-        return null
-    }
-    return filteredRole
-}
-
-@Resolver(() => AlliesNEnemiesGameState)
-export class AlliesNEnemiesGameStateResolver {
+@Service()
+@Resolver(() => AlliesAndEnemiesGameState)
+export class AlliesAndEnemiesGameStateResolver extends BaseAlliesAndEnemiesResolver {
     constructor(
         @Inject('AlliesAndEnemies')
-        private readonly gameStateDao: IAlliesAndEnemiesDao,
-        @Inject('GamePlayers') private readonly gamePlayerDao: IGamePlayerDao,
-        @Inject('Games') private readonly gameDao: IGameDao,
-        @Inject('Players') private readonly playerDao: IPlayerDao
-    ) {}
-
-    private async getGamePlayer(id: GamePlayerId): Promise<IGamePlayer> {
-        const gamePlayer = await this.gamePlayerDao.get({ id })
-        if (!gamePlayer) {
-            throw new ApiError(
-                'Unable to look up player for this game.',
-                'No game and player with this id found.'
-            )
-        }
-        return gamePlayer
+        protected readonly gameStateDao: IAlliesAndEnemiesDao,
+        @Inject('GamePlayers') protected readonly gamePlayerDao: IGamePlayerDao,
+        @Inject('Games') protected readonly gameDao: IGameDao,
+        @Inject('Players') protected readonly playerDao: IPlayerDao
+    ) {
+        super()
     }
-
-    private async getPlayer(id: PlayerId): Promise<IPlayer> {
-        const player = await this.playerDao.get({ id })
-        if (!player) {
-            throw new ApiError(
-                'Unable to look up player for this game.',
-                'No game and player with this id found.'
-            )
-        }
-        return player
-    }
-
-    private async getState(gameId: GameId): Promise<AlliesAndEnemiesState> {
-        const state = await this.gameStateDao.get({ gameId })
-        if (!state) {
-            throw new ApiError(
-                'Unable to look up game state.',
-                'No state data for this game found.'
-            )
-        }
-        return state
-    }
-
-    // @FieldResolver(() => TeamDetails, { nullable: true })
-    // async team(
-    //     @Root() root: IGameState
-    // ): Promise<ApiResponse<TeamDetails | null>> {
-    //     try {
-    //         const gamePlayer = await this.getGamePlayer(root.gamePlayerId)
-    //         const state = await this.getState(gamePlayer.gameId)
-    //         const playerState = find(
-    //             state.players,
-    //             (p) => p.id === gamePlayer.playerId
-    //         )
-    //         if (!playerState) {
-    //             return null
-    //         }
-    //         const teammates =
-    //             playerState.role === PlayerRole.Ally ||
-    //             (playerState.role === PlayerRole.EnemyLeader &&
-    //                 state.leaderIsSecret)
-    //                 ? null
-    //                 : filter(
-    //                       state.players,
-    //                       (p) =>
-    //                           (playerState.role === PlayerRole.Ally
-    //                               ? p.role === PlayerRole.Ally
-    //                               : [
-    //                                     PlayerRole.EnemyLeader,
-    //                                     PlayerRole.Enemy,
-    //                                 ].includes(p.role)) &&
-    //                           p.id !== playerState.id
-    //                   )
-    //         return (
-    //             ({
-    //                 playerRole: playerState.role,
-    //                 teammates,
-    //             } as TeamDetails) || null
-    //         )
-    //     } catch (e) {
-    //         if (e instanceof ApiError) {
-    //             return null
-    //         }
-    //         throw e
-    //     }
-    // }
-
-    // @FieldResolver(() => CurrentTurn, { nullable: true })
-    // async currentTurn(
-    //     @Root() root: IGameState
-    // ): Promise<ApiResponse<CurrentTurn | null>> {
-    //     try {
-    //         const gamePlayer = await this.getGamePlayer(root.gamePlayerId)
-    //         const state = await this.getState(gamePlayer.gameId)
-    //         const currentTurn = last(state.rounds)
-    //         if (!currentTurn) {
-    //             return null
-    //         }
-    //         const currentPlayer = find(
-    //             state.players,
-    //             (p) => p.position === currentTurn?.position
-    //         )
-    //         if (!currentPlayer) {
-    //             return null
-    //         }
-    //         return (
-    //             ({
-    //                 ...currentTurn,
-    //                 playerId: currentPlayer.id,
-    //             } as CurrentTurn) || null
-    //         )
-    //     } catch (e) {
-    //         if (e instanceof ApiError) {
-    //             return null
-    //         }
-    //         throw e
-    //     }
-    // }
 
     @FieldResolver(() => BoardState)
-    async board(@Root() root: IGameState): Promise<ApiResponse<BoardState>> {
+    async board(
+        @Root() { gamePlayerId }: IGameState
+    ): Promise<ApiResponse<BoardState>> {
         try {
-            const gamePlayer = await this.getGamePlayer(root.gamePlayerId)
+            const gamePlayer = await this.getGamePlayer(gamePlayerId)
             const state = await this.getState(gamePlayer.gameId)
             return state.board
         } catch (e) {
-            if (e instanceof ApiError) {
+            if (e instanceof DescriptiveError) {
                 return e
             }
             throw e
@@ -187,18 +69,20 @@ export class AlliesNEnemiesGameStateResolver {
     }
 
     @FieldResolver(() => AlliesAndEnemiesPlayer)
-    async activePlayer(
-        @Root() root: IGameState
+    async viewingPlayer(
+        @Root() { gamePlayerId }: IGameState
     ): Promise<ApiResponse<AlliesAndEnemiesPlayer>> {
         try {
-            const gamePlayer = await this.getGamePlayer(root.gamePlayerId)
-            const state = await this.getState(gamePlayer.gameId)
-            const playerState = state.players.find(
-                (p) => p.id === gamePlayer.playerId
+            const { state, viewingPlayer } = await this.getViewingPlayerState(
+                gamePlayerId
             )
-            return playerState as AlliesAndEnemiesPlayer
+            const playerState = state.viewingPlayer(viewingPlayer)
+            if (!playerState) {
+                return new DescriptiveError('unable to look up player state')
+            }
+            return playerState
         } catch (e) {
-            if (e instanceof ApiError) {
+            if (e instanceof DescriptiveError) {
                 return e
             }
             throw e
@@ -206,27 +90,47 @@ export class AlliesNEnemiesGameStateResolver {
     }
 
     @FieldResolver(() => [AlliesAndEnemiesPlayer])
-    async players(@Root() root: IGameState): Promise<AlliesAndEnemiesPlayer[]> {
+    async players(
+        @Root() { gamePlayerId }: IGameState
+    ): Promise<AlliesAndEnemiesPlayer[]> {
         try {
-            const gamePlayer = await this.getGamePlayer(root.gamePlayerId)
-            const state = await this.getState(gamePlayer.gameId)
-            const playerState = state.players.find(
-                (p) => p.id === gamePlayer.playerId
+            const { state, viewingPlayer } = await this.getViewingPlayerState(
+                gamePlayerId
             )
-            if (!playerState) {
+            if (!viewingPlayer) {
                 return []
             }
-            return state.players.map((p) => {
-                const role = filterRoleForPlayer(
-                    playerState.role,
-                    p.role,
-                    state.leaderIsSecret
-                )
-                return { ...p, role } as AlliesAndEnemiesPlayer
-            })
+            return state.players(viewingPlayer)
         } catch (e) {
-            if (e instanceof ApiError) {
+            if (e instanceof DescriptiveError) {
                 return []
+            }
+            throw e
+        }
+    }
+
+    @FieldResolver(() => CurrentTurn)
+    async currentTurn(
+        @Root() { gamePlayerId }: IGameState
+    ): Promise<ApiResponse<CurrentTurn | null>> {
+        try {
+            const { state, viewingPlayer } = await this.getViewingPlayerState(
+                gamePlayerId
+            )
+            const nominatedPlayer = state
+                .players(viewingPlayer)
+                .find((p) => p.id === state.currentRound.nomination)
+            return {
+                ...state.currentRound,
+                currentPlayer: state.currentPlayer(viewingPlayer),
+                ineligibleNominations: state.ineligibleNominations(
+                    viewingPlayer
+                ),
+                nominatedPlayer,
+            } as CurrentTurn
+        } catch (e) {
+            if (e instanceof DescriptiveError) {
+                return null
             }
             throw e
         }

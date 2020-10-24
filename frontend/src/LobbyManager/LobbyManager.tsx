@@ -26,7 +26,7 @@ const LobbyManager: React.FC<LobbyProps> = ({
             <Box direction="row" justify="between" gap="medium" align="center">
                 <Box direction="row" pad={{ horizontal: 'medium' }}>
                     <Text>
-                        Game Lobby <LobbyCodeText code={game.code} />
+                        Game Lobby <LobbyCodeText gameId={game.id} />
                     </Text>
                 </Box>
                 <Box direction="row">

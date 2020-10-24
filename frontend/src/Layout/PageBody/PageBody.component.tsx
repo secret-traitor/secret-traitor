@@ -8,52 +8,44 @@ import Join from 'Pages/Join'
 import LoadingScreen from 'Components/LoadingScreen'
 import Play from 'Pages/Play'
 import { getJoinUrl } from 'links'
-import { usePlayerCode } from 'types/Player'
+import { usePlayerId } from 'types/Player'
 
 const HomeRouter = () => <Home />
 
 const CreateRouter = () => <Create />
 
 const JoinRouter: React.FC<RouteComponentProps<{
-    playerCode?: string
-    gameCode: string
+    playerId?: string
+    gameId: string
 }>> = (props) => {
-    const playerCodeCookie = usePlayerCode()
-    return props.match?.params?.playerCode ? (
+    const playerIdCookie = usePlayerId()
+    return props.match?.params?.playerId ? (
         <Join
-            gameCode={props.match?.params?.gameCode}
-            playerCode={props.match?.params?.playerCode}
+            gameId={props.match?.params?.gameId}
+            playerId={props.match?.params?.playerId}
         />
     ) : (
         <Redirect
             to={getJoinUrl({
-                gameCode: props.match?.params?.gameCode as string,
-                playerCode: playerCodeCookie,
+                gameId: props.match?.params?.gameId as string,
+                playerId: playerIdCookie,
             })}
         />
     )
 }
 
 const PlayRouter: React.FC<RouteComponentProps<{
-    playerCode: string
-    gameCode: string
+    playerId: string
+    gameId: string
 }>> = (props) => <Play {...props.match?.params} />
 
 const Router = () => (
     <Switch>
         <Route exact path="/" component={HomeRouter} />
         <Route exact path="/create" component={CreateRouter} />
-        <Route exact path="/join/:gameCode" component={JoinRouter} />
-        <Route
-            exact
-            path="/join/:gameCode/:playerCode"
-            component={JoinRouter}
-        />
-        <Route
-            exact
-            path="/play/:gameCode/:playerCode"
-            component={PlayRouter}
-        />
+        <Route exact path="/join/:gameId" component={JoinRouter} />
+        <Route exact path="/join/:gameId/:playerId" component={JoinRouter} />
+        <Route exact path="/play/:gameId/:playerId" component={PlayRouter} />
     </Switch>
 )
 

@@ -13,15 +13,17 @@ import { IGamePlayerDao } from '@daos/GamePlayer'
 import { IGameDao } from '@daos/Game'
 import { IPlayerDao } from '@daos/Player'
 
+import { GameId, IGame } from '@entities/Game'
 import { GamePlayerId } from '@entities/GamePlayer'
-import { PlayerId } from '@entities/Player'
+import { PlayerId, IPlayer } from '@entities/Player'
 
 import { Event } from '@graphql/Event'
+import { Game } from '@graphql/Game'
 import { GameState, IGameState } from '@graphql/GameState'
 import { Player } from '@graphql/Player'
-import GameManager from '@games/GameManager'
+
 import { getTopicName, Topics } from '@shared/topics'
-import { GameId } from '@entities/Game'
+import GameManager from '@games/GameManager'
 
 export type IGameEvent = {
     source: PlayerId
@@ -49,11 +51,53 @@ class GameEventResolver {
         @Inject('Players') private readonly playerDao: IPlayerDao
     ) {}
 
+    @FieldResolver(() => Game, { nullable: true })
+    async game(@Root() event: IGameEvent): Promise<IGame | null> {
+        const gamePlayer = await this.gamePlayerDao.get({
+            id: event.state.gamePlayerId,
+        })
+        if (!gamePlayer) {
+            return null
+        }
+        const game = await this.gameDao.get({ id: gamePlayer.gameId })
+        if (!game) {
+            return null
+        }
+        return game
+    }
+
+    @FieldResolver(() => Player, { nullable: true })
+    async player(@Root() event: IGameEvent): Promise<IPlayer | null> {
+        const gamePlayer = await this.gamePlayerDao.get({
+            id: event.state.gamePlayerId,
+        })
+        if (!gamePlayer) {
+            return null
+        }
+        const player = await this.playerDao.get({ id: gamePlayer.playerId })
+        if (!player) {
+            return null
+        }
+        return player
+    }
+
     @FieldResolver(() => GameState, { nullable: true })
-    state(
+    async state(
         @Arg('playId', () => ID) gamePlayerId: GamePlayerId,
         @Root() event: IGameEvent
-    ): IGameState {
+    ): Promise<IGameState | null> {
+        const gamePlayer = await this.gamePlayerDao.get({ id: gamePlayerId })
+        if (!gamePlayer) {
+            return null
+        }
+        const game = await this.gameDao.get({ id: gamePlayer.gameId })
+        if (!game) {
+            return null
+        }
+        const gm = new GameManager(game.id, game.type)
+        if (!(await gm.exists())) {
+            return null
+        }
         return {
             gamePlayerId,
             gameType: event.state.gameType,

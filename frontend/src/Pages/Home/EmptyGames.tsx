@@ -1,8 +1,9 @@
 import React from 'react'
 import { Box, Text } from 'grommet'
-import { RouterButton } from '../../Components/RouterButton'
-import { getCreateUrl } from '../../links'
 import { AddCircle } from 'grommet-icons'
+
+import { RouterButton } from 'Components/RouterButton'
+import { getCreateUrl } from 'links'
 
 export const EmptyGames: React.FC = () => (
     <Box fill justify="center" align="center">

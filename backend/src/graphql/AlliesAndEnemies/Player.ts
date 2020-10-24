@@ -1,4 +1,4 @@
-import { Field, ID, ObjectType } from 'type-graphql'
+import { Field, ObjectType } from 'type-graphql'
 
 import { Player } from '@graphql/Player'
 import { PlayerRole, PlayerState } from '@games/AlliesAndEnemies'

@@ -25,11 +25,11 @@ export const CreateRouterButton: React.FC<ButtonProps> = ({
 )
 
 export type PlayProps = {
-    gameCode: string
-    playerCode: string
+    gameId: string
+    playerId: string
 }
 export const getPlayUrl = (args: PlayProps): string =>
-    `/play/${args.gameCode}/${args.playerCode}`
+    `/play/${args.gameId}/${args.playerId}`
 export const PlayRouterButton: React.FC<ButtonProps & PlayProps> = ({
     children,
     ...props
@@ -43,13 +43,13 @@ export const PlayRouterButton: React.FC<ButtonProps & PlayProps> = ({
 )
 
 export type JoinProps = {
-    playerCode?: string
-    gameCode: string
+    playerId?: string
+    gameId: string
 }
 export const getJoinUrl = (args: JoinProps): string =>
-    args.playerCode
-        ? `/join/${args.gameCode}/${args.playerCode}`
-        : `/join/${args.gameCode}`
+    args.playerId
+        ? `/join/${args.gameId}/${args.playerId}`
+        : `/join/${args.gameId}`
 export const JoinRouterButton: React.FC<ButtonProps & JoinProps> = ({
     children,
     ...props

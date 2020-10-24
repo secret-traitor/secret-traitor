@@ -1,9 +1,10 @@
 import React, { ReactElement } from 'react'
 import { Box } from 'grommet'
-import { CardSuit } from './types'
 
-export const PolicyCard: React.FC<{ suit: CardSuit; active: boolean }> = ({
-    active,
+import { CardSuit } from 'Games/AlliesAndEnemies/types'
+
+export const PolicyCard: React.FC<{ suit: CardSuit; active?: boolean }> = ({
+    active = false,
     children,
     suit,
 }) => (
@@ -17,6 +18,10 @@ export const PolicyCard: React.FC<{ suit: CardSuit; active: boolean }> = ({
         border={{ color: 'grey', style: 'dotted', size: 'medium' }}
         align="center"
         justify="center"
+        round="small"
+        style={{
+            userSelect: 'none',
+        }}
     >
         {children}
     </Box>

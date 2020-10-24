@@ -15,7 +15,12 @@ const HomeContainer: React.FC = () => {
         onSuccess: () => setShowCopySuccess(true),
         copiedTimeout: 25000,
     })
-    const [games, loadingGames, gamesError, refetchGames] = usePollGames()
+    const {
+        games,
+        loading: loadingGames,
+        error: gamesError,
+        refetch: refetchGames,
+    } = usePollGames()
     if (gamesError || (!loadingGames && !games)) {
         return <>Uh oh</>
     }

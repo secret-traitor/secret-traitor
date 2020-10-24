@@ -1,6 +1,7 @@
 import { ThemeType } from 'grommet/themes'
 
 // https://coolors.co/d8dbe2-a9bcd0-228be6-373f51-1b1b1e
+// https://paletton.com/#uid=31U110kllllaFw0g0qFqFg0w0aF
 
 const theme: ThemeType = {
     global: {
@@ -15,10 +16,9 @@ const theme: ThemeType = {
             'enemy-1': '#D4796A',
             'enemy-2': '#802415',
         },
+
         font: {
             family: 'Roboto',
-            size: '16px',
-            height: '20px',
         },
         focus: {
             border: {

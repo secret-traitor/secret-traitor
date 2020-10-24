@@ -1,97 +1,49 @@
-import get from 'lodash/get'
 import React from 'react'
-import { gql } from 'apollo-boost'
 import { Redirect } from 'react-router-dom'
-import { useMutation, useQuery } from '@apollo/react-hooks'
 
 import LoadingScreen from 'Components/LoadingScreen'
-import { GameDescription } from 'types/GameDescription'
-import { GameType } from 'types/Game'
 import { getJoinUrl } from 'links'
 import { usePageTitle } from 'hooks'
-import { usePlayerCode } from 'types/Player'
+import { usePlayerId } from 'types/Player'
 
 import Create from './Create.component'
-
-const GAME_TYPES_QUERY = gql`
-    query gameTypes {
-        gameTypes {
-            type
-            displayName
-            description
-        }
-    }
-`
-
-const useGameTypes = (): [GameDescription[], boolean, any] => {
-    const results = useQuery(GAME_TYPES_QUERY)
-    const { data, loading, error } = results
-    const gameTypes = data?.gameTypes as GameDescription[]
-    return [gameTypes, loading, error]
-}
-
-const CREATE_MUTATION = gql`
-    mutation createGame($playerCode: String!, $gameType: GameType!) {
-        game: createGame(playerCode: $playerCode, gameType: $gameType) {
-            code
-        }
-    }
-`
-
-const useCreateGame = (playerCode: string) => {
-    const [createMutation, { called, loading, error, data }] = useMutation(
-        CREATE_MUTATION
-    )
-    const create = (type: GameType) =>
-        createMutation({
-            variables: { playerCode, gameType: type },
-        })
-    return { create, called, data, error, loading }
-}
+import { useCreateGame, useGameTypes } from './hooks'
 
 const CreateContainer = () => {
     usePageTitle('Create | Secret Traitor')
-    const [gameDescriptions, loadingGameTypes, errorGameTypes] = useGameTypes()
-    const playerCode = usePlayerCode()
     const {
+        gameTypes,
+        loading: loadingGameTypes,
+        error: errorGameTypes,
+    } = useGameTypes()
+    const playerId = usePlayerId()
+    const [
         create,
-        called: calledCreate,
-        data: dataCreate,
-        error: errorCreate,
-        loading: loadingCreate,
-    } = useCreateGame(playerCode)
-    if (
-        (loadingCreate || loadingGameTypes) &&
-        !(errorCreate || errorGameTypes)
-    ) {
-        return <LoadingScreen />
-    }
+        {
+            called: calledCreate,
+            data: dataCreate,
+            error: errorCreate,
+            loading: loadingCreate,
+            game,
+        },
+    ] = useCreateGame(playerId)
+    const loading =
+        (loadingCreate || loadingGameTypes) && !(errorCreate || errorGameTypes)
+
     if (calledCreate && dataCreate) {
-        const gameCode = get(dataCreate, 'game.code')
-        if (gameCode) {
-            return <Redirect to={getJoinUrl({ gameCode })} />
+        if (game?.id) {
+            return <Redirect to={getJoinUrl({ gameId: game.id })} />
         }
     }
     if (errorCreate) {
         return <>Uh oh!</>
     }
-    return <Create create={create} descriptions={gameDescriptions} />
+    return (
+        <>
+            {loading && <LoadingScreen />}
+            <Create create={create} descriptions={gameTypes} />
+        </>
+    )
 }
-
-/*
-[
-                ...descriptions,
-                {
-                    displayName: 'Game Title',
-                    gameClass: GameType.DemoType,
-                    description: 'Description of game.',
-                },
-                {
-                    displayName: 'Another Game Title',
-                    gameClass: GameType.AnotherDemoType,
-                    description: 'Description of another game.',
-                },
-            ]
- */
 
 export default CreateContainer

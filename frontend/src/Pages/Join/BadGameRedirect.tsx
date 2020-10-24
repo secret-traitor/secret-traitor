@@ -5,9 +5,7 @@ import { getHomeUrl } from 'links'
 import { LobbyCodeText } from 'Components/GameText'
 import ConfirmRedirect from 'Components/ConfirmRedirect'
 
-export const BadGameCodeRedirect: React.FC<{ gameCode: string }> = ({
-    gameCode,
-}) => (
+export const BadGameRedirect: React.FC<{ gameId: string }> = ({ gameId }) => (
     <ConfirmRedirect to={getHomeUrl()} delay={30000}>
         <Box align="center" gap="medium">
             <Text size="large" weight="bold" textAlign="center">
@@ -15,7 +13,7 @@ export const BadGameCodeRedirect: React.FC<{ gameCode: string }> = ({
             </Text>
             <Text textAlign="center">
                 We can not find a game with lobby code "
-                <LobbyCodeText code={gameCode} />
+                <LobbyCodeText gameId={gameId} />
                 "!
             </Text>
         </Box>

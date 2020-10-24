@@ -6,7 +6,7 @@ export type DeletePlayer = GetPlayer
 export type FindPlayer = Partial<IPlayer>
 export type GetPlayer = { id: string }
 export type ListPlayers = { ids: string[] }
-export type NewPlayer = { code: string; nickname?: string }
+export type NewPlayer = { id: string; nickname?: string }
 export type PutPlayer = IPlayer
 
 export interface IPlayerDao {

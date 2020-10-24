@@ -1,18 +1,19 @@
 import { BoardActionType } from './AlliesAndEnemies.types'
 
 export type ConfigurationOptions = {
-    leaderIsSecret: boolean
     actions: BoardActionType[]
     deck: {
         totalCards: number
         allyCards: number
     }
+    enableVeto: number
+    enemies: number
+    leaderIsSecret: boolean
     victory: {
         allyCards: number
         election: number
         enemyCards: number
     }
-    enemies: number
 }
 
 export type Configuration = {
@@ -20,7 +21,6 @@ export type Configuration = {
 }
 
 const DefaultConfiguration = {
-    enemyCards: 7,
     deck: {
         totalCards: 17,
         allyCards: 6,
@@ -30,6 +30,7 @@ const DefaultConfiguration = {
         election: 3,
         enemyCards: 6,
     },
+    enableVeto: 5,
 }
 
 export const StandardConfiguration: Configuration = {}

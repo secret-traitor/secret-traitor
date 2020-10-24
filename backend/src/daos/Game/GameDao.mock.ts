@@ -75,8 +75,7 @@ class GameDaoMock extends MockDaoMock implements IGameDao {
     public async new(args: NewGame): Promise<IGame> {
         const game: IGame = {
             ...args,
-            code: makeCode(6),
-            id: UUID(),
+            id: makeCode(6),
             status: GameStatus.InLobby,
         }
         return this.add(game)

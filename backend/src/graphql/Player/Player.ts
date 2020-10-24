@@ -7,9 +7,6 @@ export class Player implements IPlayer {
     @Field(() => ID)
     public readonly id: PlayerId
 
-    @Field(() => String)
-    public readonly code: string
-
     @Field(() => String, { nullable: true })
-    public readonly nickname: string
+    public readonly nickname?: string
 }

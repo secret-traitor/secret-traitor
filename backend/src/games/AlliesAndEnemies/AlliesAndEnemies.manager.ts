@@ -13,7 +13,7 @@ import { IPlayer } from '@entities/Player'
 
 import { IGameManager, Start } from '@games/GameManager'
 
-import { ApiError } from '@shared/api'
+import { DescriptiveError } from '@shared/api'
 
 import { StandardConfiguration } from './AlliesAndEnemies.config'
 import {
@@ -51,16 +51,16 @@ export class AlliesAndEnemiesGameManager implements IGameManager {
             gameId: this.gameId,
         })
         if (!gamePlayers) {
-            throw new ApiError('no players for game')
+            throw new DescriptiveError('no players for game')
         }
         const playerIds = gamePlayers.map(({ playerId }) => playerId)
         const players = await this.playerDao.list({ ids: playerIds })
         if (!players) {
-            throw new ApiError('no players')
+            throw new DescriptiveError('no players')
         }
         const configuration = StandardConfiguration[gamePlayers.length] || null
         if (!configuration) {
-            throw new ApiError('no configuration')
+            throw new DescriptiveError('no configuration')
         }
         try {
             const state = await this.alliesAndEnemiesDao.new({
@@ -76,6 +76,7 @@ export class AlliesAndEnemiesGameManager implements IGameManager {
                     configuration.victory.enemyCards
                 ),
                 players: buildPlayers(players, configuration.enemies),
+                config: configuration,
             })
             return !!state
         } catch (Error) {
@@ -115,7 +116,7 @@ function buildBoard(
 
 function buildPlayers(players: IPlayer[], enemies: number): PlayerState[] {
     if (players.length / 2 < enemies + 1) {
-        throw new ApiError(
+        throw new DescriptiveError(
             'Invalid game configuration.',
             `You can not have ${enemies} enemies for ${players.length} players.`
         )

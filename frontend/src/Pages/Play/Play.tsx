@@ -5,51 +5,39 @@ import ConfirmRedirect from 'Components/ConfirmRedirect'
 import GameManager from 'GameManager'
 import LoadingScreen from 'Components/LoadingScreen'
 import LobbyManager from 'LobbyManager'
-import { GameStatus } from 'types/Game'
+import { GameState, GameStatus } from 'types/Game'
 import { getHomeUrl, getJoinUrl } from 'links'
 import { usePageTitle } from 'hooks'
 
-import { useGameDetails, usePlayGame, useStartGame } from './hooks'
+import { usePlayGame, usePlayId, useStartGame } from './hooks'
 
-function useComponentState(gameCode: string, playerCode: string) {
-    const details = useGameDetails(gameCode, playerCode)
-    const { gameId, playId, loading: loadingDetails } = details
-    const play = usePlayGame(gameId, playId)
-    const { game, players, state, player, loading: loadingPlay } = play
+const Play: React.FC<{
+    playerId: string
+    gameId: string
+}> = (props) => {
+    usePageTitle('Play | Secret Traitor')
+    const { gameId, playerId } = props
+    const details = usePlayId(gameId, playerId)
+    const { playId, loading: loadingDetails } = details
+    const play = usePlayGame(gameId, playerId, playId)
+    const { game, players, player, loading: loadingPlay, state } = play
     const { startGame: startGameMutation } = useStartGame(playId)
     const startGame = async () => {
         if (playId) await startGameMutation()
     }
     const loading = loadingDetails || loadingPlay
-    return { game, loading, player, players, startGame, state, playId }
-}
 
-const Play: React.FC<{
-    playerCode: string
-    gameCode: string
-}> = (props) => {
-    usePageTitle('Play | Secret Traitor')
-    const { gameCode, playerCode } = props
-    const {
-        game,
-        loading,
-        player,
-        players,
-        startGame,
-        state,
-        playId,
-    } = useComponentState(gameCode, playerCode)
-
-    // if (!loading && !player?.nickname) {
-    //     //<Redirect push to={getJoinUrl({ gameCode, playerCode })} />
-    //     return <>{player?.nickname}</>
-    // }
-    if (!loading && !(player || game || state)) {
-        return <>Uh Oh!</>
+    if (!loading && !player?.nickname) {
+        const redirect = <Redirect push to={getJoinUrl({ gameId, playerId })} />
+        if (false)
+            return <Redirect push to={getJoinUrl({ gameId, playerId })} />
+        console.log(play)
+        return <>Uh Oh! I dont have a name for this player</>
     }
-
-    console.log(state)
-
+    if (!loading && !(player || game)) {
+        return <>Uh Oh! I couldn't look up this game</>
+    }
+    console.log('playId:', playId)
     return (
         <>
             {loading && <LoadingScreen />}
@@ -65,16 +53,12 @@ const Play: React.FC<{
                     />
                 )}
             {game?.status === GameStatus.InProgress && playId && (
-                <GameManager {...state} playId={playId} />
+                <GameManager {...(state as GameState)} />
             )}
-            {game?.status === GameStatus.Closed && (
+            {(game?.status === GameStatus.Closed ||
+                game?.status === GameStatus.Archived) && (
                 <ConfirmRedirect push to={getHomeUrl()}>
-                    This game has been closed.
-                </ConfirmRedirect>
-            )}
-            {game?.status === GameStatus.Archived && (
-                <ConfirmRedirect push to={getHomeUrl()}>
-                    It is not possible to join an archived game.
+                    This game has been closed or archived.
                 </ConfirmRedirect>
             )}
         </>

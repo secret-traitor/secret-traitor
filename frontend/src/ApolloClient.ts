@@ -23,17 +23,8 @@ const getLink = () =>
         new HttpLink({ uri: HTTP_URL })
     )
 
-const getCache = async () =>
-    new InMemoryCache({
-        possibleTypes: {
-            GameEvent: ['JoinGameEvent', 'GameStatusEvent'],
-            Event: ['JoinGameEvent', 'GameStatusEvent'],
-        },
-        typePolicies: {},
-    })
-
 export const bootstrapClient = async () =>
     new ApolloClient({
         link: getLink(),
-        cache: await getCache(),
+        cache: new InMemoryCache(),
     })

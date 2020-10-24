@@ -1,5 +1,5 @@
 import React from 'react'
-import { Box, Text } from 'grommet'
+import { Box } from 'grommet'
 
 import { HostPlayer } from 'types/Player'
 
@@ -17,7 +17,6 @@ type PlayersProps = {
 
 const Players: React.FC<PlayersProps> = ({ players }) => (
     <>
-        {/*{console.log(players)}*/}
         {players.map((player) => (
             <PlayerCard key={player.id} player={player} />
         ))}

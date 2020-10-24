@@ -4,13 +4,14 @@ import { Refresh, Add } from 'grommet-icons'
 
 import { CreateRouterButton } from 'links'
 
-import Games from './Games'
-import { GameResult } from './types'
+import { Game } from 'types/Game'
+
+import { Games } from './Games'
 import { EmptyGames } from './EmptyGames'
 
 type HomeProps = {
     copy: (text: string) => void
-    games: GameResult[]
+    games: Game[]
     refresh: () => void
     showGameDetails: (gameId: string) => void
 }

@@ -7,29 +7,57 @@ schema {
 }
 
 interface Event {
-    source: String!
+    timestamp: DateTime!
+    type: String!
+}
+
+interface GameEvent {
+    game: Game
+    player: Player
+    source: Player!
+    state(playId: ID!): GameState
     timestamp: DateTime!
     type: String!
 }
 
 interface GameState {
     game: Game!
-    player: Player!
+    playId: ID!
 }
 
-interface GameStateEvent {
-    gameState: GameState!
-    source: String!
+type AlliesAndEnemiesGameState implements GameState {
+    board: BoardState!
+    currentTurn: CurrentTurn!
+    game: Game!
+    playId: ID!
+    players: [AlliesAndEnemiesPlayer!]!
+    viewingPlayer: AlliesAndEnemiesPlayer!
+}
+
+type AlliesAndEnemiesNominationEvent implements Event & GameEvent {
+    game: Game
+    player: Player
+    source: Player!
+    state(playId: ID!): GameState
     timestamp: DateTime!
     type: String!
 }
 
-type AlliesNEnemiesGameState implements GameState {
-    board: BoardState!
-    currentTurn: CurrentTurn
-    game: Game!
-    player: Player!
-    team: TeamDetails!
+type AlliesAndEnemiesPlayer {
+    id: ID!
+    nickname: String
+    position: Float!
+    role: PlayerRole
+}
+
+type AlliesAndEnemiesVoteEvent implements Event & GameEvent {
+    game: Game
+    player: Player
+    source: Player!
+    state(playId: ID!): GameState
+    timestamp: DateTime!
+    type: String!
+    vote: VoteValue!
 }
 
 type BoardRow {
@@ -48,17 +76,20 @@ type Card {
 }
 
 type CurrentTurn {
+    currentPlayer: AlliesAndEnemiesPlayer!
+    disabledNominations: [AlliesAndEnemiesPlayer!]!
+    nominatedPlayer: AlliesAndEnemiesPlayer
     number: Float!
+    position: Float!
     status: TurnStatus!
-    waitingOn: Player!
 }
 
 "Provides high level details about a game."
 type Game {
-    code: String!
     hosts: [Player!]!
     id: ID!
     players: [Player!]!
+    state(playId: ID!): GameState
     status: GameStatus!
     type: GameType!
 }
@@ -78,66 +109,53 @@ type GamePlayer {
     player: Player!
 }
 
-type GameStatusEvent implements Event & GameStateEvent {
-    gameState: GameState!
-    new: GameStatus!
-    old: GameStatus!
-    source: String!
+type GameStatusEvent implements Event & GameEvent {
+    changedFrom: GameStatus!
+    changedTo: GameStatus!
+    game: Game
+    player: Player
+    source: Player!
+    state(playId: ID!): GameState
     timestamp: DateTime!
     type: String!
 }
 
-type JoinGameEvent implements Event & GameStateEvent {
-    gameState: GameState!
-    source: String!
+type JoinGameEvent implements Event & GameEvent {
+    game: Game
+    joined: Player!
+    player: Player
+    source: Player!
+    state(playId: ID!): GameState
     timestamp: DateTime!
     type: String!
 }
 
 type Mutation {
-    createGame(gameType: GameType!, playerCode: String!): Game
-    deleteGame(id: Boolean!): Boolean!
-    joinGame(gameCode: String!, playerCode: String!, playerNickname: String!): JoinGameEvent
+    alliesAndEnemiesNominate(nominatedPlayerId: ID!, playId: ID!): AlliesAndEnemiesNominationEvent!
+    alliesAndEnemiesVote(playId: ID!, vote: VoteValue!): AlliesAndEnemiesVoteEvent!
+    createGame(gameType: GameType!, playerId: ID!): Game
+    deleteGame(id: ID!): Boolean!
+    joinGame(gameId: String!, playerId: String!, playerNickname: String!): JoinGameEvent!
     setGameStatus(playId: ID!, status: GameStatus!): GameStatusEvent
-}
-
-type Notification {
-    date: DateTime!
-    id: ID!
-    message: String
 }
 
 "Player details"
 type Player {
-    code: String!
     id: ID!
     nickname: String
 }
 
 type Query {
     allGames: [Game!]!
-    currentDate: DateTime!
-    game(code: String!): Game
-    gamePlayer(gameCode: String!, playerCode: String!): GamePlayer
+    game(id: ID!): Game
+    gamePlayer(gameId: String!, playerId: String!): GamePlayer
     gameTypes: [GameDescription!]!
     joinableGames: [Game!]!
-    play(playId: ID!): GameState
+    state(playId: ID!): GameState
 }
 
 type Subscription {
-    play(gameId: ID!, playId: ID!): GameStateEvent
-}
-
-type TeamDetails {
-    playerRole: PlayerRole!
-    teammates: [TeamPlayer!]
-}
-
-type TeamPlayer {
-    code: String!
-    id: ID!
-    nickname: String
-    role: PlayerRole!
+    play(gameId: ID!): GameEvent!
 }
 
 enum BoardActionType {
@@ -177,6 +195,12 @@ enum TurnStatus {
     FirstHand
     Nomination
     SecondHand
+    TakeAction
+}
+
+enum VoteValue {
+    No
+    Yes
 }
 
 

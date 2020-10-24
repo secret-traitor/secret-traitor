@@ -1,4 +1,4 @@
-import { AlliesAndEnemiesState } from 'Games/AlliesNEnemies/types'
+import { AlliesAndEnemiesState } from 'Games/AlliesAndEnemies/types'
 
 export enum GameType {
     AllisNEnemies,
@@ -13,7 +13,6 @@ export enum GameStatus {
 
 export type Game = {
     id: string
-    code: string
     status: GameStatus
     type: GameType
 }

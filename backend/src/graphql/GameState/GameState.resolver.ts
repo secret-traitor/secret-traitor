@@ -4,12 +4,12 @@ import { Arg, FieldResolver, ID, Query, Resolver, Root } from 'type-graphql'
 import { IGameDao } from '@daos/Game'
 import { IGamePlayerDao } from '@daos/GamePlayer'
 import { IPlayerDao } from '@daos/Player'
-import { GameId, IGame } from '@entities/Game'
-import { GamePlayerId, IGamePlayer } from '@entities/GamePlayer'
-import { IPlayer, PlayerId } from '@entities/Player'
+
+import { IGame } from '@entities/Game'
+import { GamePlayerId } from '@entities/GamePlayer'
+
 import { Game } from '@graphql/Game'
-import { Player } from '@graphql/Player'
-import { ApiError, ApiResponse } from '@shared/api'
+import { DescriptiveError, ApiResponse } from '@shared/api'
 
 import { GameState, IGameState } from './GameState.types'
 import GameManager from '@games/GameManager'
@@ -23,32 +23,25 @@ export class GameStateResolver {
         @Inject('Players') private readonly playerDao: IPlayerDao
     ) {}
 
-    private async getGamePlayer(id: GamePlayerId): Promise<IGamePlayer> {
-        const gamePlayer = await this.gamePlayerDao.get({ id })
+    @FieldResolver(() => ID)
+    playId(@Root() state: IGameState): string {
+        return state.gamePlayerId
+    }
+
+    @FieldResolver(() => Game)
+    async game(@Root() state: IGameState): Promise<ApiResponse<IGame>> {
+        const gamePlayer = await this.gamePlayerDao.get({
+            id: state.gamePlayerId,
+        })
         if (!gamePlayer) {
-            throw new ApiError(
+            throw new DescriptiveError(
                 'Unable to look up player for this game.',
                 'No game and player with this id found.'
             )
         }
-        return gamePlayer
-    }
-
-    private async getPlayer(id: PlayerId): Promise<IPlayer> {
-        const player = await this.playerDao.get({ id })
-        if (!player) {
-            throw new ApiError(
-                'Unable to look up player.',
-                'No game with this player found.'
-            )
-        }
-        return player
-    }
-
-    private async getGame(id: GameId): Promise<IGame> {
-        const game = await this.gameDao.get({ id })
+        const game = await this.gameDao.get({ id: gamePlayer.gameId })
         if (!game) {
-            throw new ApiError(
+            throw new DescriptiveError(
                 'Unable to look up game.',
                 'No game with this code found.'
             )
@@ -56,26 +49,24 @@ export class GameStateResolver {
         return game
     }
 
-    @FieldResolver(() => Game)
-    async game(@Root() state: IGameState): Promise<ApiResponse<IGame>> {
-        try {
-            const gamePlayer = await this.getGamePlayer(state.gamePlayerId)
-            return await this.getGame(gamePlayer.gameId)
-        } catch (e) {
-            if (e instanceof ApiError) {
-                return e
-            }
-            throw e
-        }
-    }
-
     @Query(() => GameState, { nullable: true })
-    state(
-        @Arg('playId', () => ID) gamePlayerId: GamePlayerId,
-        @Root() state: IGameState
-    ): IGameState {
+    async state(
+        @Arg('playId', () => ID) gamePlayerId: GamePlayerId
+    ): Promise<IGameState | null> {
+        const gamePlayer = await this.gamePlayerDao.get({ id: gamePlayerId })
+        if (!gamePlayer) {
+            return null
+        }
+        const game = await this.gameDao.get({ id: gamePlayer.gameId })
+        if (!game) {
+            return null
+        }
+        const gm = new GameManager(game.id, game.type)
+        if (!(await gm.exists())) {
+            return null
+        }
         return {
-            gameType: state.gameType,
+            gameType: game.type,
             gamePlayerId,
         } as IGameState
     }

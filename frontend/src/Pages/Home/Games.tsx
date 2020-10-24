@@ -1,16 +1,17 @@
 import React from 'react'
 import { createAbsolutePath, getJoinUrl } from 'links'
 
-import { GameResult } from './types'
+import { Game } from 'types/Game'
+
 import { GameCard } from './GameCard'
 
 export type GamesProps = {
-    games: GameResult[]
+    games: Game[]
     copy: (value: string) => void
     more: (id: string) => void
 }
 
-const Games: React.FC<GamesProps> = ({ games, copy, more }) => (
+export const Games: React.FC<GamesProps> = ({ games, copy, more }) => (
     <>
         {games.map((game) => (
             <GameCard
@@ -18,7 +19,7 @@ const Games: React.FC<GamesProps> = ({ games, copy, more }) => (
                 game={game}
                 copy={() => {
                     const path = createAbsolutePath(
-                        getJoinUrl({ gameCode: game.code })
+                        getJoinUrl({ gameId: game.id })
                     )
                     copy(path)
                 }}
@@ -27,5 +28,3 @@ const Games: React.FC<GamesProps> = ({ games, copy, more }) => (
         ))}
     </>
 )
-
-export default Games

@@ -1,10 +1,10 @@
 import React from 'react'
 
-import AlliesNEnemies from 'Games/AlliesNEnemies'
+import AlliesAndEnemies from 'Games/AlliesAndEnemies'
 import { GameState } from 'types/Game'
 
 const GameManagerContainer: React.FC<GameState> = (props) => {
-    return <AlliesNEnemies {...props} />
+    return <AlliesAndEnemies {...props} />
 }
 
 export default GameManagerContainer
