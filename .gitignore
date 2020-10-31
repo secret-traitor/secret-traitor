@@ -17,10 +17,9 @@ template-*.yml
 # Using context like process.env.CDK_DEFAULT_ACCOUNT seems to generate this
 cdk.context.json
 
-<<<<<<< HEAD
 # Visual Studio Code
 .vscode/
-=======
+
 # nyc test coverage
 .nyc_output
 
@@ -102,5 +101,5 @@ dist
 # TernJS port file
 .tern-port
 
+# Jetbrains
 .idea
->>>>>>> frontend-merge
