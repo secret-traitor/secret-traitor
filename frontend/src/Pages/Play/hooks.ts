@@ -1,12 +1,7 @@
 import { gql } from 'apollo-boost'
 import { useEffect } from 'react'
-import { FetchResult } from '@apollo/client/link/core'
-import {
-    useQuery,
-    QueryResult,
-    useMutation,
-    MutationResult,
-} from '@apollo/react-hooks'
+import { ExecutionResult, MutationResult, QueryResult } from '@apollo/react-common'
+import { useQuery, useMutation } from '@apollo/react-hooks'
 import find from 'lodash/find'
 
 import { Game, GameState } from 'types/Game'
@@ -165,7 +160,7 @@ const StartGameMutation = gql`
 
 export const useStartGame = (
     playId?: string
-): [() => Promise<FetchResult>, MutationResult] => {
+): [() => Promise<ExecutionResult>, MutationResult] => {
     const [startMutation, results] = useMutation(StartGameMutation)
     return [() => startMutation({ variables: { playId } }), results]
 }

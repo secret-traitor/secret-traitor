@@ -1,6 +1,6 @@
-import { FetchResult } from '@apollo/client/link/core'
+import { ExecutionResult } from '@apollo/react-common'
 import { gql } from 'apollo-boost'
-import { MutationResult, QueryResult } from '@apollo/client/react/types/types'
+import { MutationResult, QueryResult } from '@apollo/react-common'
 import { useMutation, useQuery } from '@apollo/react-hooks'
 
 import { Game, GameType } from 'types/Game'
@@ -36,7 +36,7 @@ const CreateMutation = gql`
 export const useCreateGame = (
     playerId: string
 ): [
-    (type: GameType) => Promise<FetchResult>,
+    (type: GameType) => Promise<ExecutionResult>,
     MutationResult & { game?: Game }
 ] => {
     const [createMutation, result] = useMutation(CreateMutation)

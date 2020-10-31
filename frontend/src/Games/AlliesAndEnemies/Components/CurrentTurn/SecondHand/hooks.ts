@@ -1,7 +1,7 @@
 import { gql } from 'apollo-boost'
 import { useMutation } from '@apollo/react-hooks'
-import { MutationResult } from '@apollo/client/react/types/types'
-import { FetchResult } from '@apollo/client/link/core'
+import { MutationResult } from '@apollo/react-common'
+import { ExecutionResult } from '@apollo/react-common'
 
 const SecondHandDiscardMutation = gql`
     mutation secondHand($playId: ID!, $index: Float!) {
@@ -15,7 +15,7 @@ export type DiscardIndex = 0 | 1
 
 export const useSecondHandDiscard = (
     playId: string
-): [(index: DiscardIndex) => Promise<FetchResult>, MutationResult] => {
+): [(index: DiscardIndex) => Promise<ExecutionResult>, MutationResult] => {
     const [discardFn, results] = useMutation(SecondHandDiscardMutation)
     const discard = async (index: DiscardIndex) => {
         return await discardFn({ variables: { index, playId } })
@@ -33,7 +33,7 @@ const CallVetoMutation = gql`
 
 export const useCallVeto = (
     playId: string
-): [() => Promise<FetchResult>, MutationResult] => {
+): [() => Promise<ExecutionResult>, MutationResult] => {
     const [callVetoFn, results] = useMutation(CallVetoMutation, {
         variables: { playId },
     })

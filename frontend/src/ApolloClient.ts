@@ -1,18 +1,16 @@
 import { getMainDefinition } from 'apollo-utilities'
-import {
-    ApolloClient,
-    HttpLink,
-    InMemoryCache,
-    split,
-} from '@apollo/react-hooks'
 import { WebSocketLink } from 'apollo-link-ws'
+
+import {ApolloClient} from "apollo-client";
+import {split, HttpLink, InMemoryCache} from "apollo-boost"
+import { Operation } from 'apollo-link/lib/types'
 
 const WS_URL = 'ws://localhost:4000/graphql'
 const HTTP_URL = 'http://localhost:4000/graphql'
 
 const getLink = () =>
     split(
-        ({ query }) => {
+        ({ query }: Operation) => {
             const def = getMainDefinition(query)
             return (
                 def.kind === 'OperationDefinition' &&
