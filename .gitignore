@@ -16,3 +16,6 @@ template-*.yml
 
 # Using context like process.env.CDK_DEFAULT_ACCOUNT seems to generate this
 cdk.context.json
+
+# Visual Studio Code
+.vscode/
