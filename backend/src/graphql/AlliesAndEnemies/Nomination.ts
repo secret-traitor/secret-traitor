@@ -42,6 +42,7 @@ export class AlliesAndEnemiesNominationEvent extends GameEvent {
     ) {
         const state = { gamePlayerId, gameType: GameType.AlliesNEnemies }
         super(state, activePlayerId, AlliesAndEnemiesNominationEvent.name)
+        this.nomination = nominatedPlayer
     }
 }
 

@@ -19,11 +19,7 @@ export const PlayerBoard: React.FC<AlliesAndEnemiesState> = ({
             margin="small"
             width="xlarge"
         >
-            <PlayerCards
-                viewingPlayer={viewingPlayer}
-                currentPosition={currentTurn?.position}
-                players={players}
-            />
+            <PlayerCards viewingPlayer={viewingPlayer} players={players} />
         </Section>
     )
 }

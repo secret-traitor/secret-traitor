@@ -1,1 +1,1 @@
-export { default as Election } from './Election.container'
+export { default } from './Election.container'

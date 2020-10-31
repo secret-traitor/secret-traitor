@@ -1,17 +1,17 @@
 import React, { useState } from 'react'
 import { Box, Button } from 'grommet'
 
-import { PlayerState } from 'Games/AlliesAndEnemies/types'
+import { PlayerState, TurnState } from 'Games/AlliesAndEnemies/types'
 
 import { CardWrapper } from './CardWrapper'
 import { OrderedPlayerCard } from './OrderedPlayerCard'
 import { Selectable } from './CardSelector'
 
 export type PlayersProps = {
+    currentRound?: TurnState
     players: PlayerState[]
-    viewingPlayer: PlayerState
-    currentPosition?: number
     selectable?: Selectable
+    viewingPlayer: PlayerState
 }
 
 export const PlayerCards: React.FC<PlayersProps> = (props) => {

@@ -1,13 +1,11 @@
 import React from 'react'
 import map from 'lodash/map'
 
-import {
-    AlliesAndEnemiesState,
-    PlayerState,
-} from 'Games/AlliesAndEnemies/types'
+import { AlliesAndEnemiesState } from 'Games/AlliesAndEnemies/types'
+import LoadingScreen from 'Components/LoadingScreen'
+
 import NominationComponent from './Nomination.component'
 import { useNominate } from './hooks'
-import LoadingScreen from '../../../../../Components/LoadingScreen'
 
 const Nomination: React.FC<AlliesAndEnemiesState> = ({
     currentTurn,
@@ -17,7 +15,7 @@ const Nomination: React.FC<AlliesAndEnemiesState> = ({
 }) => {
     const [nominate, result] = useNominate(playId)
     const disabledForPositions = map(
-        currentTurn.disabledNominations,
+        currentTurn.ineligibleNominations,
         'position'
     )
     return (
@@ -25,7 +23,6 @@ const Nomination: React.FC<AlliesAndEnemiesState> = ({
             {result.loading && <LoadingScreen />}
             <NominationComponent
                 viewingPlayer={viewingPlayer}
-                currentPosition={currentTurn.position}
                 players={players}
                 nominate={nominate}
                 disabledForPositions={disabledForPositions}

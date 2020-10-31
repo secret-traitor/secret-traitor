@@ -36,7 +36,11 @@ export class DeleteGameResolver {
     }
 
     private async seedPlayers(gameId: GameId) {
-        const seed = async (id: string, nickname: string) => {
+        const seed = async (
+            id: string,
+            nickname: string,
+            host: boolean = false
+        ) => {
             const player = await this.playerDao.put({
                 id,
                 nickname,
@@ -44,9 +48,10 @@ export class DeleteGameResolver {
             await this.gamePlayerDao.new({
                 gameId,
                 playerId: player.id,
+                host,
             })
         }
-        await seed('aaa', 'Arnold')
+        await seed('aaa', 'Arnold', true)
         await seed('bbb', 'Bonnie')
         await seed('ccc', 'Charles')
         await seed('ddd', 'David')

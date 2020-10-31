@@ -1,13 +1,16 @@
-import { BoardActionType } from './AlliesAndEnemies.types'
+import { BoardAction } from './AlliesAndEnemies.types'
 
 export type ConfigurationOptions = {
-    actions: BoardActionType[]
+    actions: BoardAction[]
+    players: {
+        allies: number
+        enemies: number
+    }
     deck: {
-        totalCards: number
+        enemyCards: number
         allyCards: number
     }
     enableVeto: number
-    enemies: number
     leaderIsSecret: boolean
     victory: {
         allyCards: number
@@ -22,8 +25,8 @@ export type Configuration = {
 
 const DefaultConfiguration = {
     deck: {
-        totalCards: 17,
         allyCards: 6,
+        enemyCards: 11,
     },
     victory: {
         allyCards: 5,
@@ -36,40 +39,67 @@ const DefaultConfiguration = {
 export const StandardConfiguration: Configuration = {}
 StandardConfiguration[5] = {
     ...DefaultConfiguration,
+    players: {
+        allies: 3,
+        enemies: 1,
+    },
     actions: [
-        BoardActionType.None,
-        BoardActionType.None,
-        BoardActionType.PolicyPeak,
-        BoardActionType.Execution,
-        BoardActionType.Execution,
+        BoardAction.None,
+        BoardAction.None,
+        BoardAction.PolicyPeek,
+        BoardAction.Execution,
+        BoardAction.Execution,
     ],
     leaderIsSecret: false,
-    enemies: 1,
 }
-StandardConfiguration[6] = StandardConfiguration[5]
+StandardConfiguration[6] = {
+    ...StandardConfiguration[5],
+    players: {
+        allies: 4,
+        enemies: 1,
+    },
+}
 StandardConfiguration[7] = {
     ...DefaultConfiguration,
+    players: {
+        allies: 4,
+        enemies: 2,
+    },
     actions: [
-        BoardActionType.None,
-        BoardActionType.InvestigateLoyalty,
-        BoardActionType.SpecialElection,
-        BoardActionType.Execution,
-        BoardActionType.Execution,
+        BoardAction.None,
+        BoardAction.InvestigateLoyalty,
+        BoardAction.SpecialElection,
+        BoardAction.Execution,
+        BoardAction.Execution,
     ],
     leaderIsSecret: true,
-    enemies: 2,
 }
-StandardConfiguration[8] = StandardConfiguration[7]
+StandardConfiguration[8] = {
+    ...StandardConfiguration[7],
+    players: {
+        allies: 5,
+        enemies: 2,
+    },
+}
 StandardConfiguration[9] = {
     ...DefaultConfiguration,
+    players: {
+        allies: 5,
+        enemies: 3,
+    },
     actions: [
-        BoardActionType.InvestigateLoyalty,
-        BoardActionType.InvestigateLoyalty,
-        BoardActionType.SpecialElection,
-        BoardActionType.Execution,
-        BoardActionType.Execution,
+        BoardAction.InvestigateLoyalty,
+        BoardAction.InvestigateLoyalty,
+        BoardAction.SpecialElection,
+        BoardAction.Execution,
+        BoardAction.Execution,
     ],
     leaderIsSecret: true,
-    enemies: 3,
 }
-StandardConfiguration[10] = StandardConfiguration[9]
+StandardConfiguration[10] = {
+    ...StandardConfiguration[9],
+    players: {
+        allies: 9,
+        enemies: 3,
+    },
+}

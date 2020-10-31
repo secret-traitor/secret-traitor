@@ -55,4 +55,4 @@ const LobbyManager: React.FC<LobbyProps> = ({
     </Main>
 )
 
-export default LobbyManager
+export default React.memo(LobbyManager)

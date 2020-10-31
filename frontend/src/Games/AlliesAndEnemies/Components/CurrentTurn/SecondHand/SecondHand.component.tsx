@@ -4,17 +4,25 @@ import { Box, Button, Text } from 'grommet'
 import Popup from 'Components/Popup'
 
 import { Card } from 'Games/AlliesAndEnemies/types'
-import { PolicyCard } from 'Games/AlliesAndEnemies/Components/Cards/PolicyCard'
-import { CardBorder } from '../../Cards/CardBorder'
+import { PolicyCard, CardBorder } from 'Games/AlliesAndEnemies/Components/Cards'
 
-type Discard = (position: number) => void
+import { DiscardIndex } from './hooks'
+
+type Discard = (position: DiscardIndex) => void
 type SecondHandProps = {
     cards: [Card, Card]
     discard: Discard
+    callVeto: () => void
+    enableVeto: boolean
 }
 
-const SecondHand: React.FC<SecondHandProps> = ({ cards, discard }) => {
-    const [selected, setSelected] = useState<number>()
+const SecondHand: React.FC<SecondHandProps> = ({
+    cards,
+    discard,
+    callVeto,
+    enableVeto,
+}) => {
+    const [selected, setSelected] = useState<DiscardIndex>()
     return (
         <Popup>
             <Box dir="row" gap="medium" align="center">
@@ -43,19 +51,29 @@ const SecondHand: React.FC<SecondHandProps> = ({ cards, discard }) => {
                         </CardBorder>
                     </Box>
                 </Box>
+                <Box direction="row" gap="large">
+                    <Button
+                        onClick={() => {
+                            if (selected !== undefined) discard(selected)
+                        }}
+                        disabled={selected === undefined}
+                        primary
+                        label="Discard"
+                        color="brand-3"
+                        size="large"
+                    />
+                    <Button
+                        onClick={() => callVeto()}
+                        disabled={!enableVeto}
+                        primary
+                        label="Call Veto"
+                        color="brand-4"
+                        size="large"
+                    />
+                </Box>
                 <Text textAlign="center" size="large" weight="bold">
                     Shh! No discussion please.
                 </Text>
-                <Button
-                    onClick={() => {
-                        if (selected !== undefined) discard(selected)
-                    }}
-                    disabled={selected === undefined}
-                    primary
-                    label="Discard"
-                    color="brand-3"
-                    size="large"
-                />
             </Box>
         </Popup>
     )

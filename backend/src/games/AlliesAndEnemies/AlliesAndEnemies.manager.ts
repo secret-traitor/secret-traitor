@@ -8,7 +8,7 @@ import { IGameDao } from '@daos/Game'
 import { IGamePlayerDao } from '@daos/GamePlayer'
 import { IPlayerDao } from '@daos/Player'
 
-import { GameId, IGame } from '@entities/Game'
+import { GameId } from '@entities/Game'
 import { IPlayer } from '@entities/Player'
 
 import { IGameManager, Start } from '@games/GameManager'
@@ -16,16 +16,7 @@ import { IGameManager, Start } from '@games/GameManager'
 import { DescriptiveError } from '@shared/api'
 
 import { StandardConfiguration } from './AlliesAndEnemies.config'
-import {
-    BoardActionType,
-    BoardRow,
-    BoardState,
-    Card,
-    CardSuit,
-    PlayerRole,
-    PlayerState,
-    TurnStatus,
-} from './AlliesAndEnemies.types'
+import { Faction, PlayerRole, PlayerState } from './AlliesAndEnemies.types'
 
 export class AlliesAndEnemiesGameManager implements IGameManager {
     private readonly gamePlayerDao = inject<IGamePlayerDao>('GamePlayers')
@@ -54,11 +45,12 @@ export class AlliesAndEnemiesGameManager implements IGameManager {
             throw new DescriptiveError('no players for game')
         }
         const playerIds = gamePlayers.map(({ playerId }) => playerId)
-        const players = await this.playerDao.list({ ids: playerIds })
+        let players = await this.playerDao.list({ ids: playerIds })
         if (!players) {
             throw new DescriptiveError('no players')
         }
-        const configuration = StandardConfiguration[gamePlayers.length] || null
+        players = players.filter((p) => p.nickname)
+        const configuration = StandardConfiguration[players.length] || null
         if (!configuration) {
             throw new DescriptiveError('no configuration')
         }
@@ -67,15 +59,10 @@ export class AlliesAndEnemiesGameManager implements IGameManager {
                 gameId: this.gameId,
                 leaderIsSecret: configuration.leaderIsSecret,
                 deck: buildDeck(
-                    configuration.deck.totalCards,
-                    configuration.deck.allyCards
+                    configuration.deck.allyCards,
+                    configuration.deck.enemyCards
                 ),
-                board: buildBoard(
-                    configuration.actions,
-                    configuration.victory.allyCards,
-                    configuration.victory.enemyCards
-                ),
-                players: buildPlayers(players, configuration.enemies),
+                players: buildPlayers(players, configuration.players.enemies),
                 config: configuration,
             })
             return !!state
@@ -88,33 +75,7 @@ export class AlliesAndEnemiesGameManager implements IGameManager {
     }
 }
 
-function buildDeck(totalCards: number, allyCards: number): Card[] {
-    const cardsAlly = Array(allyCards).fill({ suit: CardSuit.Ally })
-    const cardsEnemy = Array(totalCards - allyCards).fill({
-        suit: CardSuit.Enemy,
-    })
-    return shuffle([...cardsAlly, ...cardsEnemy])
-}
-
-function buildBoard(
-    actions: BoardActionType[],
-    allyCards: number,
-    enemyCards: number
-): BoardState {
-    return {
-        actions,
-        ally: {
-            cards: [],
-            maxCards: allyCards,
-        } as BoardRow,
-        enemy: {
-            cards: [],
-            maxCards: enemyCards,
-        } as BoardRow,
-    }
-}
-
-function buildPlayers(players: IPlayer[], enemies: number): PlayerState[] {
+const buildPlayers = (players: IPlayer[], enemies: number): PlayerState[] => {
     if (players.length / 2 < enemies + 1) {
         throw new DescriptiveError(
             'Invalid game configuration.',
@@ -132,3 +93,9 @@ function buildPlayers(players: IPlayer[], enemies: number): PlayerState[] {
         position,
     }))
 }
+
+export const buildDeck = (allyCards: number, enemyCards: number) =>
+    shuffle([
+        ...new Array(allyCards).fill({ suit: Faction.Ally }),
+        ...new Array(enemyCards).fill({ suit: Faction.Enemy }),
+    ])

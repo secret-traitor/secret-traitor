@@ -53,7 +53,7 @@ class AlliesAndEnemiesSecondHandDiscardEventResolver extends BaseAlliesAndEnemie
         const { viewingPlayer, state } = await this.getViewingPlayerState(
             gamePlayerId
         )
-        if (viewingPlayer.position !== state.currentRound.position) {
+        if (viewingPlayer.id !== state.currentRound.nomination) {
             return new DescriptiveError(
                 'Unable to play second hand.',
                 'It is not your turn.',

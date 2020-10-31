@@ -10,7 +10,7 @@ export type ConfirmRedirectProps = RedirectProps & DelayedRedirectProps
 const ConfirmRedirect: React.FC<ConfirmRedirectProps> = (props) => {
     const { children, delay } = props
     const [ok, setOk] = useState(false)
-    if (ok) return <Redirect {...(props as RedirectProps)} />
+    if (ok) return <Redirect push {...(props as RedirectProps)} />
     return (
         <Popup>
             {children}

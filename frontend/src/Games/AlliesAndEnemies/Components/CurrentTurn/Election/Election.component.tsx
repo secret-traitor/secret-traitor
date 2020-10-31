@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Box, Button, Text } from 'grommet'
 
-import { PlayerState } from 'Games/AlliesAndEnemies/types'
+import { PlayerState, PlayerStatus } from 'Games/AlliesAndEnemies/types'
 
 import Popup from 'Components/Popup'
 import { PlayerCard } from 'Games/AlliesAndEnemies/Components/Cards'
@@ -42,7 +42,7 @@ const Election: React.FC<ElectionProps> = ({
                         isForViewingPlayer={
                             viewingPlayer.id === presidentNominee.id
                         }
-                        currentOffice="president"
+                        status={PlayerStatus.President}
                     />
                     <Text size="xlarge">&</Text>
                     <PlayerCard
@@ -50,7 +50,7 @@ const Election: React.FC<ElectionProps> = ({
                         isForViewingPlayer={
                             viewingPlayer.id === governorNominee.id
                         }
-                        currentOffice="governor"
+                        status={PlayerStatus.Governor}
                     />
                 </Box>
                 <Box direction="row" gap="medium">

@@ -1,15 +1,16 @@
 import React from 'react'
-import { Redirect } from 'react-router'
 
 import ConfirmRedirect from 'Components/ConfirmRedirect'
-import GameManager from 'GameManager'
 import LoadingScreen from 'Components/LoadingScreen'
-import LobbyManager from 'LobbyManager'
+
 import { GameState, GameStatus } from 'types/Game'
 import { getHomeUrl, getJoinUrl } from 'links'
 import { usePageTitle } from 'hooks'
 
 import { usePlayGame, usePlayId, useStartGame } from './hooks'
+
+const GameManager = React.lazy(() => import('GameManager'))
+const LobbyManager = React.lazy(() => import('LobbyManager'))
 
 const Play: React.FC<{
     playerId: string
@@ -21,25 +22,30 @@ const Play: React.FC<{
     const { playId, loading: loadingDetails } = details
     const play = usePlayGame(gameId, playerId, playId)
     const { game, players, player, loading: loadingPlay, state } = play
-    const { startGame: startGameMutation } = useStartGame(playId)
+    const [startGameMutation] = useStartGame(playId)
     const startGame = async () => {
         if (playId) await startGameMutation()
     }
     const loading = loadingDetails || loadingPlay
 
+    console.log('playId:', playId)
+
     if (!loading && !player?.nickname) {
-        const redirect = <Redirect push to={getJoinUrl({ gameId, playerId })} />
-        if (false)
-            return <Redirect push to={getJoinUrl({ gameId, playerId })} />
-        console.log(play)
-        return <>Uh Oh! I dont have a name for this player</>
+        return (
+            <ConfirmRedirect push to={getJoinUrl({ gameId, playerId })}>
+                You need to join this game first!
+            </ConfirmRedirect>
+        )
     }
     if (!loading && !(player || game)) {
-        return <>Uh Oh! I couldn't look up this game</>
+        return (
+            <ConfirmRedirect push to={getHomeUrl()}>
+                This game does not exists or is not playable.
+            </ConfirmRedirect>
+        )
     }
-    console.log('playId:', playId)
     return (
-        <>
+        <React.Suspense fallback={<LoadingScreen />}>
             {loading && <LoadingScreen />}
             {game?.status === GameStatus.InLobby &&
                 player &&
@@ -61,8 +67,8 @@ const Play: React.FC<{
                     This game has been closed or archived.
                 </ConfirmRedirect>
             )}
-        </>
+        </React.Suspense>
     )
 }
 
-export default Play
+export default React.memo(Play)

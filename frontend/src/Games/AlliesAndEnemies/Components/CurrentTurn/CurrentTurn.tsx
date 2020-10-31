@@ -2,8 +2,11 @@ import React from 'react'
 
 import { AlliesAndEnemiesState, TurnStatus } from 'Games/AlliesAndEnemies/types'
 
-import { WaitingOn } from './WaitingOn'
-import { PlayerTurn } from './PlayerTurn'
+import LoadingScreen from 'Components/LoadingScreen'
+
+const PlayerTurn = React.lazy(() => import('./PlayerTurn'))
+const WaitingOn = React.lazy(() => import('./WaitingOn'))
+const VictoryScreen = React.lazy(() => import('./VictoryScreen'))
 
 const nominationFn = ({ viewingPlayer, currentTurn }: AlliesAndEnemiesState) =>
     viewingPlayer.position === currentTurn.position
@@ -29,9 +32,14 @@ const ViewingPlayerTurnFnRecord: Record<
 const getViewingPlayerTurn = (props: AlliesAndEnemiesState): boolean =>
     ViewingPlayerTurnFnRecord[props.currentTurn.status](props)
 
-export const CurrentTurn: React.FC<AlliesAndEnemiesState> = (props) =>
-    getViewingPlayerTurn(props) ? (
-        <PlayerTurn {...props} />
-    ) : (
-        <WaitingOn {...props} />
+export const CurrentTurn: React.FC<AlliesAndEnemiesState> = (props) => {
+    const victory = props.victoryStatus
+    const playerTurn = getViewingPlayerTurn(props)
+    return (
+        <React.Suspense fallback={<LoadingScreen />}>
+            {victory && <VictoryScreen {...victory} />}
+            {!victory && playerTurn && <PlayerTurn {...props} />}
+            {!victory && !playerTurn && <WaitingOn {...props} />}
+        </React.Suspense>
     )
+}

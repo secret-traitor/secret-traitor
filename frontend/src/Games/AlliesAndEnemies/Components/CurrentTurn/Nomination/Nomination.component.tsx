@@ -8,9 +8,8 @@ import { PlayerCards } from 'Games/AlliesAndEnemies/Components/Cards/PlayerCards
 
 type NominationProps = {
     players: PlayerState[]
-    currentPosition: Required<number>
     viewingPlayer: PlayerState
-    disabledForPositions: any
+    disabledForPositions: number[]
     nominate: (player: PlayerState) => void
 }
 
@@ -18,7 +17,6 @@ const Nomination: React.FC<NominationProps> = ({
     disabledForPositions,
     viewingPlayer,
     players,
-    currentPosition,
     nominate,
 }) => (
     <Popup>
@@ -31,12 +29,11 @@ const Nomination: React.FC<NominationProps> = ({
             </Text>
             <PlayerCards
                 players={players}
-                currentPosition={currentPosition}
                 viewingPlayer={viewingPlayer}
                 selectable={{
                     disabledForPositions: disabledForPositions,
                     onSubmit: nominate,
-                    label: 'Nominate',
+                    label: 'Nominate Player',
                 }}
             />
             <Text textAlign="center" size="large" weight="bold">

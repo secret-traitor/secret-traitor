@@ -42,7 +42,8 @@
   },
   "include": [
     "src/**/*.ts",
-    "spec/**/*.ts"
+    "spec/**/*.ts",
+    "node_modules/@types/jest/index.d.ts"
   ],
   "exclude": [
     "src/public/"

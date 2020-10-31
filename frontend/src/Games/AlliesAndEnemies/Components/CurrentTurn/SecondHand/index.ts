@@ -1,1 +1,1 @@
-export { default as SecondHand } from './SecondHand.container'
+export { default } from './SecondHand.container'

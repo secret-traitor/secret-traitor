@@ -1,22 +1,20 @@
 import { Player } from 'types/Player'
 
-export type CurrentOffice = 'president' | 'governor'
-
 export enum BoardAction {
-    None,
-    InvestigateLoyalty = 'InvestigateLoyalty',
-    SpecialElection = 'SpecialElection',
-    PolicyPeak = 'PolicyPeak',
     Execution = 'Execution',
+    InvestigateLoyalty = 'InvestigateLoyalty',
+    None = 'None',
+    PolicyPeek = 'PolicyPeek',
+    SpecialElection = 'SpecialElection',
 }
 
-export enum CardSuit {
-    Ally,
-    Enemy,
+export enum Faction {
+    Ally = 'Ally',
+    Enemy = 'Enemy',
 }
 
 export type Card = {
-    suit: CardSuit
+    suit: Faction
 }
 
 export type BoardRow = {
@@ -31,11 +29,11 @@ export type BoardState = {
 }
 
 export enum PlayerAction {
-    None = 'None',
     Nominate = 'Nominate',
-    Vote = 'Vote',
+    None = 'None',
     PlayCard = 'PlayCard',
     TakeBoardAction = 'TakeBoardAction',
+    Vote = 'Vote',
 }
 
 export enum PlayerRole {
@@ -44,33 +42,61 @@ export enum PlayerRole {
     EnemyLeader = 'EnemyLeader',
 }
 
+export enum PlayerStatus {
+    None = 'None',
+    President = 'President',
+    Governor = 'Governor',
+    Executed = 'Executed',
+}
+
 export type PlayerState = Player & {
-    role?: PlayerRole
+    hasBeenExecuted: boolean
     position: Required<number>
+    role?: PlayerRole
+    status: PlayerStatus
 }
 
 export enum TurnStatus {
-    Nomination = 'Nomination',
     Election = 'Election',
     FirstHand = 'FirstHand',
+    Nomination = 'Nomination',
     SecondHand = 'SecondHand',
     TakeAction = 'TakeAction',
 }
 
 export type TurnState = {
-    currentPlayer: Required<PlayerState>
+    action?: BoardAction
+    consecutiveFailedElections: number
+    elected: boolean
+    enableVeto: boolean
+    firstHand?: [Card, Card, Card]
+    ineligibleNominations: PlayerState[]
     nominatedPlayer?: PlayerState
     number: number
     position: Required<number>
+    secondHand?: [Card, Card]
+    specialElection: boolean
     status: Required<TurnStatus>
-    disabledNominations: PlayerState[]
+    waitingOn: Required<PlayerState>
 }
 
 export type AlliesAndEnemiesState = {
     board: BoardState
     currentTurn: TurnState
-    playerAction: PlayerAction
     players: PlayerState[]
     playId: string
     viewingPlayer: PlayerState
+    victoryStatus?: Victory
+}
+
+export type Victory = {
+    team: Faction
+    message: string
+    type: VictoryType
+}
+
+export enum VictoryType {
+    Cards = 'Cards',
+    Election = 'Election',
+    Execution = 'Execution',
 }

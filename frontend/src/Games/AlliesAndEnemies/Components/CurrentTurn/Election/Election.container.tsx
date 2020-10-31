@@ -10,7 +10,6 @@ const Election: React.FC<AlliesAndEnemiesState> = ({
     playId,
 }) => {
     const [vote, results] = useVote(playId)
-    console.log(results)
     if (!currentTurn.nominatedPlayer) {
         // TODO: handle no nominated player
         return <>Uh Oh</>
@@ -18,7 +17,7 @@ const Election: React.FC<AlliesAndEnemiesState> = ({
     return (
         <ElectionComponent
             governorNominee={currentTurn.nominatedPlayer}
-            presidentNominee={currentTurn.currentPlayer}
+            presidentNominee={currentTurn.waitingOn}
             vote={vote}
             viewingPlayer={viewingPlayer}
         />

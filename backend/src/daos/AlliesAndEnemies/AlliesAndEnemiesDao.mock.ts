@@ -37,10 +37,13 @@ class AlliesAndEnemiesDaoMock
                     number: 1,
                     position: 0,
                     status: TurnStatus.Nomination,
-                    vetoIsEnabled: false,
                     votes: [],
                 },
             ],
+            board: {
+                ally: [],
+                enemy: [],
+            },
         } as Add)
     }
 

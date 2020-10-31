@@ -15,22 +15,29 @@ import { IPlayerDao } from '@daos/Player'
 import { GameType } from '@entities/Game'
 
 import {
-    BoardActionType,
-    CardSuit,
+    BoardAction,
+    Faction,
     PlayerRole,
+    PlayerStatus,
     TurnStatus,
+    Victory,
+    VictoryType,
+    VoteValue,
 } from '@games/AlliesAndEnemies'
 
 import {
     AlliesAndEnemiesPlayer,
     CurrentTurn,
     BoardState,
+    BoardRow,
+    CurrentTurnRoot,
 } from '@graphql/AlliesAndEnemies'
 import { GameState, IGameState } from '@graphql/GameState'
 
 import { DescriptiveError, ApiResponse } from '@shared/api'
 
 import { BaseAlliesAndEnemiesResolver } from './resolver'
+import { AlliesAndEnemiesVictoryStatus } from '@graphql/AlliesAndEnemies/VictoryStatus'
 
 @ObjectType({ implements: [GameState] })
 export class AlliesAndEnemiesGameState extends GameState {
@@ -59,7 +66,17 @@ export class AlliesAndEnemiesGameStateResolver extends BaseAlliesAndEnemiesResol
         try {
             const gamePlayer = await this.getGamePlayer(gamePlayerId)
             const state = await this.getState(gamePlayer.gameId)
-            return state.board
+            return {
+                ally: {
+                    cards: state.board.ally,
+                    maxCards: state.config.victory.allyCards,
+                } as BoardRow,
+                enemy: {
+                    cards: state.board.enemy,
+                    maxCards: state.config.victory.enemyCards,
+                } as BoardRow,
+                actions: state.config.actions,
+            } as BoardState
         } catch (e) {
             if (e instanceof DescriptiveError) {
                 return e
@@ -112,32 +129,24 @@ export class AlliesAndEnemiesGameStateResolver extends BaseAlliesAndEnemiesResol
     @FieldResolver(() => CurrentTurn)
     async currentTurn(
         @Root() { gamePlayerId }: IGameState
-    ): Promise<ApiResponse<CurrentTurn | null>> {
-        try {
-            const { state, viewingPlayer } = await this.getViewingPlayerState(
-                gamePlayerId
-            )
-            const nominatedPlayer = state
-                .players(viewingPlayer)
-                .find((p) => p.id === state.currentRound.nomination)
-            return {
-                ...state.currentRound,
-                currentPlayer: state.currentPlayer(viewingPlayer),
-                ineligibleNominations: state.ineligibleNominations(
-                    viewingPlayer
-                ),
-                nominatedPlayer,
-            } as CurrentTurn
-        } catch (e) {
-            if (e instanceof DescriptiveError) {
-                return null
-            }
-            throw e
-        }
+    ): Promise<CurrentTurnRoot> {
+        return await this.getViewingPlayerState(gamePlayerId)
+    }
+
+    @FieldResolver(() => AlliesAndEnemiesVictoryStatus, { nullable: true })
+    async victoryStatus(
+        @Root() { gamePlayerId }: IGameState
+    ): Promise<Victory | null> {
+        const { state } = await this.getViewingPlayerState(gamePlayerId)
+        return state.victory
     }
 }
 
-registerEnumType(BoardActionType, { name: 'BoardActionType' })
-registerEnumType(CardSuit, { name: 'CardSuit' })
-registerEnumType(TurnStatus, { name: 'TurnStatus' })
-registerEnumType(PlayerRole, { name: 'PlayerRole' })
+const prefix = 'AlliesAndEnemies'
+registerEnumType(BoardAction, { name: prefix + 'BoardActionType' })
+registerEnumType(Faction, { name: prefix + 'Faction' })
+registerEnumType(PlayerRole, { name: prefix + 'PlayerRole' })
+registerEnumType(PlayerStatus, { name: prefix + 'PlayerStatus' })
+registerEnumType(TurnStatus, { name: prefix + 'TurnStatus' })
+registerEnumType(VictoryType, { name: prefix + 'VictoryType' })
+registerEnumType(VoteValue, { name: prefix + 'VoteValue' })

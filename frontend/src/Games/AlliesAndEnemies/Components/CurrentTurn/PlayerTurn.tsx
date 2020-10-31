@@ -1,10 +1,13 @@
-import { AlliesAndEnemiesState, TurnStatus } from 'Games/AlliesAndEnemies/types'
 import React from 'react'
-import { Nomination } from './Nomination'
-import { Election } from './Election'
-import { FirstHand } from './FirstHand'
-import { SecondHand } from './SecondHand'
-import { TakeAction } from './TakeAction'
+
+import { AlliesAndEnemiesState, TurnStatus } from 'Games/AlliesAndEnemies/types'
+import LoadingScreen from 'Components/LoadingScreen'
+
+const TakeAction = React.lazy(() => import('./TakeAction'))
+const Nomination = React.lazy(() => import('./Nomination'))
+const Election = React.lazy(() => import('./Election'))
+const FirstHand = React.lazy(() => import('./FirstHand'))
+const SecondHand = React.lazy(() => import('./SecondHand'))
 
 const PlayerTurnComponentFnRecord: Record<
     TurnStatus,
@@ -16,6 +19,9 @@ const PlayerTurnComponentFnRecord: Record<
     [TurnStatus.SecondHand]: (props) => <SecondHand {...props} />,
     [TurnStatus.TakeAction]: (props) => <TakeAction {...props} />,
 }
-export const PlayerTurn: React.FC<AlliesAndEnemiesState> = (props) =>
-    PlayerTurnComponentFnRecord[props.currentTurn.status](props)
-// PlayerTurnComponentFnRecord[TurnStatus.Nomination](props)
+const PlayerTurn: React.FC<AlliesAndEnemiesState> = (props) => (
+    <React.Suspense fallback={<LoadingScreen />}>
+        {PlayerTurnComponentFnRecord[props.currentTurn.status](props)}
+    </React.Suspense>
+)
+export default PlayerTurn

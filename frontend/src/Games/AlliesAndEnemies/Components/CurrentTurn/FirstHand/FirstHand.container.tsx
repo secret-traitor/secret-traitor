@@ -1,24 +1,21 @@
 import React from 'react'
 
-import {
-    AlliesAndEnemiesState,
-    Card,
-    CardSuit,
-} from 'Games/AlliesAndEnemies/types'
-import FirstHandComponent from './FirstHand.component'
+import { AlliesAndEnemiesState } from 'Games/AlliesAndEnemies/types'
 
-const FirstHand: React.FC<AlliesAndEnemiesState> = ({ currentTurn }) => {
-    const discardFn = (position: number) => {
-        // TODO: Implement first hand mutation
-        console.log('FirstHand', position)
+import FirstHandComponent from './FirstHand.component'
+import { useFirstHandDiscard } from './hooks'
+
+const FirstHand: React.FC<AlliesAndEnemiesState> = ({
+    currentTurn,
+    playId,
+}) => {
+    const [discard] = useFirstHandDiscard(playId)
+    if (!currentTurn.firstHand) {
+        return <>Uh Oh</>
     }
-    // const cards = currentTurn.firstHand
-    const cards: [Card, Card, Card] = [
-        { suit: CardSuit.Ally },
-        { suit: CardSuit.Enemy },
-        { suit: CardSuit.Ally },
-    ]
-    return <FirstHandComponent cards={cards} discard={discardFn} />
+    return (
+        <FirstHandComponent cards={currentTurn.firstHand} discard={discard} />
+    )
 }
 
 export default FirstHand

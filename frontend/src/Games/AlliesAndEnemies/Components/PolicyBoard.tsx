@@ -6,7 +6,7 @@ import {
     AlliesAndEnemiesState,
     BoardAction,
     BoardRow,
-    CardSuit,
+    Faction,
 } from 'Games/AlliesAndEnemies/types'
 import Section from 'Components/Box'
 
@@ -18,7 +18,7 @@ const mapIcon = (action: BoardAction) => {
             return <Close size="large" />
         case BoardAction.InvestigateLoyalty:
             return <Accessibility size="large" />
-        case BoardAction.PolicyPeak:
+        case BoardAction.PolicyPeek:
             return <View size="large" />
         case BoardAction.SpecialElection:
             return <Notes size="large" />
@@ -38,7 +38,7 @@ const mapEnemyCards = (row: BoardRow, actions: BoardAction[]) =>
                 ) : (
                     mapIcon(actions[index])
                 ),
-            suit: CardSuit.Enemy,
+            suit: Faction.Enemy,
         }))
 
 const mapAllyCards = (row: BoardRow) =>
@@ -50,7 +50,7 @@ const mapAllyCards = (row: BoardRow) =>
                 index === row.maxCards - 1 ? (
                     <Trophy size="large" />
                 ) : undefined,
-            suit: CardSuit.Ally,
+            suit: Faction.Ally,
         }))
 
 export const PolicyBoard: React.FC<AlliesAndEnemiesState> = ({ board }) => {

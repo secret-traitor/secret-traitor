@@ -1,5 +1,6 @@
 import { gql } from 'apollo-boost'
 import { useEffect } from 'react'
+import { FetchResult } from '@apollo/client/link/core'
 import {
     useQuery,
     QueryResult,
@@ -118,7 +119,7 @@ export const usePlayGame = (
     }
 }
 
-const GAME_PLAYER_QUERY = gql`
+const GamePlayerQuery = gql`
     query gamePlayer($playerId: String!, $gameId: String!) {
         gamePlayer(playerId: $playerId, gameId: $gameId) {
             id
@@ -141,7 +142,7 @@ type GamePlayer = QueryResult & {
 }
 
 export const usePlayId = (gameId: string, playerId: string): GamePlayer => {
-    const result = useQuery(GAME_PLAYER_QUERY, {
+    const result = useQuery(GamePlayerQuery, {
         variables: { gameId, playerId },
         skip: !gameId || !playerId,
         fetchPolicy: 'no-cache',
@@ -150,7 +151,7 @@ export const usePlayId = (gameId: string, playerId: string): GamePlayer => {
     return { ...result, playId }
 }
 
-const START_GAME_MUTATION = gql`
+const StartGameMutation = gql`
     mutation startGame($playId: ID!) {
         setGameStatus(playId: $playId, status: InProgress) {
             timestamp
@@ -162,16 +163,9 @@ const START_GAME_MUTATION = gql`
     }
 `
 
-type StartGame = {
-    startGame: () => void
-    result: MutationResult
-}
-
-export const useStartGame = (playId?: string) => {
-    const result = useMutation(START_GAME_MUTATION)
-    const [startMutation] = result
-    return {
-        startGame: () => startMutation({ variables: { playId } }),
-        result,
-    }
+export const useStartGame = (
+    playId?: string
+): [() => Promise<FetchResult>, MutationResult] => {
+    const [startMutation, results] = useMutation(StartGameMutation)
+    return [() => startMutation({ variables: { playId } }), results]
 }

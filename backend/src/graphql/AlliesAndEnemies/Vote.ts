@@ -20,13 +20,13 @@ import { GamePlayerId } from '@entities/GamePlayer'
 import { GameType } from '@entities/Game'
 import { PlayerId } from '@entities/Player'
 
-import { TurnStatus, VoteValue } from '@games/AlliesAndEnemies'
+import { VoteValue } from '@games/AlliesAndEnemies'
 
 import { Event } from '@graphql/Event'
 import { GameEvent } from '@graphql/GameEvent'
 import { BaseAlliesAndEnemiesResolver } from '@graphql/AlliesAndEnemies/resolver'
 
-import { DescriptiveError, ApiResponse } from '@shared/api'
+import { ApiResponse, DescriptiveError } from '@shared/api'
 import { getTopicName, Topics } from '@shared/topics'
 
 @ObjectType({ implements: [Event, GameEvent] })

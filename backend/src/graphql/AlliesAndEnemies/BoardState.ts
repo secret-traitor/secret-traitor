@@ -1,31 +1,26 @@
 import { Field, ObjectType } from 'type-graphql'
 
-import {
-    BoardActionType,
-    BoardState as IBoardState,
-    BoardRow as IBoardRow,
-    Card as ICard,
-} from '@games/AlliesAndEnemies'
+import { BoardAction, Card as ICard } from '@games/AlliesAndEnemies'
 
 import { Card } from './Card'
 
 @ObjectType()
-export class BoardState implements IBoardState {
-    @Field(() => [BoardActionType])
-    readonly actions: BoardActionType[]
-
-    @Field(() => BoardRow)
-    readonly ally: IBoardRow
-
-    @Field(() => BoardRow)
-    readonly enemy: IBoardRow
-}
-
-@ObjectType()
-export class BoardRow implements IBoardRow {
+export class BoardRow {
     @Field(() => [Card])
     cards: ICard[]
 
     @Field(() => Number)
     maxCards: number
+}
+
+@ObjectType()
+export class BoardState {
+    @Field(() => [BoardAction])
+    readonly actions: BoardAction[]
+
+    @Field(() => BoardRow)
+    readonly ally: BoardRow
+
+    @Field(() => BoardRow)
+    readonly enemy: BoardRow
 }

@@ -4,7 +4,7 @@ import { usePollingQuery } from 'hooks'
 import { Game } from 'types/Game'
 import { QueryResult } from '@apollo/react-hooks'
 
-const GAMES_QUERY = gql`
+const GamesQuery = gql`
     query joinableGames {
         games: joinableGames {
             id
@@ -14,7 +14,7 @@ const GAMES_QUERY = gql`
     }
 `
 export const usePollGames = (): QueryResult & { games: Game[] } => {
-    const result = usePollingQuery(GAMES_QUERY, {
+    const result = usePollingQuery(GamesQuery, {
         fetchPolicy: 'no-cache',
     })
     const games: Game[] = result.data?.games as Game[]

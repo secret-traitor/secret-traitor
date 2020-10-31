@@ -12,6 +12,7 @@ export const AlliesAndEnemiesGameStateFragment = gql`
         nickname
         position
         role
+        status
     }
     fragment AlliesAndEnemiesGameStateFragment on AlliesAndEnemiesGameState {
         playId
@@ -31,18 +32,34 @@ export const AlliesAndEnemiesGameStateFragment = gql`
             }
         }
         currentTurn {
-            number
-            status
-            position
-            currentPlayer {
+            action
+            consecutiveFailedElections
+            elected
+            enableVeto
+            firstHand {
+                suit
+            }
+            ineligibleNominations {
                 ...AlliesAndEnemiesPlayerFragment
             }
             nominatedPlayer {
                 ...AlliesAndEnemiesPlayerFragment
             }
-            disabledNominations {
+            number
+            position
+            secondHand {
+                suit
+            }
+            specialElection
+            status
+            waitingOn {
                 ...AlliesAndEnemiesPlayerFragment
             }
+        }
+        victoryStatus {
+            message
+            team
+            type
         }
     }
 `

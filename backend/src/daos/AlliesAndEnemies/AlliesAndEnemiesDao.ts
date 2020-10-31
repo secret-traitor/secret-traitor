@@ -11,7 +11,6 @@ import {
 export type Add = AlliesAndEnemiesState
 export type Get = { gameId: GameId }
 export type New = {
-    board: BoardState
     config: ConfigurationOptions
     deck: Card[]
     gameId: GameId

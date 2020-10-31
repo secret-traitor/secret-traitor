@@ -2,14 +2,6 @@ import { GameId } from '@entities/Game'
 import { IPlayer, PlayerId } from '@entities/Player'
 import { ConfigurationOptions } from '@games/AlliesAndEnemies/AlliesAndEnemies.config'
 
-export enum PlayerActionType {
-    None,
-    Nominate,
-    Vote,
-    PlayCard,
-    TakeBoardAction,
-}
-
 export enum PlayerRole {
     Ally,
     Enemy,
@@ -29,14 +21,19 @@ export type PlayerVote = {
 export type PlayerState = IPlayer & {
     readonly position: number
     readonly role: PlayerRole
+    readonly hasBeenExecuted?: boolean
 }
 
 export type ViewingPlayerState = Omit<PlayerState, 'role'> & {
     readonly role?: PlayerRole
+    readonly status: PlayerStatus
 }
 
-export type CardState = Card & {
-    readonly discarded: boolean
+export enum PlayerStatus {
+    None,
+    President,
+    Governor,
+    Executed,
 }
 
 export type FirstHand = [Card, Card, Card]
@@ -48,47 +45,45 @@ export enum TurnStatus {
     FirstHand,
     SecondHand,
     TakeAction,
+    Veto,
+    GameOver,
 }
 
 export type TurnState = {
+    readonly action?: BoardAction
     readonly consecutiveFailedElections: number
     readonly elected: boolean
+    readonly enableVeto?: boolean
     readonly firstHand?: FirstHand
     readonly nomination?: PlayerId
     readonly number: number
     readonly position: number
     readonly secondHand?: SecondHand
+    readonly specialElection?: boolean
     readonly status: TurnStatus
-    readonly vetoIsEnabled: boolean
     readonly votes: PlayerVote[]
 }
 
-export enum CardSuit {
+export enum Faction {
     Ally,
     Enemy,
 }
 
 export type Card = {
-    readonly suit: CardSuit
+    readonly suit: Faction
 }
 
-export enum BoardActionType {
+export enum BoardAction {
     None,
     InvestigateLoyalty,
     SpecialElection,
-    PolicyPeak,
+    PolicyPeek,
     Execution,
 }
 
-export type BoardRow = {
-    cards: Card[]
-    maxCards: number
-}
-
 export type BoardState = {
-    readonly actions: BoardActionType[]
-    readonly ally: BoardRow
-    readonly enemy: BoardRow
+    readonly ally: Card[]
+    readonly enemy: Card[]
 }
 
 export type AlliesAndEnemiesState = {
@@ -99,4 +94,17 @@ export type AlliesAndEnemiesState = {
     readonly gameId: GameId
     readonly players: PlayerState[]
     readonly rounds: TurnState[]
+    readonly victory?: Victory
+}
+
+export type Victory = {
+    team: Faction
+    message: string
+    type: VictoryType
+}
+
+export enum VictoryType {
+    Cards,
+    Election,
+    Execution,
 }

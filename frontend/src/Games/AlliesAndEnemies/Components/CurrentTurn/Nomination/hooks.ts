@@ -11,17 +11,12 @@ const NominationMutation = gql`
             nominatedPlayerId: $nominatedPlayerId
             playId: $playId
         ) {
-            state(playId: $playId) {
-                ... on AlliesAndEnemiesGameState {
-                    currentTurn {
-                        status
-                        nominatedPlayer {
-                            id
-                            nickname
-                            position
-                            role
-                        }
-                    }
+            ... on AlliesAndEnemiesNominationEvent {
+                nomination {
+                    id
+                    nickname
+                    position
+                    role
                 }
             }
         }
@@ -36,6 +31,5 @@ export const useNominate = (
         await nominateFn({
             variables: { playId, nominatedPlayerId: player.id },
         })
-    console.log(results.data)
     return [nominate, results]
 }

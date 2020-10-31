@@ -9,6 +9,12 @@ import { GameId } from '@entities/Game'
 import { AlliesAndEnemiesState, PlayerState } from '@games/AlliesAndEnemies'
 import { ActiveAlliesAndEnemiesState } from '@games/AlliesAndEnemies/AlliesAndEnemies.game'
 
+export type ViewingPlayerState = {
+    state: ActiveAlliesAndEnemiesState
+    viewingPlayer: PlayerState
+    gamePlayer: IGamePlayer
+}
+
 export abstract class BaseAlliesAndEnemiesResolver {
     protected readonly gameStateDao: IAlliesAndEnemiesDao
     protected readonly gamePlayerDao: IGamePlayerDao
@@ -39,11 +45,7 @@ export abstract class BaseAlliesAndEnemiesResolver {
 
     protected async getViewingPlayerState(
         gamePlayerId: string
-    ): Promise<{
-        state: ActiveAlliesAndEnemiesState
-        viewingPlayer: PlayerState
-        gamePlayer: IGamePlayer
-    }> {
+    ): Promise<ViewingPlayerState> {
         const gamePlayer = await this.getGamePlayer(gamePlayerId)
         const state = await this.getState(gamePlayer.gameId)
         const viewingPlayer =

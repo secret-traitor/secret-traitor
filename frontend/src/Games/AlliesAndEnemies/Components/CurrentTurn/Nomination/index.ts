@@ -1,1 +1,1 @@
-export { default as Nomination } from './Nomination.container'
+export { default } from './Nomination.container'

@@ -6,7 +6,7 @@ import { Player } from 'types/Player'
 import { MutationResult, QueryResult } from '@apollo/client/react/types/types'
 import { FetchResult } from '@apollo/client/link/core'
 
-const GAME_PLAYERS_QUERY = gql`
+const GamePlayersMutation = gql`
     query gameWithPlayers($gameId: ID!) {
         game(id: $gameId) {
             id
@@ -24,23 +24,20 @@ export const useGameWithPlayers = (
     gameId: string,
     playerId: string
 ): QueryResult & { game?: Game; player?: Player } => {
-    const result = useQuery(GAME_PLAYERS_QUERY, {
+    const result = useQuery(GamePlayersMutation, {
         variables: { gameId, playerId },
         fetchPolicy: 'no-cache',
     })
-    const game = result.data?.game as Game
-    const players = (result.data?.game?.players as Player[]) || []
-    const player = players.find((player) => player.id === playerId)
-
-    console.log({ game, players, player, playerId })
     return {
         ...result,
-        game,
-        player,
+        game: result.data?.game as Game,
+        player: result.data?.game?.players?.find(
+            (player: Player) => player.id === playerId
+        ),
     }
 }
 
-const JOIN_GAME_MUTATION = gql`
+const JoinGameMutation = gql`
     mutation joinGame(
         $gameId: String!
         $playerId: String!
@@ -74,7 +71,7 @@ export const useJoinGame = (): [
     (variables: JoinGameProps) => Promise<FetchResult>,
     MutationResult
 ] => {
-    const [createMutation, results] = useMutation(JOIN_GAME_MUTATION)
+    const [createMutation, results] = useMutation(JoinGameMutation)
     const join = (variables: JoinGameProps) => createMutation({ variables })
     return [join, results]
 }

@@ -6,15 +6,16 @@ import Popup from 'Components/Popup'
 import { Card } from 'Games/AlliesAndEnemies/types'
 import { PolicyCard } from 'Games/AlliesAndEnemies/Components/Cards/PolicyCard'
 import { CardBorder } from 'Games/AlliesAndEnemies/Components/Cards/CardBorder'
+import { DiscardIndex } from './hooks'
 
-type Discard = (position: number) => void
+type Discard = (position: DiscardIndex) => void
 type FirstHandProps = {
     cards: [Card, Card, Card]
     discard: Discard
 }
 
 const FirstHand: React.FC<FirstHandProps> = ({ cards, discard }) => {
-    const [selected, setSelected] = useState<number>()
+    const [selected, setSelected] = useState<DiscardIndex>()
     return (
         <Popup>
             <Box dir="row" gap="medium" align="center">

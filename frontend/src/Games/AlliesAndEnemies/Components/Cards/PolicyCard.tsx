@@ -1,16 +1,16 @@
 import React, { ReactElement } from 'react'
 import { Box } from 'grommet'
 
-import { CardSuit } from 'Games/AlliesAndEnemies/types'
+import { Faction } from 'Games/AlliesAndEnemies/types'
 
-export const PolicyCard: React.FC<{ suit: CardSuit; active?: boolean }> = ({
+export const PolicyCard: React.FC<{ suit: Faction; active?: boolean }> = ({
     active = false,
     children,
     suit,
 }) => (
     <Box
         background={{
-            color: suit === CardSuit.Ally ? 'ally-1' : 'enemy-1',
+            color: suit === Faction.Ally ? 'ally-1' : 'enemy-1',
             opacity: active ? 'strong' : 'medium',
         }}
         width="xsmall"
@@ -29,9 +29,9 @@ export const PolicyCard: React.FC<{ suit: CardSuit; active?: boolean }> = ({
 
 export const PolicyCardRow: React.FC<{
     cards: {
-        active: boolean
+        active?: boolean
         icon?: ReactElement
-        suit: CardSuit
+        suit: Faction
     }[]
 }> = ({ cards }) => (
     <>

@@ -1,23 +1,27 @@
 import React from 'react'
 
-import {
-    AlliesAndEnemiesState,
-    Card,
-    CardSuit,
-} from 'Games/AlliesAndEnemies/types'
-import SecondHandComponent from './SecondHand.component'
+import { AlliesAndEnemiesState } from 'Games/AlliesAndEnemies/types'
 
-const SecondHand: React.FC<AlliesAndEnemiesState> = ({ currentTurn }) => {
-    const discardFn = (position: number) => {
-        // TODO: Implement second hand mutation
-        console.log('SecondHand', position)
+import SecondHandComponent from './SecondHand.component'
+import { useSecondHandDiscard, useCallVeto } from './hooks'
+
+const SecondHand: React.FC<AlliesAndEnemiesState> = ({
+    currentTurn,
+    playId,
+}) => {
+    const [discard] = useSecondHandDiscard(playId)
+    const [callVeto] = useCallVeto(playId)
+    if (!currentTurn.secondHand) {
+        return <>Uh Oh</>
     }
-    // const cards = currentTurn.secondHand
-    const cards: [Card, Card] = [
-        { suit: CardSuit.Ally },
-        { suit: CardSuit.Enemy },
-    ]
-    return <SecondHandComponent cards={cards} discard={discardFn} />
+    return (
+        <SecondHandComponent
+            cards={currentTurn.secondHand}
+            discard={discard}
+            enableVeto={currentTurn.enableVeto}
+            callVeto={callVeto}
+        />
+    )
 }
 
 export default SecondHand
