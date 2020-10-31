@@ -8,8 +8,13 @@ import { HitCounter } from "./hitcounter";
 export class SecretTraitorStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
-
-    const zoneName = this.node.tryGetContext("domain") as string;
+    const defaultEnv = "prod";
+    const stagingEnv = "staging";
+    const env: string = this.node.tryGetContext("env") || defaultEnv;
+    let zoneName = this.node.tryGetContext("domain") as string;
+    if (env === stagingEnv) {
+      zoneName = this.node.tryGetContext("stagingDomain") as string;
+    }
     const appDescriptor = this.node.tryGetContext("appDescriptor") as string;
     const graphqlSubdomain = this.node.tryGetContext(
       "graphqlSubdomain"

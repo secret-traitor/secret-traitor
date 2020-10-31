@@ -6,6 +6,9 @@
     "@aws-cdk/core:stackRelativeExports": "true",
     "appDescriptor": "SecretTraitor",
     "domain": "secrettraitor.com",
-    "graphqlSubdomain": "graphql"
+    "stagingDomain": "traystay.net",
+    "graphqlSubdomain": "graphql",
+    "envOptions": ["prod", "staging"],
+    "defaultEnv": "prod"
   }
 }

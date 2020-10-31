@@ -21,7 +21,10 @@ bootstrap:	aws-prereqs
 diff:	bootstrap
 	npx cdk diff
 
-deploy:	bootstrap
+deploy-staging:	bootstrap
+	npx cdk deploy --context env=staging --require-approval never
+
+deploy-prod:	bootstrap
 	npx cdk deploy --require-approval never
 
 install:
