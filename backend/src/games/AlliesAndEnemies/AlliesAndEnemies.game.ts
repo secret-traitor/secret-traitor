@@ -25,7 +25,6 @@ import { IPlayer, PlayerId } from '@entities/Player'
 import { GameId } from '@entities/Game'
 import { DescriptiveError } from '@shared/api'
 import { IAlliesAndEnemiesDao } from '@daos/AlliesAndEnemies'
-import { AlliesAndEnemiesPlayer } from '@graphql/AlliesAndEnemies'
 
 const FirstHandDiscardRecord: Record<
     0 | 1 | 2,
@@ -612,10 +611,10 @@ export class ActiveAlliesAndEnemiesState {
 
     public specialElection(
         playerId: PlayerId
-    ): [nominatedPlayerId?: PlayerId, error?: DescriptiveError] {
+    ): [success: boolean, error?: DescriptiveError] {
         if (this.currentRound.status !== TurnStatus.TakeAction) {
             return [
-                undefined,
+                false,
                 new DescriptiveError(
                     'Unable to take the special election action.',
                     'The turn state does not allow taking board actions',
@@ -625,7 +624,7 @@ export class ActiveAlliesAndEnemiesState {
         }
         if (this.currentRound.action !== BoardAction.SpecialElection) {
             return [
-                undefined,
+                false,
                 new DescriptiveError(
                     'Unable to take the special election action.',
                     'The action for the current turn is not special election.',
@@ -638,7 +637,7 @@ export class ActiveAlliesAndEnemiesState {
         )
         if (!specialElectedPlayer) {
             return [
-                undefined,
+                false,
                 new DescriptiveError(
                     'Unable to elect this player.',
                     'Player with this id does not exist.',
@@ -648,7 +647,7 @@ export class ActiveAlliesAndEnemiesState {
         }
         if (specialElectedPlayer.hasBeenExecuted) {
             return [
-                undefined,
+                false,
                 new DescriptiveError(
                     'Unable to elect this player.',
                     'Can not elect executed players.',
@@ -657,7 +656,7 @@ export class ActiveAlliesAndEnemiesState {
             ]
         }
         this.specialElectionRound(specialElectedPlayer.position)
-        return [playerId]
+        return [true]
     }
 
     private specialElectionRound(position: number) {
@@ -752,7 +751,7 @@ export class ActiveAlliesAndEnemiesState {
                 ),
             ]
         }
-        if (this.checkVeto) {
+        if (!this.checkVeto) {
             return [
                 false,
                 new DescriptiveError(

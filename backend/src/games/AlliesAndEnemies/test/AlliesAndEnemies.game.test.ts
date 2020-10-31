@@ -91,6 +91,7 @@ describe('Allies and Enemies', () => {
             expect(state.currentRound.status).toBe(TurnStatus.TakeAction)
             expect(state.currentRound.action).toBe(BoardAction.PolicyPeek)
             state.policyPeek()
+            state.policyPeekOk()
             // ---- turn 4 ----
             expect(state.currentRound.number).toBe(turnNumber++)
             state.nominate('4')
@@ -728,6 +729,8 @@ describe('Allies and Enemies', () => {
                 })
             )
             state.policyPeek()
+            expect(state.currentRound.number).toBe(0)
+            state.policyPeekOk()
             expect(state.currentRound.number).toBe(1)
         })
     })
