@@ -1,0 +1,117 @@
+import {
+    Arg,
+    ID,
+    Mutation,
+    ObjectType,
+    PubSub,
+    Query,
+    Resolver,
+} from 'type-graphql'
+import { Inject } from 'typedi'
+import { PubSubEngine } from 'graphql-subscriptions'
+
+import { IAlliesAndEnemiesDao } from '@daos/AlliesAndEnemies'
+import { IGameDao } from '@daos/Game'
+import { IPlayerDao } from '@daos/Player'
+import { IGamePlayerDao } from '@daos/GamePlayer'
+
+import { GamePlayerId } from '@entities/GamePlayer'
+import { GameType } from '@entities/Game'
+import { PlayerId } from '@entities/Player'
+
+import {
+    Faction,
+    PlayerRole,
+    PlayerState,
+    ViewingPlayerState,
+} from '@games/AlliesAndEnemies'
+
+import { AlliesAndEnemiesPlayer } from '@graphql/AlliesAndEnemies'
+import { Event } from '@graphql/Event'
+import { GameEvent } from '@graphql/GameEvent'
+
+import { ApiResponse, DescriptiveError } from '@shared/api'
+import { getTopicName, Topics } from '@shared/topics'
+
+import { BaseAlliesAndEnemiesResolver } from './resolver'
+
+@ObjectType({ implements: [Event, GameEvent] })
+export class AlliesAndEnemiesInvestigateLoyaltyEvent extends GameEvent {
+    constructor(gamePlayerId: GamePlayerId, activePlayerId: PlayerId) {
+        const state = { gamePlayerId, gameType: GameType.AlliesNEnemies }
+        super(
+            state,
+            activePlayerId,
+            AlliesAndEnemiesInvestigateLoyaltyEvent.name
+        )
+    }
+}
+
+@Resolver(() => AlliesAndEnemiesInvestigateLoyaltyEvent)
+class AlliesAndEnemiesInvestigateLoyaltyEventResolver extends BaseAlliesAndEnemiesResolver {
+    constructor(
+        @Inject('AlliesAndEnemies')
+        protected readonly gameStateDao: IAlliesAndEnemiesDao,
+        @Inject('GamePlayers') protected readonly gamePlayerDao: IGamePlayerDao,
+        @Inject('Games') protected readonly gameDao: IGameDao,
+        @Inject('Players') protected readonly playerDao: IPlayerDao
+    ) {
+        super()
+    }
+
+    @Query(() => AlliesAndEnemiesPlayer, { nullable: true })
+    async alliesAndEnemiesInvestigateLoyalty(
+        @Arg('playId', () => ID) gamePlayerId: GamePlayerId,
+        @Arg('playerId', () => ID) playerId: PlayerId
+    ): Promise<ApiResponse<AlliesAndEnemiesPlayer | null>> {
+        const { viewingPlayer, state } = await this.getViewingPlayerState(
+            gamePlayerId
+        )
+        if (viewingPlayer.position !== state.currentRound.position) {
+            return new DescriptiveError(
+                'Unable to investigate player loyalty.',
+                'It is not your turn.',
+                'Please refresh the page before nominating another player.'
+            )
+        }
+        const [faction, error] = state.investigateLoyalty(playerId)
+        if (error) {
+            return error
+        }
+        const player = state
+            .players(viewingPlayer)
+            .find((p) => p.id === playerId) as ViewingPlayerState
+        return {
+            ...player,
+            role: faction === Faction.Ally ? PlayerRole.Ally : PlayerRole.Enemy,
+        }
+    }
+
+    @Mutation(() => AlliesAndEnemiesInvestigateLoyaltyEvent)
+    async alliesAndEnemiesInvestigateLoyaltyOk(
+        @Arg('playId', () => ID) gamePlayerId: GamePlayerId,
+        @PubSub() pubSub: PubSubEngine
+    ): Promise<ApiResponse<AlliesAndEnemiesInvestigateLoyaltyEvent>> {
+        const { viewingPlayer, state } = await this.getViewingPlayerState(
+            gamePlayerId
+        )
+        if (viewingPlayer.position !== state.currentRound.position) {
+            return new DescriptiveError(
+                'Unable to nominate player.',
+                'It is not your turn.',
+                'Please refresh the page before nominating another player.'
+            )
+        }
+        const [, error] = state.investigateLoyaltyOk()
+        if (error) {
+            return error
+        }
+        await state.saveTo(this.gameStateDao)
+        const payload = new AlliesAndEnemiesInvestigateLoyaltyEvent(
+            gamePlayerId,
+            viewingPlayer.id
+        )
+        await pubSub.publish(getTopicName(Topics.Play, state.gameId), payload)
+        return payload
+    }
+}
