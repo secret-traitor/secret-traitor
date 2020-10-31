@@ -3,8 +3,8 @@ import { useMutation, useQuery } from '@apollo/react-hooks'
 
 import { Game } from 'types/Game'
 import { Player } from 'types/Player'
-import { MutationResult, QueryResult } from '@apollo/client/react/types/types'
-import { FetchResult } from '@apollo/client/link/core'
+import { MutationResult, QueryResult } from '@apollo/react-common'
+import { ExecutionResult } from '@apollo/react-common'
 
 const GamePlayersMutation = gql`
     query gameWithPlayers($gameId: ID!) {
@@ -68,7 +68,7 @@ export type JoinGameProps = {
 }
 
 export const useJoinGame = (): [
-    (variables: JoinGameProps) => Promise<FetchResult>,
+    (variables: JoinGameProps) => Promise<ExecutionResult>,
     MutationResult
 ] => {
     const [createMutation, results] = useMutation(JoinGameMutation)

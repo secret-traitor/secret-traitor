@@ -1,7 +1,7 @@
 import { gql } from 'apollo-boost'
 import { useQuery, useMutation } from '@apollo/react-hooks'
-import { MutationResult, QueryResult } from '@apollo/client/react/types/types'
-import { FetchResult } from '@apollo/client/link/core'
+import { MutationResult, QueryResult } from '@apollo/react-common'
+import { ExecutionResult } from '@apollo/react-common'
 
 import { Card } from 'Games/AlliesAndEnemies/types'
 
@@ -32,7 +32,7 @@ const PolicyPeekOkMutation = gql`
 `
 export const usePolicyPeekOk = (
     playId: string
-): [() => Promise<FetchResult>, MutationResult] =>
+): [() => Promise<ExecutionResult>, MutationResult] =>
     useMutation(PolicyPeekOkMutation, {
         variables: { playId },
     })

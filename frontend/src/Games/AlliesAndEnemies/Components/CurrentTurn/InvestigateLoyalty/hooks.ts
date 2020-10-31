@@ -1,7 +1,7 @@
 import { gql } from 'apollo-boost'
 import { useLazyQuery, useMutation } from '@apollo/react-hooks'
-import { MutationResult, QueryResult } from '@apollo/client/react/types/types'
-import { FetchResult } from '@apollo/client/link/core'
+import { MutationResult, QueryResult } from '@apollo/react-common'
+import { ExecutionResult } from '@apollo/react-common'
 
 import { PlayerState } from 'Games/AlliesAndEnemies/types'
 
@@ -57,7 +57,7 @@ const InvestigateLoyaltyOkMutation = gql`
 `
 export const useInvestigateLoyaltyOk = (
     playId: string
-): [() => Promise<FetchResult>, MutationResult] =>
+): [() => Promise<ExecutionResult>, MutationResult] =>
     useMutation(InvestigateLoyaltyOkMutation, {
         variables: { playId },
     })

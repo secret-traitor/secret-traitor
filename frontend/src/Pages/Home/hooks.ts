@@ -2,7 +2,7 @@ import { gql } from 'apollo-boost'
 
 import { usePollingQuery } from 'hooks'
 import { Game } from 'types/Game'
-import { QueryResult } from '@apollo/react-hooks'
+import { QueryResult } from '@apollo/react-common'
 
 const GamesQuery = gql`
     query joinableGames {

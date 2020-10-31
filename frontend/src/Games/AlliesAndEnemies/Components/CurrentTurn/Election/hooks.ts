@@ -1,7 +1,6 @@
 import { gql } from 'apollo-boost'
 import { useMutation } from '@apollo/react-hooks'
-import { MutationResult } from '@apollo/client/react/types/types'
-import { FetchResult } from '@apollo/client/link/core'
+import { MutationResult, ExecutionResult } from '@apollo/react-common'
 
 const VoteMutation = gql`
     mutation vote($playId: ID!, $vote: AlliesAndEnemiesVoteValue!) {
@@ -16,7 +15,7 @@ const VoteMutation = gql`
 
 export const useVote = (
     playId: string
-): [(vote: 'yes' | 'no') => Promise<FetchResult>, MutationResult] => {
+): [(vote: 'yes' | 'no') => Promise<ExecutionResult>, MutationResult] => {
     const [voteFn, results] = useMutation(VoteMutation)
     const vote = async (vote: 'yes' | 'no') => {
         if (vote === 'yes') {
