@@ -48,7 +48,7 @@
     "eject": "react-scripts eject",
     "precommit": "lint-staged",
     "start": "react-scripts start",
-    "start:dev": "nodemon",
+    "start:dev": "./node_modules/nodemon/bin/nodemon.js",
     "test": "react-scripts test",
     "codegen": "apollo client:codegen --no-addTypename --target typescript --globalTypesFile=src/__generated__/globalTypes.ts --passthroughCustomScalars --customScalarsPrefix=GraphQL_ __generated__"
   },
