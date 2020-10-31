@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="48" failures="0" errors="0" time="1.347">
+  <testsuite name="Allies and Enemies" errors="0" failures="0" skipped="0" timestamp="2020-10-31T02:43:03" time="1.214" tests="48">
+    <testcase classname="Allies and Enemies game active state management plays out a game with all enemy cards" name="Allies and Enemies game active state management plays out a game with all enemy cards" time="0.013">
+    </testcase>
+    <testcase classname="Allies and Enemies nomination does not allow action turn state is not take action" name="Allies and Enemies nomination does not allow action turn state is not take action" time="0.001">
+    </testcase>
+    <testcase classname="Allies and Enemies nomination does not nominate invalid players" name="Allies and Enemies nomination does not nominate invalid players" time="0.001">
+    </testcase>
+    <testcase classname="Allies and Enemies nomination does not nominate executed players" name="Allies and Enemies nomination does not nominate executed players" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies nomination does not nominate ineligible players" name="Allies and Enemies nomination does not nominate ineligible players" time="0.001">
+    </testcase>
+    <testcase classname="Allies and Enemies nomination nominates eligible players" name="Allies and Enemies nomination nominates eligible players" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies voting does not allow voting when status is not election" name="Allies and Enemies voting does not allow voting when status is not election" time="0.001">
+    </testcase>
+    <testcase classname="Allies and Enemies voting does not vote for an invalid player" name="Allies and Enemies voting does not vote for an invalid player" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies voting does not vote for executed players" name="Allies and Enemies voting does not vote for executed players" time="0.001">
+    </testcase>
+    <testcase classname="Allies and Enemies voting does not require votes from executed players" name="Allies and Enemies voting does not require votes from executed players" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies election sets status to FirstHand for successful election" name="Allies and Enemies election sets status to FirstHand for successful election" time="0.001">
+    </testcase>
+    <testcase classname="Allies and Enemies election moves to next round for failed election" name="Allies and Enemies election moves to next round for failed election" time="0.001">
+    </testcase>
+    <testcase classname="Allies and Enemies election plays the top card of the deck on 3 failed rounds" name="Allies and Enemies election plays the top card of the deck on 3 failed rounds" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies election sets victory status when enemy leader is elected" name="Allies and Enemies election sets victory status when enemy leader is elected" time="0.004">
+    </testcase>
+    <testcase classname="Allies and Enemies first hand does not discard when the turn state is not first hand" name="Allies and Enemies first hand does not discard when the turn state is not first hand" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies first hand provides an error when no cards have been drawn" name="Allies and Enemies first hand provides an error when no cards have been drawn" time="0.001">
+    </testcase>
+    <testcase classname="Allies and Enemies first hand puts card in the discard pile" name="Allies and Enemies first hand puts card in the discard pile" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies second hand does not discard when the turn state is not second hand" name="Allies and Enemies second hand does not discard when the turn state is not second hand" time="0.001">
+    </testcase>
+    <testcase classname="Allies and Enemies second hand provides an error when no cards have been drawn" name="Allies and Enemies second hand provides an error when no cards have been drawn" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies second hand puts card in the discard pile" name="Allies and Enemies second hand puts card in the discard pile" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies pushing a card sets victory status to ally when 5 cards are pushed" name="Allies and Enemies pushing a card sets victory status to ally when 5 cards are pushed" time="0.001">
+    </testcase>
+    <testcase classname="Allies and Enemies pushing a card sets victory status to enemy when 6 cards are pushed" name="Allies and Enemies pushing a card sets victory status to enemy when 6 cards are pushed" time="0.001">
+    </testcase>
+    <testcase classname="Allies and Enemies playing a card sets board status to take action and sets the action to be taken" name="Allies and Enemies playing a card sets board status to take action and sets the action to be taken" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies playing a card advances the turn when no action is to be taken" name="Allies and Enemies playing a card advances the turn when no action is to be taken" time="0.001">
+    </testcase>
+    <testcase classname="Allies and Enemies policy peek does not allow action when status is not take action" name="Allies and Enemies policy peek does not allow action when status is not take action" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies policy peek does not allow action when the turn state does not specify it" name="Allies and Enemies policy peek does not allow action when the turn state does not specify it" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies policy peek does not change draw or discard and returns cards" name="Allies and Enemies policy peek does not change draw or discard and returns cards" time="0.001">
+    </testcase>
+    <testcase classname="Allies and Enemies policy peek advances the turn" name="Allies and Enemies policy peek advances the turn" time="0.001">
+    </testcase>
+    <testcase classname="Allies and Enemies special election does not allow action when status is not take action" name="Allies and Enemies special election does not allow action when status is not take action" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies special election provides an error when action is not special election" name="Allies and Enemies special election provides an error when action is not special election" time="0.001">
+    </testcase>
+    <testcase classname="Allies and Enemies special election provides an error when player does not exist" name="Allies and Enemies special election provides an error when player does not exist" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies special election provides an error when player is already executed" name="Allies and Enemies special election provides an error when player is already executed" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies special election advances the turn, sets special election flag, and sets proper position" name="Allies and Enemies special election advances the turn, sets special election flag, and sets proper position" time="0.001">
+    </testcase>
+    <testcase classname="Allies and Enemies special election returns to the proper position after the special election round" name="Allies and Enemies special election returns to the proper position after the special election round" time="0.001">
+    </testcase>
+    <testcase classname="Allies and Enemies execution does not allow action when status is not take action" name="Allies and Enemies execution does not allow action when status is not take action" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies execution provides an error when action is not execute" name="Allies and Enemies execution provides an error when action is not execute" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies execution provides an error when player is already executed" name="Allies and Enemies execution provides an error when player is already executed" time="0.001">
+    </testcase>
+    <testcase classname="Allies and Enemies execution provides an error when player does not exist" name="Allies and Enemies execution provides an error when player does not exist" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies execution updates player status with `hasBeenExecuted` true" name="Allies and Enemies execution updates player status with `hasBeenExecuted` true" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies execution advances the turn" name="Allies and Enemies execution advances the turn" time="0.001">
+    </testcase>
+    <testcase classname="Allies and Enemies call veto does not allow action when status is not take second hand" name="Allies and Enemies call veto does not allow action when status is not take second hand" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies call veto does not allow vetoes when `enableVeto` is false" name="Allies and Enemies call veto does not allow vetoes when `enableVeto` is false" time="0.001">
+    </testcase>
+    <testcase classname="Allies and Enemies call veto does not allow vetoes before config specifies" name="Allies and Enemies call veto does not allow vetoes before config specifies" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies call veto does not allow vetoes without the second hand being drawn" name="Allies and Enemies call veto does not allow vetoes without the second hand being drawn" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies call veto sets the turn status to veto when all checks pass" name="Allies and Enemies call veto sets the turn status to veto when all checks pass" time="0.001">
+    </testcase>
+    <testcase classname="Allies and Enemies veto vote returns to a new first hand on a yes vote" name="Allies and Enemies veto vote returns to a new first hand on a yes vote" time="0.001">
+    </testcase>
+    <testcase classname="Allies and Enemies veto vote provides an error when second hand is in an invalid state" name="Allies and Enemies veto vote provides an error when second hand is in an invalid state" time="0">
+    </testcase>
+    <testcase classname="Allies and Enemies veto vote returns to same second hand on a no vote" name="Allies and Enemies veto vote returns to same second hand on a no vote" time="0.001">
+    </testcase>
+  </testsuite>
+</testsuites>
