@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useClipboard } from 'use-clipboard-copy'
-import {
-    useQuery,
-    QueryHookOptions,
-} from '@apollo/react-hooks'
+import { useQuery, QueryHookOptions } from '@apollo/react-hooks'
 import { DocumentNode } from 'graphql'
 import { OperationVariables, QueryResult } from '@apollo/react-common'
 

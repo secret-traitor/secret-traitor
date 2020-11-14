@@ -1,6 +1,10 @@
 import { gql } from 'apollo-boost'
 import { useEffect } from 'react'
-import { ExecutionResult, MutationResult, QueryResult } from '@apollo/react-common'
+import {
+    ExecutionResult,
+    MutationResult,
+    QueryResult,
+} from '@apollo/react-common'
 import { useQuery, useMutation } from '@apollo/react-hooks'
 import find from 'lodash/find'
 

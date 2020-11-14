@@ -6,7 +6,6 @@ import { enableExperimentalFragmentVariables } from 'graphql-tag'
 import * as serviceWorker from './serviceWorker'
 import { bootstrapClient } from './ApolloClient'
 import App from './App'
-
 ;(async () => {
     enableExperimentalFragmentVariables()
     const ApolloClient = await bootstrapClient()
