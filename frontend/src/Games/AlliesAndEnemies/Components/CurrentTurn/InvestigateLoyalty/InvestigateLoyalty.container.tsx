@@ -1,13 +1,13 @@
 import React from 'react'
 
 import { AlliesAndEnemiesState } from 'Games/AlliesAndEnemies/types'
+import LoadingScreen from 'Components/LoadingScreen'
 
 import {
     InvestigateLoyaltyPick,
     InvestigateLoyaltyView,
 } from './InvestigateLoyalty.component'
 import { useInvestigateLoyaltyOk, useInvestigateLoyalty } from './hooks'
-import LoadingScreen from '../../../../../Components/LoadingScreen'
 
 const InvestigateLoyaltyContainer: React.FC<AlliesAndEnemiesState> = ({
     players,
