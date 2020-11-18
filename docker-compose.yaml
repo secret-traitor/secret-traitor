@@ -1,0 +1,26 @@
+version: "3"
+
+services:
+  backend: 
+    build: ./backend
+  dynamodb-local:
+    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-dbPath", "/home/dynamodblocal/data"]
+    container_name: dynamodb-local
+    image: amazon/dynamodb-local
+    ports:
+      - "8000:8000"
+    hostname: dynamodb-local
+    volumes:
+      - ./dynamo:/home/dynamodblocal/data
+  frontend: 
+    build: ./frontend
+  web:
+    image: nginx
+    ports:
+      - "7327:80"
+    # volumes:
+    #   - ./web/nginx.conf:/etc/nginx/nginx.conf:ro
+    command: [nginx-debug, '-g', 'daemon off;']
+    environment:
+    - NGINX_HOST=foobar.com
+    - NGINX_PORT=80
