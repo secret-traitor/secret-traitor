@@ -1,6 +1,8 @@
 version: "3"
 
 services:
+  backend: 
+    build: ./backend
   dynamodb-local:
     command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-dbPath", "/home/dynamodblocal/data"]
     container_name: dynamodb-local
@@ -10,6 +12,8 @@ services:
     hostname: dynamodb-local
     volumes:
       - ./dynamo:/home/dynamodblocal/data
+  frontend: 
+    build: ./frontend
   web:
     image: nginx
     ports:
