@@ -32,3 +32,9 @@ build:
 
 tests:
 	npm test
+
+start-reverse-proxy:
+	
+
+start-frontend:
+	cd frontend && npm start
