@@ -103,3 +103,5 @@ dist
 
 # Jetbrains
 .idea
+
+backend/src/daos/MockDb/MockDb.json
