@@ -21,6 +21,9 @@ services:
             - ./dynamo:/home/dynamodblocal/data
     frontend:
         build: ./frontend
+        ports:
+            - '7328:3000'
+        stdin_open: true
     web:
         image: nginx
         ports:
