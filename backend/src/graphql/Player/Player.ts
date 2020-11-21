@@ -9,4 +9,7 @@ export class Player implements IPlayer {
 
     @Field(() => String, { nullable: true })
     public readonly nickname?: string
+
+    @Field(() => Boolean, { defaultValue: false })
+    public readonly host?: boolean
 }

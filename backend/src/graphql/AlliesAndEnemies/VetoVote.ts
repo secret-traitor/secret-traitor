@@ -7,16 +7,10 @@ import {
     PubSub,
     Resolver,
 } from 'type-graphql'
-import { Inject } from 'typedi'
 import { PubSubEngine } from 'graphql-subscriptions'
 
-import { IAlliesAndEnemiesDao } from '@daos/AlliesAndEnemies'
-import { IGameDao } from '@daos/Game'
-import { IPlayerDao } from '@daos/Player'
-import { IGamePlayerDao } from '@daos/GamePlayer'
-
 import { GamePlayerId } from '@entities/GamePlayer'
-import { GameType } from '@entities/Game'
+import { GameId, GameType } from '@entities/Game'
 import { PlayerId } from '@entities/Player'
 
 import { VoteValue } from '@games/AlliesAndEnemies'
@@ -25,62 +19,45 @@ import { Event } from '@graphql/Event'
 import { GameEvent } from '@graphql/GameEvent'
 import { BaseAlliesAndEnemiesResolver } from '@graphql/AlliesAndEnemies/resolver'
 
-import { ApiResponse, DescriptiveError } from '@shared/api'
+import { ApiResponse } from '@shared/api'
 import { getTopicName, Topics } from '@shared/topics'
+import GamesClient from '@clients/Games'
 
 @ObjectType({ implements: [Event, GameEvent] })
 export class AlliesAndEnemiesVetoVoteEvent extends GameEvent {
     @Field(() => VoteValue)
     public readonly vote: VoteValue
 
-    constructor(
-        vote: VoteValue,
-        gamePlayerId: GamePlayerId,
-        activePlayerId: PlayerId
-    ) {
-        const state = { gamePlayerId, gameType: GameType.AlliesNEnemies }
-        super(state, activePlayerId, AlliesAndEnemiesVetoVoteEvent.name)
+    constructor(vote: VoteValue, gameId: GamePlayerId, playerId: PlayerId) {
+        const state = { gameId, playerId, gameType: GameType.AlliesNEnemies }
+        super(state, playerId, AlliesAndEnemiesVetoVoteEvent.name)
         this.vote = vote
     }
 }
 
 @Resolver(() => AlliesAndEnemiesVetoVoteEvent)
 class AlliesAndEnemiesVetoVoteEventResolver extends BaseAlliesAndEnemiesResolver {
-    constructor(
-        @Inject('AlliesAndEnemies')
-        protected readonly gameStateDao: IAlliesAndEnemiesDao,
-        @Inject('GamePlayers') protected readonly gamePlayerDao: IGamePlayerDao,
-        @Inject('Games') protected readonly gameDao: IGameDao,
-        @Inject('Players') protected readonly playerDao: IPlayerDao
-    ) {
-        super()
-    }
-
     @Mutation(() => AlliesAndEnemiesVetoVoteEvent)
     async alliesAndEnemiesVetoVote(
-        @Arg('playId', () => ID) gamePlayerId: GamePlayerId,
+        @Arg('gameId', () => ID) gameId: GameId,
+        @Arg('playerId', () => ID) playerId: PlayerId,
         @Arg('vote', () => VoteValue) vote: VoteValue,
         @PubSub() pubSub: PubSubEngine
     ): Promise<ApiResponse<AlliesAndEnemiesVetoVoteEvent>> {
-        const { viewingPlayer, state } = await this.getViewingPlayerState(
-            gamePlayerId
-        )
-        if (viewingPlayer.position !== state.currentRound.position) {
-            return new DescriptiveError(
-                'Unable to vote on the veto.',
-                'It is not your turn.',
-                'Please refresh the page before trying again.'
-            )
+        const { state } = await this.getActiveViewingPlayerState({
+            gameId,
+            playerId,
+        })
+
+        const result = state.vetoVote(vote)
+        if ('error' in result) {
+            return result.error
         }
-        const [, error] = state.vetoVote(vote)
-        if (error) {
-            return error
-        }
-        await state.saveTo(this.gameStateDao)
+        await GamesClient.state.put(gameId, state)
         const payload = new AlliesAndEnemiesVetoVoteEvent(
             vote,
-            gamePlayerId,
-            viewingPlayer.id
+            gameId,
+            playerId
         )
         await pubSub.publish(getTopicName(Topics.Play, state.gameId), payload)
         return payload

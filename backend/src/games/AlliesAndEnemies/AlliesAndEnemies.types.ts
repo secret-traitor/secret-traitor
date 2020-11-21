@@ -3,6 +3,7 @@ import { IPlayer, PlayerId } from '@entities/Player'
 import { ConfigurationOptions } from '@games/AlliesAndEnemies/AlliesAndEnemies.config'
 
 export enum PlayerRole {
+    Unknown,
     Ally,
     Enemy,
     EnemyLeader,
@@ -19,13 +20,12 @@ export type PlayerVote = {
 }
 
 export type PlayerState = IPlayer & {
+    readonly hasBeenExecuted?: boolean
     readonly position: number
     readonly role: PlayerRole
-    readonly hasBeenExecuted?: boolean
 }
 
-export type ViewingPlayerState = Omit<PlayerState, 'role'> & {
-    readonly role?: PlayerRole
+export type ViewingPlayerState = PlayerState & {
     readonly status: PlayerStatus
 }
 

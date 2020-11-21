@@ -1,36 +1,21 @@
-import { Field, FieldResolver, ObjectType, Resolver, Root } from 'type-graphql'
+import { FieldResolver, ObjectType, Resolver, Root } from 'type-graphql'
 
-import { AlliesAndEnemiesPlayer } from '@graphql/AlliesAndEnemies/Player'
 import { BoardAction, TurnStatus } from '@games/AlliesAndEnemies'
+import { AlliesAndEnemiesPlayer } from '@graphql/AlliesAndEnemies/Player'
 import {
     BaseAlliesAndEnemiesResolver,
-    ViewingPlayerState,
+    ActiveViewingPlayerState,
 } from '@graphql/AlliesAndEnemies/resolver'
-import { Inject } from 'typedi'
-import { IAlliesAndEnemiesDao } from '@daos/AlliesAndEnemies'
-import { IGamePlayerDao } from '@daos/GamePlayer'
-import { IGameDao } from '@daos/Game'
-import { IPlayerDao } from '@daos/Player'
-import { ApiResponse, DescriptiveError } from '@shared/api'
 import { Card } from '@graphql/AlliesAndEnemies/Card'
+import { ApiResponse, DescriptiveError } from '@shared/api'
 
-export type CurrentTurnRoot = ViewingPlayerState
+export type CurrentTurnRoot = ActiveViewingPlayerState
 
 @ObjectType()
 export class CurrentTurn {}
 
 @Resolver(() => CurrentTurn)
 class CurrentTurnResolver extends BaseAlliesAndEnemiesResolver {
-    constructor(
-        @Inject('AlliesAndEnemies')
-        protected readonly gameStateDao: IAlliesAndEnemiesDao,
-        @Inject('GamePlayers') protected readonly gamePlayerDao: IGamePlayerDao,
-        @Inject('Games') protected readonly gameDao: IGameDao,
-        @Inject('Players') protected readonly playerDao: IPlayerDao
-    ) {
-        super()
-    }
-
     @FieldResolver(() => BoardAction, { nullable: true })
     action(@Root() { state }: CurrentTurnRoot): BoardAction | null {
         return state.currentRound.action || null
@@ -63,13 +48,13 @@ class CurrentTurnResolver extends BaseAlliesAndEnemiesResolver {
 
     @FieldResolver(() => AlliesAndEnemiesPlayer, { nullable: true })
     nominatedPlayer(
-        @Root() { state, viewingPlayer }: CurrentTurnRoot
+        @Root() { state }: CurrentTurnRoot
     ): ApiResponse<AlliesAndEnemiesPlayer | null> {
         if (!state.currentRound.nomination) {
             return null
         }
         const player = state
-            .players(viewingPlayer)
+            .players()
             .find((p) => p.id === state.currentRound.nomination)
         if (!player) {
             return new DescriptiveError(
@@ -115,7 +100,7 @@ class CurrentTurnResolver extends BaseAlliesAndEnemiesResolver {
         @Root() { state, viewingPlayer }: CurrentTurnRoot
     ): ApiResponse<AlliesAndEnemiesPlayer> {
         const player = state
-            .players(viewingPlayer)
+            .players()
             .find((p) => p.position === state.currentRound.position)
         if (!player) {
             return new DescriptiveError(
@@ -128,8 +113,8 @@ class CurrentTurnResolver extends BaseAlliesAndEnemiesResolver {
 
     @FieldResolver(() => [AlliesAndEnemiesPlayer])
     ineligibleNominations(
-        @Root() { state, viewingPlayer }: CurrentTurnRoot
+        @Root() { state }: CurrentTurnRoot
     ): ApiResponse<AlliesAndEnemiesPlayer[]> {
-        return state.ineligibleNominations(viewingPlayer)
+        return state.ineligibleNominations()
     }
 }

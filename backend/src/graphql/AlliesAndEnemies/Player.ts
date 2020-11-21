@@ -7,18 +7,19 @@ import {
     PlayerRole,
     PlayerState,
     PlayerStatus,
+    ViewingPlayerState,
 } from '@games/AlliesAndEnemies'
 
 @ObjectType()
 export class AlliesAndEnemiesPlayer
     extends Player
-    implements Omit<PlayerState, 'role'> {
+    implements ViewingPlayerState {
     @Field(() => Number)
-    position: number
+    readonly position: number
 
-    @Field(() => PlayerRole, { nullable: true })
-    role?: PlayerRole
+    @Field(() => PlayerRole)
+    readonly role: PlayerRole
 
     @Field(() => PlayerStatus)
-    status: PlayerStatus
+    readonly status: PlayerStatus
 }
