@@ -7,32 +7,28 @@ import { Player } from 'types/Player'
 
 const NominateSpecialElectionMutation = gql`
     mutation alliesAndEnemiesSpecialElection(
-        $playId: ID!
-        $nominatedPlayerId: ID!
+        $gameId: ID!
+        $playerId: ID!
+        $selectedPlayerId: ID!
     ) {
         alliesAndEnemiesSpecialElection(
-            playerId: $nominatedPlayerId
-            playId: $playId
+            playerId: $playerId
+            gameId: $gameId
+            selectedPlayerId: $selectedPlayerId
         ) {
-            ... on AlliesAndEnemiesSpecialElectionEvent {
-                nomination {
-                    id
-                    nickname
-                    position
-                    role
-                }
-            }
+            timestamp
         }
     }
 `
 
 export const useNominateSpecialElection = (
-    playId: string
+    gameId: string,
+    playerId: string
 ): [(player: Player) => Promise<ExecutionResult>, MutationResult] => {
     const [nominateFn, results] = useMutation(NominateSpecialElectionMutation)
     const nominate = async (player: Player) =>
         await nominateFn({
-            variables: { playId, nominatedPlayerId: player.id },
+            variables: { gameId, playerId, selectedPlayerId: player.id },
         })
     return [nominate, results]
 }

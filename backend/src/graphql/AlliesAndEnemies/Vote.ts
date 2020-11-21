@@ -9,7 +9,6 @@ import {
 } from 'type-graphql'
 import { PubSubEngine } from 'graphql-subscriptions'
 
-import GamesClient from '@clients/Games'
 import { GamePlayerId } from '@entities/GamePlayer'
 import { GameId, GameType } from '@entities/Game'
 import { PlayerId } from '@entities/Player'
@@ -49,7 +48,7 @@ class AlliesAndEnemiesVoteEventResolver extends BaseAlliesAndEnemiesResolver {
         if ('error' in result) {
             return result.error
         }
-        await GamesClient.state.put(gameId, state)
+        await state.save()
         const payload = new AlliesAndEnemiesVoteEvent(vote, gameId, playerId)
         await pubSub.publish(getTopicName(Topics.Play, state.gameId), payload)
         return payload

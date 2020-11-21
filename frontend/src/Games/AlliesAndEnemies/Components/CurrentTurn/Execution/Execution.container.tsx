@@ -6,11 +6,11 @@ import Execution from './Execution.component'
 import { useExecutePlayer } from './hooks'
 
 const ExecutionContainer: React.FC<AlliesAndEnemiesState> = ({
-    playId,
+    game,
     players,
     viewingPlayer,
 }) => {
-    const [execute] = useExecutePlayer(playId)
+    const [execute] = useExecutePlayer(game.id, viewingPlayer.id)
     return (
         <Execution
             viewingPlayer={viewingPlayer}

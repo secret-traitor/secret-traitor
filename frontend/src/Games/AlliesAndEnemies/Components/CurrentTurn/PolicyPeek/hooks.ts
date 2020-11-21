@@ -6,17 +6,23 @@ import { ExecutionResult } from '@apollo/react-common'
 import { Card } from 'Games/AlliesAndEnemies/types'
 
 const PolicyPeekQuery = gql`
-    query peek($playId: ID!) {
-        cards: alliesAndEnemiesPolicyPeek(playId: $playId) {
+    query peek($gameId: ID!, $playerId: ID!) {
+        cards: alliesAndEnemiesPolicyPeek(
+            gameId: $gameId
+            playerId: $playerId
+        ) {
             suit
         }
     }
 `
 
 export const usePolicyPeek = (
-    playId: string
+    gameId: string,
+    playerId: string
 ): QueryResult & { cards?: [Card, Card, Card] } => {
-    const results = useQuery(PolicyPeekQuery, { variables: { playId } })
+    const results = useQuery(PolicyPeekQuery, {
+        variables: { gameId, playerId },
+    })
     return {
         ...results,
         cards: results.data?.cards,
@@ -24,15 +30,16 @@ export const usePolicyPeek = (
 }
 
 const PolicyPeekOkMutation = gql`
-    mutation peek($playId: ID!) {
-        alliesAndEnemiesPolicyPeekOk(playId: $playId) {
+    mutation peek($gameId: ID!, $playerId: ID!) {
+        alliesAndEnemiesPolicyPeekOk(playerId: $playerId, gameId: $gameId) {
             timestamp
         }
     }
 `
 export const usePolicyPeekOk = (
-    playId: string
+    gameId: string,
+    playerId: string
 ): [() => Promise<ExecutionResult>, MutationResult] =>
     useMutation(PolicyPeekOkMutation, {
-        variables: { playId },
+        variables: { gameId, playerId },
     })

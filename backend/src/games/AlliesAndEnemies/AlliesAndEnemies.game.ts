@@ -11,12 +11,12 @@ import {
     BoardAction,
     BoardState,
     Card,
+    ConfigurationOptions,
     Faction,
     PlayerRole,
     PlayerState,
     PlayerStatus,
     PlayerVote,
-    StandardConfiguration,
     TurnState,
     TurnStatus,
     Victory,
@@ -296,7 +296,7 @@ export class ActiveAlliesAndEnemiesState {
     public nominate(
         nominatedPlayerId: PlayerId
     ): ActionResponse<{ nominatedPlayer: ViewingPlayerState }> {
-        if (!this.isActiveViewingPlayer()) {
+        if (!this.isCurrentViewingPlayer()) {
             return {
                 error: new DescriptiveError(
                     'Unable to nominate player.',
@@ -486,7 +486,7 @@ export class ActiveAlliesAndEnemiesState {
     public secondHand(
         discardIndex: 0 | 1
     ): { error: DescriptiveError } | { success: true } {
-        if (!this.isActiveViewingPlayer()) {
+        if (!this.isNominatedViewingPlayer()) {
             return {
                 error: new DescriptiveError(
                     'Unable to play second hand.',
@@ -552,7 +552,7 @@ export class ActiveAlliesAndEnemiesState {
     }
 
     public policyPeek(): ActionResponse<{ cards: [Card, Card, Card] }> {
-        if (!this.isActiveViewingPlayer()) {
+        if (!this.isCurrentViewingPlayer()) {
             return {
                 error: new DescriptiveError(
                     'Unable to peek at the next policies.',
@@ -591,7 +591,7 @@ export class ActiveAlliesAndEnemiesState {
     }
 
     public policyPeekOk(): ActionResponse {
-        if (!this.isActiveViewingPlayer()) {
+        if (!this.isCurrentViewingPlayer()) {
             return {
                 error: new DescriptiveError(
                     'Unable to progress turn.',
@@ -625,7 +625,7 @@ export class ActiveAlliesAndEnemiesState {
     public specialElection(
         playerId: PlayerId
     ): ActionResponse<{ specialElectedPlayer: ViewingPlayerState }> {
-        if (!this.isActiveViewingPlayer()) {
+        if (!this.isCurrentViewingPlayer()) {
             return {
                 error: new DescriptiveError(
                     'Unable to nominate player.',
@@ -688,7 +688,7 @@ export class ActiveAlliesAndEnemiesState {
     public executePlayer(
         playerId: PlayerId
     ): ActionResponse<{ executedPlayer: ViewingPlayerState }> {
-        if (!this.isActiveViewingPlayer()) {
+        if (!this.isCurrentViewingPlayer()) {
             return {
                 error: new DescriptiveError(
                     'Unable to execute a player.',
@@ -750,7 +750,7 @@ export class ActiveAlliesAndEnemiesState {
     }
 
     public callVeto(): ActionResponse {
-        if (!this.isActiveViewingPlayer()) {
+        if (!this.isCurrentViewingPlayer()) {
             return {
                 error: new DescriptiveError(
                     'Unable to call veto.',
@@ -802,7 +802,7 @@ export class ActiveAlliesAndEnemiesState {
     }
 
     public vetoVote(vote: VoteValue): ActionResponse {
-        if (!this.isActiveViewingPlayer()) {
+        if (!this.isCurrentViewingPlayer()) {
             return {
                 error: new DescriptiveError(
                     'Unable to vote on the veto.',
@@ -850,7 +850,7 @@ export class ActiveAlliesAndEnemiesState {
     public investigateLoyalty(
         playerId: PlayerId
     ): ActionResponse<{ investigatedPlayer: ViewingPlayerState }> {
-        if (!this.isActiveViewingPlayer()) {
+        if (!this.isCurrentViewingPlayer()) {
             return {
                 error: new DescriptiveError(
                     'Unable to investigate player loyalty.',
@@ -900,7 +900,7 @@ export class ActiveAlliesAndEnemiesState {
     }
 
     investigateLoyaltyOk(): ActionResponse {
-        if (!this.isActiveViewingPlayer()) {
+        if (!this.isCurrentViewingPlayer()) {
             return {
                 error: new DescriptiveError(
                     'Unable to nominate player.',
@@ -931,7 +931,7 @@ export class ActiveAlliesAndEnemiesState {
         return { success: true }
     }
 
-    private isActiveViewingPlayer() {
+    private isCurrentViewingPlayer() {
         const viewingPlayer = this.getViewingPlayer()
         return (
             viewingPlayer &&
@@ -942,24 +942,21 @@ export class ActiveAlliesAndEnemiesState {
         return this.state.players.find((p) => p.id === this.viewingPlayerId)
     }
 
-    public static async newGame(
-        gameId: GameId
-    ): Promise<ActionResponse<{ state: AlliesAndEnemiesState }>> {
-        let players = await GamesClient.players.list(gameId)
-        if (!players) {
-            return {
-                error: new DescriptiveError('no players'),
-            }
-        }
-        players = players.filter((p) => p.nickname)
-        const configuration = StandardConfiguration[players.length] || null
-        if (!configuration) {
-            return {
-                error: new DescriptiveError('no configuration'),
-            }
-        }
-        return {
-            state: {
+    private isNominatedViewingPlayer() {
+        const viewingPlayer = this.getViewingPlayer()
+        return (
+            viewingPlayer && this.currentRound.nomination === viewingPlayer.id
+        )
+    }
+
+    public static newGame(
+        gameId: GameId,
+        players: IPlayer[],
+        configuration: ConfigurationOptions,
+        viewingPlayerId: PlayerId
+    ): ActiveAlliesAndEnemiesState {
+        return new ActiveAlliesAndEnemiesState(
+            {
                 gameId,
                 draw: this.buildDeck(
                     configuration.deck.allyCards,
@@ -986,7 +983,8 @@ export class ActiveAlliesAndEnemiesState {
                     enemy: [],
                 },
             },
-        }
+            viewingPlayerId
+        )
     }
 
     private static buildPlayers = (
@@ -1016,4 +1014,8 @@ export class ActiveAlliesAndEnemiesState {
             ...new Array(allyCards).fill({ suit: Faction.Ally }),
             ...new Array(enemyCards).fill({ suit: Faction.Enemy }),
         ])
+
+    public async save() {
+        return await GamesClient.state.put(this.gameId, this.state)
+    }
 }

@@ -1,7 +1,6 @@
 import { Arg, ID, Mutation, ObjectType, PubSub, Resolver } from 'type-graphql'
 import { PubSubEngine } from 'graphql-subscriptions'
 
-import GamesClient from '@clients/Games'
 import { GamePlayerId } from '@entities/GamePlayer'
 import { GameId, GameType } from '@entities/Game'
 import { PlayerId } from '@entities/Player'
@@ -36,7 +35,7 @@ class AlliesAndEnemiesSecondHandDiscardEventResolver extends BaseAlliesAndEnemie
         if ('error' in result) {
             return result.error
         }
-        await GamesClient.state.put(gameId, state)
+        await state.save()
         const payload = new AlliesAndEnemiesSecondHandDiscardEvent(
             gameId,
             playerId

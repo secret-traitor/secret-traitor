@@ -18,7 +18,6 @@ import { ApiResponse } from '@shared/api'
 import { getTopicName, Topics } from '@shared/topics'
 import { AlliesAndEnemiesPlayer } from '@graphql/AlliesAndEnemies/Player'
 import { ViewingPlayerState } from '@games/AlliesAndEnemies'
-import GamesClient from '@clients/Games'
 
 @ObjectType({ implements: [Event, GameEvent] })
 export class AlliesAndEnemiesExecutePlayer extends GameEvent {
@@ -54,7 +53,7 @@ class AlliesAndEnemiesExecutePlayerResolver extends BaseAlliesAndEnemiesResolver
             return result.error
         }
         const executedPlayer = result.executedPlayer
-        await GamesClient.state.put(gameId, state)
+        await state.save()
         const payload = new AlliesAndEnemiesExecutePlayer(
             executedPlayer,
             gameId,

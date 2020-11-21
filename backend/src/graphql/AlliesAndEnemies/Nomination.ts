@@ -9,7 +9,6 @@ import {
 } from 'type-graphql'
 import { PubSubEngine } from 'graphql-subscriptions'
 
-import GamesClient from '@clients/Games'
 import { GamePlayerId } from '@entities/GamePlayer'
 import { GameId, GameType } from '@entities/Game'
 import { PlayerId } from '@entities/Player'
@@ -56,7 +55,7 @@ class AlliesAndEnemiesNominationEventResolver extends BaseAlliesAndEnemiesResolv
             return result.error
         }
         const nominatedPlayer = result.nominatedPlayer
-        await GamesClient.state.put(gameId, state)
+        await state.save()
         const payload = new AlliesAndEnemiesNominationEvent(
             nominatedPlayer,
             gameId,
