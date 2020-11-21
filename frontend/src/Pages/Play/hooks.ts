@@ -71,21 +71,17 @@ type PlayGame = QueryResult & {
     state?: GameState
 }
 
-export const usePlayGame = (
-    gameId: string,
-    playerId: string,
-    playId?: string
-): PlayGame => {
+export const usePlayGame = (gameId: string, playerId: string): PlayGame => {
     const result = useQuery(GameQuery, {
-        variables: { gameId, playId },
-        skip: !gameId || !playId,
+        variables: { gameId, playerId },
+        skip: !gameId || !playerId,
     })
     useEffect(() => {
         let unsubscribe: (() => void) | undefined
-        if (gameId && playId) {
+        if (gameId && playerId) {
             unsubscribe = result?.subscribeToMore({
                 document: GameSubscription,
-                variables: { gameId, playId },
+                variables: { gameId, playerId },
                 updateQuery: (prev, { subscriptionData }) => {
                     console.log('subscriptionData:', subscriptionData?.data)
                     const { game, state } = subscriptionData?.data?.play
@@ -94,7 +90,7 @@ export const usePlayGame = (
             })
         }
         if (unsubscribe) return unsubscribe
-    }, [gameId, playId, result])
+    }, [gameId, playerId, result])
     const game = result?.data?.game
     const state = result?.data?.game?.state
     const players = result?.data?.game?.players
@@ -103,7 +99,7 @@ export const usePlayGame = (
         game: game as Game,
         player: find(players, (p) => p.id === playerId),
         players: players as Player[],
-        state: state as GameState,
+        state: { game, ...state } as GameState,
     }
     console.log(playe)
     return playe

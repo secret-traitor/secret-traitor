@@ -2,7 +2,6 @@ import dynamoDb from '@clients/dynamo'
 import { GameId, GameStatus, GameType, IGame } from '@entities/Game'
 import { IPlayer, PlayerId } from '@entities/Player'
 import { DocumentClient } from 'aws-sdk/lib/dynamodb/document_client'
-import { Query } from 'type-graphql'
 
 type Item = { [key: string]: any }
 
@@ -75,7 +74,7 @@ type ComparisonOperator =
     | 'BEGINS_WITH'
 
 type Condition = {
-    AttributeValueList: any
+    AttributeValueList?: any
     ComparisonOperator: ComparisonOperator
 }
 
@@ -301,6 +300,18 @@ class StateClient implements IStateClient {
             Item: this.toDynamo(gameId, state),
             TableName: this.tableName,
         })
+    }
+
+    async delete(gameId: GameId): Promise<any> {
+        return await this.client
+            .delete({
+                TableName: this.tableName,
+                Key: {
+                    PK: `g#${gameId}`,
+                    SK: 'state',
+                },
+            })
+            .promise()
     }
 
     private readonly toDynamo = (gameId: GameId, state: any) => ({

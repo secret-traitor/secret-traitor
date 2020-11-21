@@ -1,12 +1,12 @@
-import AWS from 'aws-sdk'
+import { DynamoDB, Endpoint } from 'aws-sdk'
 
-AWS.config.update({
-    region: 'us-west-2',
-    dynamodb: {
-        endpoint: new AWS.Endpoint(process.env.DYNAMO_HOST ?? 'localhost:8000'),
+const dynamoDb = new DynamoDB({
+    region: 'local',
+    credentials: {
+        accessKeyId: 'qal9pj',
+        secretAccessKey: 'qryy0m',
     },
+    endpoint: new Endpoint('http://localhost:8000'),
 })
 
-const dynamodb = new AWS.DynamoDB.DocumentClient()
-
-export default dynamodb
+export default new DynamoDB.DocumentClient({ service: dynamoDb })

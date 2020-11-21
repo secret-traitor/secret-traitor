@@ -5,11 +5,11 @@ import SpecialElection from './SpecialElection.component'
 import { useNominateSpecialElection } from './hooks'
 
 const SpecialElectionContainer: React.FC<AlliesAndEnemiesState> = ({
-    viewingPlayer,
+    game,
     players,
-    playId,
+    viewingPlayer,
 }) => {
-    const [nominate] = useNominateSpecialElection(playId)
+    const [nominate] = useNominateSpecialElection(game.id, viewingPlayer.id)
     return (
         <SpecialElection
             players={players}

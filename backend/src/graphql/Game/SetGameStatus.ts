@@ -12,6 +12,10 @@ import { PubSubEngine } from 'graphql-subscriptions'
 import GamesClient from '@clients/Games'
 import { GameId, GameStatus, IGame } from '@entities/Game'
 import { PlayerId } from '@entities/Player'
+import {
+    ActiveAlliesAndEnemiesState,
+    StandardConfiguration,
+} from '@games/AlliesAndEnemies'
 import { Event } from '@graphql/Event'
 import { GameEvent } from '@graphql/GameEvent'
 import { ApiResponse, DescriptiveError } from '@shared/api'
@@ -53,13 +57,35 @@ export class SetGameStatusResolver {
             return new DescriptiveError('')
         }
         const newGame = { ...oldGame, status }
-        await GamesClient.games.put(newGame)
         if (
             oldGame.status === GameStatus.InLobby &&
             newGame.status === GameStatus.InProgress
         ) {
-            // TODO: start game
+            const players = await GamesClient.players.find({
+                PK: {
+                    ComparisonOperator: 'CONTAINS',
+                    AttributeValueList: [gameId],
+                },
+                Name: { ComparisonOperator: 'NOT_NULL' },
+            })
+            if (!players) {
+                return new DescriptiveError('no players')
+            }
+            const configuration = StandardConfiguration[players.length] || null
+            if (!configuration) {
+                return new DescriptiveError('no configuration')
+            }
+            const state = ActiveAlliesAndEnemiesState.newGame(
+                gameId,
+                players,
+                configuration,
+                playerId
+            )
+            await state.save()
+        } else {
+            await GamesClient.state.delete(gameId)
         }
+        await GamesClient.games.put(newGame)
         const payload = new GameStatusEvent({
             game: newGame,
             playerId,

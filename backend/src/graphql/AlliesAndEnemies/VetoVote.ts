@@ -12,16 +12,12 @@ import { PubSubEngine } from 'graphql-subscriptions'
 import { GamePlayerId } from '@entities/GamePlayer'
 import { GameId, GameType } from '@entities/Game'
 import { PlayerId } from '@entities/Player'
-
 import { VoteValue } from '@games/AlliesAndEnemies'
-
 import { Event } from '@graphql/Event'
 import { GameEvent } from '@graphql/GameEvent'
 import { BaseAlliesAndEnemiesResolver } from '@graphql/AlliesAndEnemies/resolver'
-
 import { ApiResponse } from '@shared/api'
 import { getTopicName, Topics } from '@shared/topics'
-import GamesClient from '@clients/Games'
 
 @ObjectType({ implements: [Event, GameEvent] })
 export class AlliesAndEnemiesVetoVoteEvent extends GameEvent {
@@ -53,7 +49,7 @@ class AlliesAndEnemiesVetoVoteEventResolver extends BaseAlliesAndEnemiesResolver
         if ('error' in result) {
             return result.error
         }
-        await GamesClient.state.put(gameId, state)
+        await state.save()
         const payload = new AlliesAndEnemiesVetoVoteEvent(
             vote,
             gameId,

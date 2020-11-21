@@ -15,7 +15,6 @@ export const AlliesAndEnemiesGameStateFragment = gql`
         status
     }
     fragment AlliesAndEnemiesGameStateFragment on AlliesAndEnemiesGameState {
-        playId
         players {
             ...AlliesAndEnemiesPlayerFragment
         }

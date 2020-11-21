@@ -3,24 +3,17 @@ import { PluginDefinition } from 'apollo-server-core/src/types'
 import logger from '@shared/Logger'
 
 export const LoggingPlugin: PluginDefinition = {
-    serverWillStart() {
-        // logger.debug('LoggingPlugin initialized')
-    },
     requestDidStart(requestContext) {
         const start = new Date().getTime()
-        // logger.debug(
-        //     'Received Query:\n' +
-        //         JSON.stringify(requestContext.request.query) +
-        //         '\nWith variables:\n' +
-        //         JSON.stringify(requestContext.request.variables)
-        // )
         return {
             willSendResponse(requestContext) {
-                logger.debug(`Request took: ${new Date().getTime() - start}ms`)
-                // logger.debug(
-                //     'Sending ApiResponse:\n' +
-                //         JSON.stringify(requestContext.response.data)
-                // )
+                const operation = requestContext.request.operationName
+                if (operation !== 'IntrospectionQuery') {
+                    const duration = new Date().getTime() - start
+                    logger.debug(
+                        `Send Response: "${operation}" (${duration}ms)`
+                    )
+                }
             },
             didEncounterErrors(requestContext) {
                 logger.error(JSON.stringify(requestContext.errors))

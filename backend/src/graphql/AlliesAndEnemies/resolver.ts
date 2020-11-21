@@ -4,7 +4,7 @@ import {
     AlliesAndEnemiesState,
     ViewingPlayerState,
 } from '@games/AlliesAndEnemies'
-import { IPlayer, PlayerId } from '@entities/Player'
+import { PlayerId } from '@entities/Player'
 import { GameId } from '@entities/Game'
 import { DescriptiveError } from '@shared/api'
 
