@@ -1,9 +1,11 @@
 import groupBy from 'lodash/groupBy'
 import merge from 'lodash/merge'
+import range from 'lodash/range'
 import remove from 'lodash/remove'
 import shuffle from 'lodash/shuffle'
 import uniqBy from 'lodash/uniqBy'
 
+import GamesClient from '@clients/Games'
 import {
     AlliesAndEnemiesState,
     BoardAction,
@@ -14,17 +16,19 @@ import {
     PlayerState,
     PlayerStatus,
     PlayerVote,
+    StandardConfiguration,
     TurnState,
     TurnStatus,
     Victory,
     VictoryType,
     ViewingPlayerState,
     VoteValue,
-} from '@games/AlliesAndEnemies/index'
-import { IPlayer, PlayerId } from '@entities/Player'
+} from '@games/AlliesAndEnemies'
 import { GameId } from '@entities/Game'
+import { IPlayer, PlayerId } from '@entities/Player'
 import { DescriptiveError } from '@shared/api'
-import { IAlliesAndEnemiesDao } from '@daos/AlliesAndEnemies'
+
+type ActionResponse<T = { success: true }> = { error: DescriptiveError } | T
 
 const FirstHandDiscardRecord: Record<
     0 | 1 | 2,
@@ -43,51 +47,49 @@ const SecondHandDiscardRecord: Record<
     1: (cards) => [cards[0], cards[1]],
 }
 
-function getPlayerState(player: PlayerState, currentRound: TurnState) {
-    let status = PlayerStatus.None
-    if (currentRound.elected) {
-        if (currentRound.position === player.position) {
-            status = PlayerStatus.President
-        }
-        if (currentRound.nomination === player.id) {
-            status = PlayerStatus.Governor
-        }
-    }
-    if (player.hasBeenExecuted) {
-        status = PlayerStatus.Executed
-    }
-    return status
-}
-
 export class ActiveAlliesAndEnemiesState {
-    constructor(private state: AlliesAndEnemiesState) {}
+    constructor(
+        private state: AlliesAndEnemiesState,
+        private viewingPlayerId: PlayerId
+    ) {}
 
-    public async saveTo(dao: IAlliesAndEnemiesDao) {
-        await dao.put(this.state)
+    get config() {
+        return this.state.config
     }
 
-    public players(viewingPlayer: IPlayer): ViewingPlayerState[] {
-        const playerState = this.state.players.find(
-            (p) => p.id === viewingPlayer.id
-        )
-        if (!playerState) {
-            return []
+    public players(): ViewingPlayerState[] {
+        const viewingPlayer = this.getViewingPlayer()
+        if (!viewingPlayer) return []
+
+        const getStatus = (p: PlayerState) => {
+            if (p.hasBeenExecuted) {
+                return PlayerStatus.Executed
+            }
+            if (this.currentRound.elected) {
+                if (this.currentRound.position === p.position) {
+                    return PlayerStatus.President
+                }
+                if (this.currentRound.nomination === p.id) {
+                    return PlayerStatus.Governor
+                }
+            }
+            return PlayerStatus.None
         }
+
         const hideEnemyLeader =
-            playerState.role === PlayerRole.EnemyLeader &&
+            viewingPlayer.role === PlayerRole.EnemyLeader &&
             this.state.config.leaderIsSecret
         const hideRole =
             !this.state.victory &&
-            (playerState.role === PlayerRole.Ally || hideEnemyLeader)
-        return this.state.players.map((p) => {
-            const role =
-                p.id === playerState.id || !hideRole ? p.role : undefined
-            return {
-                ...p,
-                role,
-                status: getPlayerState(p, this.currentRound),
-            }
-        })
+            (viewingPlayer.role === PlayerRole.Ally || hideEnemyLeader)
+        const getRole = (p: PlayerState) =>
+            p.id === viewingPlayer.id || !hideRole ? p.role : PlayerRole.Unknown
+
+        return this.state.players.map((p) => ({
+            ...p,
+            role: getRole(p),
+            status: getStatus(p),
+        }))
     }
 
     get gameId(): GameId {
@@ -110,18 +112,6 @@ export class ActiveAlliesAndEnemiesState {
         return this.updateState({ rounds: [...rounds, updated] })
     }
 
-    public viewingPlayer(viewingPlayer: IPlayer): ViewingPlayerState {
-        return this.players(viewingPlayer).find(
-            (p) => p.id === viewingPlayer.id
-        ) as ViewingPlayerState
-    }
-
-    public currentPlayer(viewingPlayer: IPlayer): ViewingPlayerState {
-        return this.players(viewingPlayer).find(
-            (p) => p.id === this.currentPlayerId()
-        ) as ViewingPlayerState
-    }
-
     private updatePlayer(update: Partial<PlayerState> & { id: PlayerId }) {
         const index = this.state.players.findIndex((p) => p.id === update.id)
         const players = [...this.state.players]
@@ -136,38 +126,43 @@ export class ActiveAlliesAndEnemiesState {
         ) as PlayerState).id
     }
 
-    public ineligibleNominations(viewingPlayer: IPlayer): ViewingPlayerState[] {
+    public ineligibleNominations(): ViewingPlayerState[] {
         const ineligible = this.ineligiblePlayerIds()
-        return this.players(viewingPlayer).filter((p) =>
-            ineligible.includes(p.id)
-        )
+        return this.players().filter((p) => ineligible.includes(p.id))
     }
 
     private ineligiblePlayerIds() {
-        if (this.state.players.filter((p) => !p.hasBeenExecuted).length < 5) {
+        if (
+            this.state.players.filter(({ hasBeenExecuted }) => !hasBeenExecuted)
+                .length <= 5
+        ) {
             return [this.currentPlayerId()]
         }
         const previousElections = this.state.rounds
             .sort((r) => r.number)
             .filter((r) => r.elected)
-        const players = new Set([this.currentPlayerId()])
+        const playerIds = new Set([this.currentPlayerId()])
         if (previousElections.length > 0) {
             const last = previousElections[previousElections.length - 1]
             const president = this.state.players.find(
                 (p) => p.position === last.position
-            ) as ViewingPlayerState
-            players.add(president.id)
+            )
+            if (president) {
+                playerIds.add(president.id)
+            }
             const governor = this.state.players.find(
                 (p) => p.id === last.nomination
-            ) as ViewingPlayerState
-            players.add(governor.id)
+            )
+            if (governor) {
+                playerIds.add(governor.id)
+            }
         }
         this.state.players.forEach((p) => {
             if (p.hasBeenExecuted) {
-                players.add(p.id)
+                playerIds.add(p.id)
             }
         })
-        return [...players]
+        return [...playerIds]
     }
 
     private checkCards(): boolean {
@@ -300,106 +295,110 @@ export class ActiveAlliesAndEnemiesState {
 
     public nominate(
         nominatedPlayerId: PlayerId
-    ): [success: boolean, error?: DescriptiveError] {
+    ): ActionResponse<{ nominatedPlayer: ViewingPlayerState }> {
+        if (!this.isActiveViewingPlayer()) {
+            return {
+                error: new DescriptiveError(
+                    'Unable to nominate player.',
+                    'It is not your turn.',
+                    'Please refresh the page before nominating another player.'
+                ),
+            }
+        }
         if (this.currentRound.status !== TurnStatus.Nomination) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to nominate a player.',
                     'The turn state does not allow this action.',
                     'Are you supposed to be nominating a player?'
                 ),
-            ]
+            }
         }
-        const nominatedPlayer = this.state.players.find(
+        const nominatedPlayer = this.players().find(
             (p) => p.id === nominatedPlayerId
         )
         if (!nominatedPlayer) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to nominate this player.',
                     'Player with this id does not exist.',
                     'Check that a player exists before nominating them.'
                 ),
-            ]
+            }
         }
         if (nominatedPlayer.hasBeenExecuted) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to nominate this player.',
                     'This player has been executed.',
                     'Please refresh the page before trying again.'
                 ),
-            ]
+            }
         }
         if (this.ineligiblePlayerIds().includes(nominatedPlayer.id)) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to nominate a player.',
                     'This player is ineligible.',
                     'Please refresh the page before making another nomination.'
                 ),
-            ]
+            }
         }
         this.updateCurrentRound({
             nomination: nominatedPlayer.id,
             status: TurnStatus.Election,
         })
-        return [true]
+        return { nominatedPlayer }
     }
 
-    public vote(
-        playerId: string,
-        vote: VoteValue
-    ): [success: boolean, error?: DescriptiveError] {
+    public vote(vote: VoteValue): ActionResponse {
         if (this.currentRound.status !== TurnStatus.Election) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to vote.',
                     'The turn state does not allow this action.',
                     'Are you supposed to be voting right now?'
                 ),
-            ]
+            }
         }
-        const votingPlayer = this.state.players.find((p) => p.id === playerId)
+        const votingPlayer = this.state.players.find(
+            (p) => p.id === this.viewingPlayerId
+        )
         if (!votingPlayer) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to vote.',
                     'A player with this id does not exist.',
                     'Are you supposed to be voting right now?'
                 ),
-            ]
+            }
         }
         if (votingPlayer.hasBeenExecuted) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to vote.',
                     'Executed players can not vote.',
                     'Are you supposed to be voting right now?'
                 ),
-            ]
+            }
         }
         const votes = uniqBy(
             this.currentRound.votes as PlayerVote[],
             (v) => v.playerId
         )
-        remove(votes, (v) => v.playerId === playerId)
-        this.updateCurrentRound({ votes: [...votes, { playerId, vote }] })
+        remove(votes, (v) => v.playerId === this.viewingPlayerId)
+        this.updateCurrentRound({
+            votes: [...votes, { playerId: this.viewingPlayerId, vote }],
+        })
         this.checkElectionResults()
-        return [true]
+        return { success: true }
     }
 
     public checkElectionResults(): [completed: boolean, success?: boolean] {
-        const neededVotes = this.state.players.filter((p) => !p.hasBeenExecuted)
-            .length
-        console.log({ neededVotes, count: this.currentRound.votes.length })
+        const neededVotes = this.state.players.filter(
+            ({ hasBeenExecuted }) => !hasBeenExecuted
+        ).length
+
         if (this.currentRound.votes.length >= neededVotes) {
             const groupedVotes = groupBy(
                 this.currentRound.votes,
@@ -454,28 +453,24 @@ export class ActiveAlliesAndEnemiesState {
         this.advanceRound()
     }
 
-    public firstHand(
-        discardIndex: 0 | 1 | 2
-    ): [success: boolean, error?: DescriptiveError] {
+    public firstHand(discardIndex: 0 | 1 | 2): ActionResponse {
         if (this.currentRound.status !== TurnStatus.FirstHand) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to play first hand.',
                     'The turn state does not allow this action.',
                     'Are you supposed to be playing the first hand?'
                 ),
-            ]
+            }
         }
         if (!this.currentRound.firstHand) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to play first hand.',
                     'No cards have been drawn.',
                     'Are you supposed to be playing the first hand?'
                 ),
-            ]
+            }
         }
         const [secondHand, discard] = FirstHandDiscardRecord[discardIndex](
             this.currentRound.firstHand
@@ -485,38 +480,45 @@ export class ActiveAlliesAndEnemiesState {
             status: TurnStatus.SecondHand,
         })
         this.updateState({ discard: [...this.state.discard, discard] })
-        return [true]
+        return { success: true }
     }
 
     public secondHand(
         discardIndex: 0 | 1
-    ): [success: boolean, error?: DescriptiveError] {
+    ): { error: DescriptiveError } | { success: true } {
+        if (!this.isActiveViewingPlayer()) {
+            return {
+                error: new DescriptiveError(
+                    'Unable to play second hand.',
+                    'It is not your turn.',
+                    'Please refresh the page before trying again.'
+                ),
+            }
+        }
         if (this.currentRound.status !== TurnStatus.SecondHand) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to play second hand.',
                     'The turn state does not allow this action.',
                     'Are you supposed to be playing the second hand?'
                 ),
-            ]
+            }
         }
         if (!this.currentRound.secondHand) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to play first hand.',
                     'No cards have been drawn.',
                     'Are you supposed to be playing the second hand?'
                 ),
-            ]
+            }
         }
         const [play, discard] = SecondHandDiscardRecord[discardIndex](
             this.currentRound.secondHand
         )
         this.playCard(play)
         this.updateState({ discard: [...this.state.discard, discard] })
-        return [true]
+        return { success: true }
     }
 
     private allyVictory(type: VictoryType, message?: string) {
@@ -549,29 +551,33 @@ export class ActiveAlliesAndEnemiesState {
         return this.state.victory ?? null
     }
 
-    public policyPeek(): [
-        cards?: [Card, Card, Card],
-        error?: DescriptiveError
-    ] {
+    public policyPeek(): ActionResponse<{ cards: [Card, Card, Card] }> {
+        if (!this.isActiveViewingPlayer()) {
+            return {
+                error: new DescriptiveError(
+                    'Unable to peek at the next policies.',
+                    'It is not your turn.',
+                    'Please refresh the page before trying again.'
+                ),
+            }
+        }
         if (this.currentRound.status !== TurnStatus.TakeAction) {
-            return [
-                undefined,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to take the policy peek action.',
                     'The turn state does not allow taking board actions',
                     'Are you supposed to be taking an action?'
                 ),
-            ]
+            }
         }
         if (this.currentRound.action !== BoardAction.PolicyPeek) {
-            return [
-                undefined,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to take the policy peek action.',
                     'The action for the current turn is not policy peek.',
                     'Please check the appropriate action before attempting an action.'
                 ),
-            ]
+            }
         }
         if (this.state.draw.length < 3) {
             this.shuffleDiscard()
@@ -581,82 +587,94 @@ export class ActiveAlliesAndEnemiesState {
             this.state.draw[1],
             this.state.draw[2],
         ] as [Card, Card, Card]
-        return [cards]
+        return { cards }
     }
 
-    public policyPeekOk(): [success: boolean, error?: DescriptiveError] {
+    public policyPeekOk(): ActionResponse {
+        if (!this.isActiveViewingPlayer()) {
+            return {
+                error: new DescriptiveError(
+                    'Unable to progress turn.',
+                    'It is not your turn.',
+                    'Please refresh the page before trying again.'
+                ),
+            }
+        }
         if (this.currentRound.status !== TurnStatus.TakeAction) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to take the policy peek action.',
                     'The turn state does not allow taking board actions',
                     'Are you supposed to be taking an action?'
                 ),
-            ]
+            }
         }
         if (this.currentRound.action !== BoardAction.PolicyPeek) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to take the policy peek action.',
                     'The action for the current turn is not policy peek.',
                     'Please check the appropriate action before attempting an action.'
                 ),
-            ]
+            }
         }
         this.advanceRound()
-        return [true]
+        return { success: true }
     }
 
     public specialElection(
         playerId: PlayerId
-    ): [success: boolean, error?: DescriptiveError] {
+    ): ActionResponse<{ specialElectedPlayer: ViewingPlayerState }> {
+        if (!this.isActiveViewingPlayer()) {
+            return {
+                error: new DescriptiveError(
+                    'Unable to nominate player.',
+                    'It is not your turn.',
+                    'Please refresh the page before nominating another player.'
+                ),
+            }
+        }
         if (this.currentRound.status !== TurnStatus.TakeAction) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to take the special election action.',
                     'The turn state does not allow taking board actions',
                     'Are you supposed to be taking an action?'
                 ),
-            ]
+            }
         }
         if (this.currentRound.action !== BoardAction.SpecialElection) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to take the special election action.',
                     'The action for the current turn is not special election.',
                     'Please check the appropriate action before attempting an action.'
                 ),
-            ]
+            }
         }
-        const specialElectedPlayer = this.state.players.find(
+        const specialElectedPlayer = this.players().find(
             (p) => p.id === playerId
         )
         if (!specialElectedPlayer) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to elect this player.',
                     'Player with this id does not exist.',
                     'Please refresh the page before trying again.'
                 ),
-            ]
+            }
         }
         if (specialElectedPlayer.hasBeenExecuted) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to elect this player.',
                     'Can not elect executed players.',
                     'Please refresh the page before trying again.'
                 ),
-            ]
+            }
         }
         this.specialElectionRound(specialElectedPlayer.position)
-        return [true]
+        return { specialElectedPlayer }
     }
 
     private specialElectionRound(position: number) {
@@ -669,47 +687,52 @@ export class ActiveAlliesAndEnemiesState {
 
     public executePlayer(
         playerId: PlayerId
-    ): [success: boolean, error?: DescriptiveError] {
+    ): ActionResponse<{ executedPlayer: ViewingPlayerState }> {
+        if (!this.isActiveViewingPlayer()) {
+            return {
+                error: new DescriptiveError(
+                    'Unable to execute a player.',
+                    'It is not your turn.',
+                    'Please refresh the page before trying again.'
+                ),
+            }
+        }
         if (this.currentRound.status !== TurnStatus.TakeAction) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to take the execute action.',
                     'The turn state does not allow taking board actions',
                     'Are you supposed to be taking an action?'
                 ),
-            ]
+            }
         }
         if (this.currentRound.action !== BoardAction.Execution) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to take the execute action.',
                     'The action for the current turn is not execute.',
                     'Please check the appropriate action before attempting an action.'
                 ),
-            ]
+            }
         }
-        const executedPlayer = this.state.players.find((p) => p.id === playerId)
+        const executedPlayer = this.players().find((p) => p.id === playerId)
         if (!executedPlayer) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to take the execute action.',
                     'Player with this id does not exist.',
                     'Please refresh the page before trying again.'
                 ),
-            ]
+            }
         }
         if (executedPlayer.hasBeenExecuted) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to take the execute action.',
                     'This player has already been executed.',
                     'Please refresh the page before trying again.'
                 ),
-            ]
+            }
         }
         this.updatePlayer({ id: playerId, hasBeenExecuted: true })
         if (executedPlayer.role === PlayerRole.EnemyLeader) {
@@ -719,164 +742,278 @@ export class ActiveAlliesAndEnemiesState {
             )
         }
         this.advanceRound()
-        return [true]
+        return { executedPlayer }
     }
 
     get checkVeto() {
-        console.log({
-            enemy: this.state.board.enemy.length,
-            enable: this.state.config.enableVeto,
-        })
         return this.state.board.enemy.length >= this.state.config.enableVeto
     }
 
-    public callVeto(): [success: boolean, error?: DescriptiveError] {
+    public callVeto(): ActionResponse {
+        if (!this.isActiveViewingPlayer()) {
+            return {
+                error: new DescriptiveError(
+                    'Unable to call veto.',
+                    'You have not been elected.',
+                    'Please refresh the page before trying again.'
+                ),
+            }
+        }
         if (this.currentRound.status !== TurnStatus.SecondHand) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to veto.',
                     'Vetoes must occur during the second hand.',
                     'Please refresh the page before trying again.'
                 ),
-            ]
+            }
         }
         if (!this.currentRound.enableVeto) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to veto.',
                     'Veto is not enabled for this round.',
                     'Please refresh the screen before trying again.'
                 ),
-            ]
+            }
         }
         if (!this.checkVeto) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to veto.',
                     'Not enough enemy cards have been played to allow veto.',
                     'Please refresh the screen before trying again.'
                 ),
-            ]
+            }
         }
         if (!this.currentRound.secondHand) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to veto.',
                     'No cards have been drawn.',
                     'Are you supposed to be playing the first hand?'
                 ),
-            ]
+            }
         }
         this.updateCurrentRound({
             status: TurnStatus.Veto,
         })
-        return [true]
+        return { success: true }
     }
 
-    public vetoVote(
-        vote: VoteValue
-    ): [success: boolean, error?: DescriptiveError] {
-        if (vote === VoteValue.Yes) {
-            if (!this.currentRound.secondHand) {
-                return [
-                    false,
-                    new DescriptiveError(
-                        'Unable to vote on this veto.',
-                        'The second hand is in an invalid state.',
-                        'Are you supposed to be playing the first hand?'
-                    ),
-                ]
+    public vetoVote(vote: VoteValue): ActionResponse {
+        if (!this.isActiveViewingPlayer()) {
+            return {
+                error: new DescriptiveError(
+                    'Unable to vote on the veto.',
+                    'It is not your turn.',
+                    'Please refresh the page before trying again.'
+                ),
             }
-            this.updateState({
-                discard: [
-                    ...this.state.discard,
-                    this.currentRound.secondHand[0] as Card,
-                    this.currentRound.secondHand[1] as Card,
-                ],
-            })
-            this.updateCurrentRound({
-                status: TurnStatus.FirstHand,
-                firstHand: [this.drawCard(), this.drawCard(), this.drawCard()],
-                secondHand: undefined,
-            })
-            return [true]
         }
+        return vote === VoteValue.Yes ? this.vetoVoteYes() : this.vetoVoteNo()
+    }
+
+    private vetoVoteYes(): ActionResponse {
+        if (!this.currentRound.secondHand) {
+            return {
+                error: new DescriptiveError(
+                    'Unable to vote on this veto.',
+                    'The second hand is in an invalid state.',
+                    'Are you supposed to be playing the first hand?'
+                ),
+            }
+        }
+        this.updateState({
+            discard: [
+                ...this.state.discard,
+                this.currentRound.secondHand[0] as Card,
+                this.currentRound.secondHand[1] as Card,
+            ],
+        })
+        this.updateCurrentRound({
+            status: TurnStatus.FirstHand,
+            firstHand: [this.drawCard(), this.drawCard(), this.drawCard()],
+            secondHand: undefined,
+        })
+        return { success: true }
+    }
+
+    private vetoVoteNo(): ActionResponse {
         this.updateCurrentRound({
             status: TurnStatus.SecondHand,
             enableVeto: false,
         })
-        return [true]
+        return { success: true }
     }
 
     public investigateLoyalty(
         playerId: PlayerId
-    ): [faction?: Faction, error?: DescriptiveError] {
+    ): ActionResponse<{ investigatedPlayer: ViewingPlayerState }> {
+        if (!this.isActiveViewingPlayer()) {
+            return {
+                error: new DescriptiveError(
+                    'Unable to investigate player loyalty.',
+                    'It is not your turn.',
+                    'Please refresh the page before nominating another player.'
+                ),
+            }
+        }
         if (this.currentRound.status !== TurnStatus.TakeAction) {
-            return [
-                undefined,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to take the execute action.',
                     'The turn state does not allow taking board actions',
                     'Are you supposed to be taking an action?'
                 ),
-            ]
+            }
         }
         if (this.currentRound.action !== BoardAction.InvestigateLoyalty) {
-            return [
-                undefined,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to investigate loyalty.',
                     'The action for the current turn is not investigate loyalty.',
                     'Please check the appropriate action before attempting an action.'
                 ),
-            ]
+            }
         }
-        const investigatedPlayer = this.state.players.find(
-            (p) => p.id === playerId
-        )
-        if (!investigatedPlayer) {
-            return [
-                undefined,
-                new DescriptiveError(
+        const role = this.state.players.find((p) => p.id === playerId)?.role
+        const investigatedPlayer = this.players().find((p) => p.id === playerId)
+        if (!role || !investigatedPlayer) {
+            return {
+                error: new DescriptiveError(
                     'Unable to investigate loyalty.',
                     'Player with this id does not exist.',
                     'Please refresh the page before trying again.'
                 ),
-            ]
+            }
         }
-        return [
-            investigatedPlayer.role === PlayerRole.Ally
-                ? Faction.Ally
-                : Faction.Enemy,
-        ]
+        return {
+            investigatedPlayer: {
+                ...investigatedPlayer,
+                role:
+                    role === PlayerRole.Ally
+                        ? PlayerRole.Ally
+                        : PlayerRole.Enemy,
+            },
+        }
     }
 
-    investigateLoyaltyOk(): [success: boolean, error?: DescriptiveError] {
+    investigateLoyaltyOk(): ActionResponse {
+        if (!this.isActiveViewingPlayer()) {
+            return {
+                error: new DescriptiveError(
+                    'Unable to nominate player.',
+                    'It is not your turn.',
+                    'Please refresh the page before nominating another player.'
+                ),
+            }
+        }
         if (this.currentRound.status !== TurnStatus.TakeAction) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to take the execute action.',
                     'The turn state does not allow taking board actions',
                     'Are you supposed to be taking an action?'
                 ),
-            ]
+            }
         }
         if (this.currentRound.action !== BoardAction.InvestigateLoyalty) {
-            return [
-                false,
-                new DescriptiveError(
+            return {
+                error: new DescriptiveError(
                     'Unable to investigate loyalty.',
                     'The action for the current turn is not investigate loyalty.',
                     'Please check the appropriate action before attempting an action.'
                 ),
-            ]
+            }
         }
         this.advanceRound()
-        return [true]
+        return { success: true }
     }
+
+    private isActiveViewingPlayer() {
+        const viewingPlayer = this.getViewingPlayer()
+        return (
+            viewingPlayer &&
+            this.currentRound.position === viewingPlayer.position
+        )
+    }
+    private getViewingPlayer() {
+        return this.state.players.find((p) => p.id === this.viewingPlayerId)
+    }
+
+    public static async newGame(
+        gameId: GameId
+    ): Promise<ActionResponse<{ state: AlliesAndEnemiesState }>> {
+        let players = await GamesClient.players.list(gameId)
+        if (!players) {
+            return {
+                error: new DescriptiveError('no players'),
+            }
+        }
+        players = players.filter((p) => p.nickname)
+        const configuration = StandardConfiguration[players.length] || null
+        if (!configuration) {
+            return {
+                error: new DescriptiveError('no configuration'),
+            }
+        }
+        return {
+            state: {
+                gameId,
+                draw: this.buildDeck(
+                    configuration.deck.allyCards,
+                    configuration.deck.enemyCards
+                ),
+                players: this.buildPlayers(
+                    players,
+                    configuration.players.enemies
+                ),
+                config: configuration,
+                discard: [],
+                rounds: [
+                    {
+                        consecutiveFailedElections: 0,
+                        elected: false,
+                        number: 1,
+                        position: 0,
+                        status: TurnStatus.Nomination,
+                        votes: [],
+                    },
+                ],
+                board: {
+                    ally: [],
+                    enemy: [],
+                },
+            },
+        }
+    }
+
+    private static buildPlayers = (
+        players: IPlayer[],
+        enemies: number
+    ): PlayerState[] => {
+        if (players.length / 2 < enemies + 1) {
+            throw new DescriptiveError(
+                'Invalid game configuration.',
+                `You can not have ${enemies} enemies for ${players.length} players.`
+            )
+        }
+        const roles = shuffle([
+            PlayerRole.EnemyLeader,
+            ...range(enemies).map(() => PlayerRole.Enemy),
+            ...range(players.length - enemies - 1).map(() => PlayerRole.Ally),
+        ])
+        return shuffle(players).map((player, position) => ({
+            ...player,
+            role: roles[position],
+            position,
+        }))
+    }
+
+    private static buildDeck = (allyCards: number, enemyCards: number) =>
+        shuffle([
+            ...new Array(allyCards).fill({ suit: Faction.Ally }),
+            ...new Array(enemyCards).fill({ suit: Faction.Enemy }),
+        ])
 }

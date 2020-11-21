@@ -7,7 +7,7 @@ import { GameState, GameStatus } from 'types/Game'
 import { getHomeUrl, getJoinUrl } from 'links'
 import { usePageTitle } from 'hooks'
 
-import { usePlayGame, usePlayId, useStartGame } from './hooks'
+import { usePlayGame, usePlayer, useStartGame } from './hooks'
 
 const GameManager = React.lazy(() => import('GameManager'))
 const LobbyManager = React.lazy(() => import('LobbyManager'))
@@ -18,32 +18,34 @@ const Play: React.FC<{
 }> = (props) => {
     usePageTitle('Play | Secret Traitor')
     const { gameId, playerId } = props
-    const details = usePlayId(gameId, playerId)
-    const { playId, loading: loadingDetails } = details
-    const play = usePlayGame(gameId, playerId, playId)
-    const { game, players, player, loading: loadingPlay, state } = play
-    const [startGameMutation] = useStartGame(playId)
+    const playGameResults = usePlayGame(gameId, playerId)
+    const {
+        game,
+        players,
+        player,
+        loading: loadingPlay,
+        state,
+    } = playGameResults
+    const [startGameMutation] = useStartGame()
     const startGame = async () => {
-        if (playId) await startGameMutation()
+        if (gameId && playerId) await startGameMutation(gameId, playerId)
     }
-    const loading = loadingDetails || loadingPlay
+    const loading = loadingPlay
 
-    console.log('playId:', playId)
-
-    if (!loading && !player?.nickname) {
-        return (
-            <ConfirmRedirect push to={getJoinUrl({ gameId, playerId })}>
-                You need to join this game first!
-            </ConfirmRedirect>
-        )
-    }
-    if (!loading && !(player || game)) {
-        return (
-            <ConfirmRedirect push to={getHomeUrl()}>
-                This game does not exists or is not playable.
-            </ConfirmRedirect>
-        )
-    }
+    // if (!loading && !player?.nickname) {
+    //     return (
+    //         <ConfirmRedirect push to={getJoinUrl({ gameId, playerId })}>
+    //             You need to join this game first!
+    //         </ConfirmRedirect>
+    //     )
+    // }
+    // if (!loading && !(player || game)) {
+    //     return (
+    //         <ConfirmRedirect push to={getHomeUrl()}>
+    //             This game does not exists or is not playable.
+    //         </ConfirmRedirect>
+    //     )
+    // }
     return (
         <React.Suspense fallback={<LoadingScreen />}>
             {loading && <LoadingScreen />}
@@ -58,7 +60,7 @@ const Play: React.FC<{
                         startGame={startGame}
                     />
                 )}
-            {game?.status === GameStatus.InProgress && playId && (
+            {game?.status === GameStatus.InProgress && player && game && (
                 <GameManager {...(state as GameState)} />
             )}
             {(game?.status === GameStatus.Closed ||

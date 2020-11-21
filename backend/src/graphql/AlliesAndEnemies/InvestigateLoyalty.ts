@@ -7,109 +7,66 @@ import {
     Query,
     Resolver,
 } from 'type-graphql'
-import { Inject } from 'typedi'
 import { PubSubEngine } from 'graphql-subscriptions'
 
-import { IAlliesAndEnemiesDao } from '@daos/AlliesAndEnemies'
-import { IGameDao } from '@daos/Game'
-import { IPlayerDao } from '@daos/Player'
-import { IGamePlayerDao } from '@daos/GamePlayer'
-
+import GamesClient from '@clients/Games'
 import { GamePlayerId } from '@entities/GamePlayer'
-import { GameType } from '@entities/Game'
+import { GameId, GameType } from '@entities/Game'
 import { PlayerId } from '@entities/Player'
-
-import {
-    Faction,
-    PlayerRole,
-    PlayerState,
-    ViewingPlayerState,
-} from '@games/AlliesAndEnemies'
-
 import { AlliesAndEnemiesPlayer } from '@graphql/AlliesAndEnemies'
 import { Event } from '@graphql/Event'
 import { GameEvent } from '@graphql/GameEvent'
-
-import { ApiResponse, DescriptiveError } from '@shared/api'
+import { ApiResponse } from '@shared/api'
 import { getTopicName, Topics } from '@shared/topics'
 
 import { BaseAlliesAndEnemiesResolver } from './resolver'
 
 @ObjectType({ implements: [Event, GameEvent] })
 export class AlliesAndEnemiesInvestigateLoyaltyEvent extends GameEvent {
-    constructor(gamePlayerId: GamePlayerId, activePlayerId: PlayerId) {
-        const state = { gamePlayerId, gameType: GameType.AlliesNEnemies }
-        super(
-            state,
-            activePlayerId,
-            AlliesAndEnemiesInvestigateLoyaltyEvent.name
-        )
+    constructor(gameId: GamePlayerId, playerId: PlayerId) {
+        const state = { gameId, playerId, gameType: GameType.AlliesNEnemies }
+        super(state, playerId, AlliesAndEnemiesInvestigateLoyaltyEvent.name)
     }
 }
 
 @Resolver(() => AlliesAndEnemiesInvestigateLoyaltyEvent)
 class AlliesAndEnemiesInvestigateLoyaltyEventResolver extends BaseAlliesAndEnemiesResolver {
-    constructor(
-        @Inject('AlliesAndEnemies')
-        protected readonly gameStateDao: IAlliesAndEnemiesDao,
-        @Inject('GamePlayers') protected readonly gamePlayerDao: IGamePlayerDao,
-        @Inject('Games') protected readonly gameDao: IGameDao,
-        @Inject('Players') protected readonly playerDao: IPlayerDao
-    ) {
-        super()
-    }
-
     @Query(() => AlliesAndEnemiesPlayer, { nullable: true })
     async alliesAndEnemiesInvestigateLoyalty(
-        @Arg('playId', () => ID) gamePlayerId: GamePlayerId,
-        @Arg('playerId', () => ID) playerId: PlayerId
+        @Arg('gameId', () => ID) gameId: GameId,
+        @Arg('playerId', () => ID) playerId: PlayerId,
+        @Arg('investigatePlayerId', () => ID) investigatePlayerId: PlayerId
     ): Promise<ApiResponse<AlliesAndEnemiesPlayer | null>> {
-        const { viewingPlayer, state } = await this.getViewingPlayerState(
-            gamePlayerId
-        )
-        if (viewingPlayer.position !== state.currentRound.position) {
-            return new DescriptiveError(
-                'Unable to investigate player loyalty.',
-                'It is not your turn.',
-                'Please refresh the page before nominating another player.'
-            )
+        const { state } = await this.getActiveViewingPlayerState({
+            gameId,
+            playerId,
+        })
+        const result = state.investigateLoyalty(investigatePlayerId)
+        if ('error' in result) {
+            return result.error
         }
-        const [faction, error] = state.investigateLoyalty(playerId)
-        if (error) {
-            return error
-        }
-        const player = state
-            .players(viewingPlayer)
-            .find((p) => p.id === playerId) as ViewingPlayerState
-        return {
-            ...player,
-            role: faction === Faction.Ally ? PlayerRole.Ally : PlayerRole.Enemy,
-        }
+        return result.investigatedPlayer
     }
 
     @Mutation(() => AlliesAndEnemiesInvestigateLoyaltyEvent)
     async alliesAndEnemiesInvestigateLoyaltyOk(
-        @Arg('playId', () => ID) gamePlayerId: GamePlayerId,
+        @Arg('gameId', () => ID) gameId: GameId,
+        @Arg('playerId', () => ID) playerId: PlayerId,
         @PubSub() pubSub: PubSubEngine
     ): Promise<ApiResponse<AlliesAndEnemiesInvestigateLoyaltyEvent>> {
-        const { viewingPlayer, state } = await this.getViewingPlayerState(
-            gamePlayerId
-        )
-        if (viewingPlayer.position !== state.currentRound.position) {
-            return new DescriptiveError(
-                'Unable to nominate player.',
-                'It is not your turn.',
-                'Please refresh the page before nominating another player.'
-            )
+        const { state } = await this.getActiveViewingPlayerState({
+            gameId,
+            playerId,
+        })
+
+        const result = state.investigateLoyaltyOk()
+        if ('error' in result) {
+            return result.error
         }
-        const [, error] = state.investigateLoyaltyOk()
-        if (error) {
-            return error
-        }
-        await state.saveTo(this.gameStateDao)
+        await GamesClient.state.put(gameId, state)
         const payload = new AlliesAndEnemiesInvestigateLoyaltyEvent(
-            gamePlayerId,
-            viewingPlayer.id
+            gameId,
+            playerId
         )
         await pubSub.publish(getTopicName(Topics.Play, state.gameId), payload)
         return payload

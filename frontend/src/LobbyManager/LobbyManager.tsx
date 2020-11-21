@@ -3,15 +3,15 @@ import { Box, Button, Main, Text } from 'grommet'
 import { Deploy, More } from 'grommet-icons'
 
 import { Game } from 'types/Game'
-import { HostPlayer } from 'types/Player'
+import { Player } from 'types/Player'
 
 import Players from './Players'
 import { LobbyCodeText } from '../Components/GameText'
 
 export type LobbyProps = {
     game: Game
-    players: HostPlayer[]
-    currentPlayer: HostPlayer
+    players: Player[]
+    currentPlayer: Player
     startGame: () => void
 }
 
