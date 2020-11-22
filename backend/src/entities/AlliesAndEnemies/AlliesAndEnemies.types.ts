@@ -1,6 +1,7 @@
 import { GameId } from '@entities/Game'
 import { IPlayer, PlayerId } from '@entities/Player'
-import { ConfigurationOptions } from '@entities/AlliesAndEnemies/AlliesAndEnemies.config'
+
+import { ConfigurationOptions } from './AlliesAndEnemies.config'
 
 export enum PlayerRole {
     Unknown,
