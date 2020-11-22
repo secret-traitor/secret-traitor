@@ -23,7 +23,7 @@ import {
     VictoryType,
     ViewingPlayerState,
     VoteValue,
-} from '@entities/AlliesAndEnemies/index'
+} from '@entities/AlliesAndEnemies'
 import { GameId } from '@entities/Game'
 import { IPlayer, PlayerId } from '@entities/Player'
 import { DescriptiveError } from '@shared/api'
@@ -79,9 +79,8 @@ export class ActiveAlliesAndEnemiesState {
             viewingPlayer.role === PlayerRole.EnemyLeader &&
             this.config.leaderIsSecret
         const hideRole =
-            !this.victory &&
-            (viewingPlayer.role === PlayerRole.Ally || hideEnemyLeader)
-        return player.id === viewingPlayer.id || !hideRole
+            viewingPlayer.role === PlayerRole.Ally || hideEnemyLeader
+        return player.id === viewingPlayer.id || !hideRole || this.victory
             ? player.role
             : PlayerRole.Unknown
     }
