@@ -48,15 +48,6 @@ const GameSubscription = gql`
                 }
             }
             timestamp
-            ... on JoinGameEvent {
-                joined {
-                    nickname
-                }
-            }
-            ... on GameStatusEvent {
-                changedFrom
-                changedTo
-            }
             __typename
         }
     }
@@ -94,37 +85,13 @@ export const usePlayGame = (gameId: string, playerId: string): PlayGame => {
     const game = result?.data?.game
     const state = result?.data?.game?.state
     const players = result?.data?.game?.players
-    const playe = {
+    return {
         ...result,
         game: game as Game,
         player: find(players, (p) => p.id === playerId),
         players: players as Player[],
         state: { game, ...state } as GameState,
     }
-    console.log(playe)
-    return playe
-}
-
-const PlayerQuery = gql`
-    query player($playerId: ID!, $gameId: ID!) {
-        player(playerId: $playerId, gameId: $gameId) {
-            host
-            id
-            nickname
-        }
-    }
-`
-
-export const usePlayer = (
-    gameId: string,
-    playerId: string
-): QueryResult & { player: Player } => {
-    const result = useQuery(PlayerQuery, {
-        variables: { gameId, playerId },
-        skip: !gameId || !playerId,
-        fetchPolicy: 'no-cache',
-    })
-    return { ...result, player: result?.data?.player as Player }
 }
 
 const StartGameMutation = gql`

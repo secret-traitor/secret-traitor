@@ -9,6 +9,7 @@ const WaitingOnTextRecord: Record<TurnStatus, any> = {
     [TurnStatus.FirstHand]: 'choose the first policy to discard.',
     [TurnStatus.SecondHand]: 'choose the second policy to discard.',
     [TurnStatus.TakeAction]: 'take the current action.',
+    [TurnStatus.Veto]: 'to decide on a veto.',
 }
 const WaitingOn: React.FC<AlliesAndEnemiesState> = (props) => {
     const what = WaitingOnTextRecord[props.currentTurn.status]

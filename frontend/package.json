@@ -45,6 +45,7 @@
   },
   "scripts": {
     "build": "react-scripts build",
+    "build-schema-fragment" : "node src/schemaQuery.js",
     "eject": "react-scripts eject",
     "precommit": "lint-staged",
     "start": "react-scripts start",
