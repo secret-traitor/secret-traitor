@@ -8,7 +8,7 @@ import {
     PlayerState,
     PlayerStatus,
     ViewingPlayerState,
-} from '@games/AlliesAndEnemies'
+} from '@entities/AlliesAndEnemies'
 
 @ObjectType()
 export class AlliesAndEnemiesPlayer

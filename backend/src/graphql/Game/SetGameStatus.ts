@@ -1,5 +1,6 @@
 import {
     Arg,
+    Ctx,
     Field,
     ID,
     Mutation,
@@ -15,11 +16,13 @@ import { PlayerId } from '@entities/Player'
 import {
     ActiveAlliesAndEnemiesState,
     StandardConfiguration,
-} from '@games/AlliesAndEnemies'
+} from '@entities/AlliesAndEnemies'
 import { Event } from '@graphql/Event'
 import { GameEvent } from '@graphql/GameEvent'
 import { ApiResponse, DescriptiveError } from '@shared/api'
 import { getTopicName, Topics } from '@shared/topics'
+import { IGameState } from '@graphql/GameState'
+import Context from '@shared/Context'
 
 type GameStateEvent = {
     game: IGame
@@ -50,9 +53,10 @@ export class SetGameStatusResolver {
         @Arg('gameId', () => ID) gameId: GameId,
         @Arg('playerId', () => ID) playerId: PlayerId,
         @Arg('status', () => GameStatus) status: GameStatus,
+        @Ctx() { dataSources: { games } }: Context,
         @PubSub() pubSub: PubSubEngine
     ): Promise<ApiResponse<GameStatusEvent | null>> {
-        const oldGame = await GamesClient.games.get(gameId)
+        const oldGame = await games.get(gameId)
         if (!oldGame) {
             return new DescriptiveError('')
         }

@@ -23,7 +23,7 @@ import {
     VictoryType,
     ViewingPlayerState,
     VoteValue,
-} from '@games/AlliesAndEnemies'
+} from '@entities/AlliesAndEnemies/index'
 import { GameId } from '@entities/Game'
 import { IPlayer, PlayerId } from '@entities/Player'
 import { DescriptiveError } from '@shared/api'
@@ -48,47 +48,68 @@ const SecondHandDiscardRecord: Record<
 }
 
 export class ActiveAlliesAndEnemiesState {
+    public viewingPlayer: ViewingPlayerState
+
     constructor(
         private state: AlliesAndEnemiesState,
         private viewingPlayerId: PlayerId
-    ) {}
+    ) {
+        const viewingPlayer = state.players.find(
+            (p) => p.id === viewingPlayerId
+        )
+        if (!viewingPlayer) {
+            throw new DescriptiveError(
+                'Unable to look up viewing player state.',
+                'No player state data for this game state found.'
+            )
+        }
+        this.viewingPlayer = {
+            ...viewingPlayer,
+            role: this.getRole(viewingPlayer, viewingPlayer),
+            status: this.getStatus(viewingPlayer),
+        }
+    }
+
+    private getRole = (
+        player: PlayerState,
+        viewingPlayer: PlayerState
+    ): PlayerRole => {
+        if (player === viewingPlayer) return player.role
+        const hideEnemyLeader =
+            viewingPlayer.role === PlayerRole.EnemyLeader &&
+            this.config.leaderIsSecret
+        const hideRole =
+            !this.victory &&
+            (viewingPlayer.role === PlayerRole.Ally || hideEnemyLeader)
+        return player.id === viewingPlayer.id || !hideRole
+            ? player.role
+            : PlayerRole.Unknown
+    }
+
+    private getStatus = (player: PlayerState): PlayerStatus => {
+        if (player.hasBeenExecuted) {
+            return PlayerStatus.Executed
+        }
+        if (this.currentRound?.elected) {
+            if (this.currentRound?.position === player.position) {
+                return PlayerStatus.President
+            }
+            if (this.currentRound?.nomination === player.id) {
+                return PlayerStatus.Governor
+            }
+        }
+        return PlayerStatus.None
+    }
 
     get config() {
         return this.state.config
     }
 
     public players(): ViewingPlayerState[] {
-        const viewingPlayer = this.getViewingPlayer()
-        if (!viewingPlayer) return []
-
-        const getStatus = (p: PlayerState) => {
-            if (p.hasBeenExecuted) {
-                return PlayerStatus.Executed
-            }
-            if (this.currentRound.elected) {
-                if (this.currentRound.position === p.position) {
-                    return PlayerStatus.President
-                }
-                if (this.currentRound.nomination === p.id) {
-                    return PlayerStatus.Governor
-                }
-            }
-            return PlayerStatus.None
-        }
-
-        const hideEnemyLeader =
-            viewingPlayer.role === PlayerRole.EnemyLeader &&
-            this.state.config.leaderIsSecret
-        const hideRole =
-            !this.state.victory &&
-            (viewingPlayer.role === PlayerRole.Ally || hideEnemyLeader)
-        const getRole = (p: PlayerState) =>
-            p.id === viewingPlayer.id || !hideRole ? p.role : PlayerRole.Unknown
-
         return this.state.players.map((p) => ({
             ...p,
-            role: getRole(p),
-            status: getStatus(p),
+            role: this.getRole(p, this.viewingPlayer),
+            status: this.getStatus(this.viewingPlayer),
         }))
     }
 
@@ -451,6 +472,15 @@ export class ActiveAlliesAndEnemiesState {
     }
 
     public firstHand(discardIndex: 0 | 1 | 2): ActionResponse {
+        if (!this.isCurrentViewingPlayer()) {
+            return {
+                error: new DescriptiveError(
+                    'Unable to play first hand.',
+                    'It is not your turn.',
+                    'Please refresh the page before trying again.'
+                ),
+            }
+        }
         if (this.currentRound.status !== TurnStatus.FirstHand) {
             return {
                 error: new DescriptiveError(
@@ -930,21 +960,11 @@ export class ActiveAlliesAndEnemiesState {
     }
 
     private isCurrentViewingPlayer() {
-        const viewingPlayer = this.getViewingPlayer()
-        return (
-            viewingPlayer &&
-            this.currentRound.position === viewingPlayer.position
-        )
-    }
-    private getViewingPlayer() {
-        return this.state.players.find((p) => p.id === this.viewingPlayerId)
+        return this.currentRound.position === this.viewingPlayer.position
     }
 
     private isNominatedViewingPlayer() {
-        const viewingPlayer = this.getViewingPlayer()
-        return (
-            viewingPlayer && this.currentRound.nomination === viewingPlayer.id
-        )
+        return this.currentRound.nomination === this.viewingPlayer.id
     }
 
     public static newGame(

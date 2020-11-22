@@ -1,5 +1,6 @@
 import {
     Arg,
+    Ctx,
     FieldResolver,
     ID,
     InterfaceType,
@@ -14,6 +15,7 @@ import { PlayerId } from '@entities/Player'
 import { AlliesAndEnemiesGameState } from '@graphql/AlliesAndEnemies'
 import { Game } from '@graphql/Game'
 import { ApiResponse, DescriptiveError } from '@shared/api'
+import Context from '@shared/Context'
 
 export interface IGameState {
     readonly playerId: Required<PlayerId>
@@ -47,8 +49,11 @@ export abstract class GameState implements IGameState {
 @Resolver(() => GameState)
 class GameStateResolver {
     @FieldResolver(() => Game)
-    async game(@Root() { gameId }: IGameState): Promise<ApiResponse<IGame>> {
-        const game = await GamesClient.games.get(gameId)
+    async game(
+        @Root() { gameId }: IGameState,
+        @Ctx() { dataSources: { games } }: Context
+    ): Promise<ApiResponse<IGame>> {
+        const game = await games.get(gameId)
         if (!game) {
             throw new DescriptiveError(
                 'Unable to look up game.',
@@ -61,9 +66,10 @@ class GameStateResolver {
     @Query(() => GameState, { nullable: true })
     async state(
         @Arg('gameId', () => ID) gameId: GameId,
-        @Arg('playerId', () => ID) playerId: PlayerId
+        @Arg('playerId', () => ID) playerId: PlayerId,
+        @Ctx() { dataSources: { games } }: Context
     ): Promise<IGameState | null> {
-        const game = await GamesClient.games.get(gameId)
+        const game = await games.get(gameId)
         if (!game) {
             throw new DescriptiveError(
                 'Unable to look up game.',

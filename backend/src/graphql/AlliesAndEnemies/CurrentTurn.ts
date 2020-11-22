@@ -1,46 +1,47 @@
 import { FieldResolver, ObjectType, Resolver, Root } from 'type-graphql'
 
-import { BoardAction, TurnStatus } from '@games/AlliesAndEnemies'
-import { AlliesAndEnemiesPlayer } from '@graphql/AlliesAndEnemies/Player'
 import {
-    BaseAlliesAndEnemiesResolver,
-    ActiveViewingPlayerState,
-} from '@graphql/AlliesAndEnemies/resolver'
+    ActiveAlliesAndEnemiesState,
+    BoardAction,
+    TurnStatus,
+} from '@entities/AlliesAndEnemies'
+import { AlliesAndEnemiesPlayer } from '@graphql/AlliesAndEnemies/Player'
+
 import { Card } from '@graphql/AlliesAndEnemies/Card'
 import { ApiResponse, DescriptiveError } from '@shared/api'
-
-export type CurrentTurnRoot = ActiveViewingPlayerState
 
 @ObjectType()
 export class CurrentTurn {}
 
 @Resolver(() => CurrentTurn)
-class CurrentTurnResolver extends BaseAlliesAndEnemiesResolver {
+class CurrentTurnResolver {
     @FieldResolver(() => BoardAction, { nullable: true })
-    action(@Root() { state }: CurrentTurnRoot): BoardAction | null {
+    action(@Root() state: ActiveAlliesAndEnemiesState): BoardAction | null {
         return state.currentRound.action || null
     }
 
     @FieldResolver(() => Number)
-    consecutiveFailedElections(@Root() { state }: CurrentTurnRoot): number {
+    consecutiveFailedElections(
+        @Root() state: ActiveAlliesAndEnemiesState
+    ): number {
         return state.currentRound.consecutiveFailedElections
     }
 
     @FieldResolver(() => Boolean)
-    elected(@Root() { state }: CurrentTurnRoot): boolean {
+    elected(@Root() state: ActiveAlliesAndEnemiesState): boolean {
         return state.currentRound.elected || false
     }
 
     @FieldResolver(() => Boolean)
-    enableVeto(@Root() { state }: CurrentTurnRoot): boolean {
+    enableVeto(@Root() state: ActiveAlliesAndEnemiesState): boolean {
         return state.currentRound.enableVeto || false
     }
 
     @FieldResolver(() => [Card], { nullable: true })
     firstHand(
-        @Root() { state, viewingPlayer }: CurrentTurnRoot
+        @Root() state: ActiveAlliesAndEnemiesState
     ): ApiResponse<[Card, Card, Card] | null> {
-        if (state.currentRound.position === viewingPlayer.position) {
+        if (state.currentRound.position === state.viewingPlayer.position) {
             return state.currentRound.firstHand || null
         }
         return null
@@ -48,7 +49,7 @@ class CurrentTurnResolver extends BaseAlliesAndEnemiesResolver {
 
     @FieldResolver(() => AlliesAndEnemiesPlayer, { nullable: true })
     nominatedPlayer(
-        @Root() { state }: CurrentTurnRoot
+        @Root() state: ActiveAlliesAndEnemiesState
     ): ApiResponse<AlliesAndEnemiesPlayer | null> {
         if (!state.currentRound.nomination) {
             return null
@@ -66,38 +67,40 @@ class CurrentTurnResolver extends BaseAlliesAndEnemiesResolver {
     }
 
     @FieldResolver(() => Number)
-    number(@Root() { state }: CurrentTurnRoot): number {
-        return state.currentRound.number
+    number(@Root() { currentRound }: ActiveAlliesAndEnemiesState): number {
+        return currentRound.number
     }
 
     @FieldResolver(() => Number)
-    position(@Root() { state }: CurrentTurnRoot): number {
-        return state.currentRound.position
+    position(@Root() { currentRound }: ActiveAlliesAndEnemiesState): number {
+        return currentRound.position
     }
 
     @FieldResolver(() => [Card], { nullable: true })
     secondHand(
-        @Root() { state, viewingPlayer }: CurrentTurnRoot
+        @Root() { currentRound, viewingPlayer }: ActiveAlliesAndEnemiesState
     ): ApiResponse<[Card, Card] | null> {
-        if (state.currentRound.nomination === viewingPlayer.id) {
-            return state.currentRound.secondHand || null
+        if (currentRound.nomination === viewingPlayer.id) {
+            return currentRound.secondHand || null
         }
         return null
     }
 
     @FieldResolver(() => Boolean)
-    specialElection(@Root() { state }: CurrentTurnRoot): boolean {
-        return state.currentRound.specialElection || false
+    specialElection(
+        @Root() { currentRound }: ActiveAlliesAndEnemiesState
+    ): boolean {
+        return currentRound.specialElection || false
     }
 
     @FieldResolver(() => TurnStatus)
-    status(@Root() { state }: CurrentTurnRoot): TurnStatus {
-        return state.currentRound.status
+    status(@Root() { currentRound }: ActiveAlliesAndEnemiesState): TurnStatus {
+        return currentRound.status
     }
 
     @FieldResolver(() => AlliesAndEnemiesPlayer)
     waitingOn(
-        @Root() { state, viewingPlayer }: CurrentTurnRoot
+        @Root() state: ActiveAlliesAndEnemiesState
     ): ApiResponse<AlliesAndEnemiesPlayer> {
         const player = state
             .players()
@@ -113,7 +116,7 @@ class CurrentTurnResolver extends BaseAlliesAndEnemiesResolver {
 
     @FieldResolver(() => [AlliesAndEnemiesPlayer])
     ineligibleNominations(
-        @Root() { state }: CurrentTurnRoot
+        @Root() state: ActiveAlliesAndEnemiesState
     ): ApiResponse<AlliesAndEnemiesPlayer[]> {
         return state.ineligibleNominations()
     }

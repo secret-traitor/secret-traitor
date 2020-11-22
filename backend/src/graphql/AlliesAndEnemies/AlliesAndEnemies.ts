@@ -1,4 +1,5 @@
 import {
+    Ctx,
     FieldResolver,
     ObjectType,
     registerEnumType,
@@ -9,6 +10,7 @@ import {
 import { GameId, GameType } from '@entities/Game'
 import { PlayerId } from '@entities/Player'
 import {
+    ActiveAlliesAndEnemiesState,
     BoardAction,
     Faction,
     PlayerRole,
@@ -17,19 +19,16 @@ import {
     Victory,
     VictoryType,
     VoteValue,
-} from '@games/AlliesAndEnemies'
-import {
-    AlliesAndEnemiesPlayer,
-    CurrentTurn,
-    BoardState,
-    BoardRow,
-    CurrentTurnRoot,
-} from '@graphql/AlliesAndEnemies'
+} from '@entities/AlliesAndEnemies'
+
 import { AlliesAndEnemiesVictoryStatus } from '@graphql/AlliesAndEnemies/VictoryStatus'
 import { GameState, IGameState } from '@graphql/GameState'
 import { DescriptiveError, ApiResponse } from '@shared/api'
+import Context from '@shared/Context'
 
-import { BaseAlliesAndEnemiesResolver } from './resolver'
+import { AlliesAndEnemiesPlayer } from './Player'
+import { BoardState } from './BoardState'
+import { CurrentTurn } from './CurrentTurn'
 
 @ObjectType({ implements: [GameState] })
 export class AlliesAndEnemiesGameState extends GameState {
@@ -39,16 +38,14 @@ export class AlliesAndEnemiesGameState extends GameState {
 }
 
 @Resolver(() => AlliesAndEnemiesGameState)
-export class AlliesAndEnemiesGameStateResolver extends BaseAlliesAndEnemiesResolver {
+class AlliesAndEnemiesGameStateResolver {
     @FieldResolver(() => BoardState)
     async board(
-        @Root() { gameId, playerId }: IGameState
+        @Root() { gameId, playerId }: IGameState,
+        @Ctx() { dataSources: { alliesAndEnemies } }: Context
     ): Promise<ApiResponse<BoardState>> {
         try {
-            const { state } = await this.getActiveViewingPlayerState({
-                gameId,
-                playerId,
-            })
+            const state = await alliesAndEnemies.get(gameId, playerId)
             return {
                 ally: {
                     cards: state.board.ally,
@@ -70,13 +67,11 @@ export class AlliesAndEnemiesGameStateResolver extends BaseAlliesAndEnemiesResol
 
     @FieldResolver(() => AlliesAndEnemiesPlayer)
     async viewingPlayer(
-        @Root() { gameId, playerId }: IGameState
+        @Root() { gameId, playerId }: IGameState,
+        @Ctx() { dataSources: { alliesAndEnemies } }: Context
     ): Promise<ApiResponse<AlliesAndEnemiesPlayer>> {
         try {
-            const { state } = await this.getActiveViewingPlayerState({
-                gameId,
-                playerId,
-            })
+            const state = await alliesAndEnemies.get(gameId, playerId)
             const playerState = state.players().find((p) => p.id === playerId)
             if (!playerState) {
                 return new DescriptiveError('unable to look up player state')
@@ -92,37 +87,27 @@ export class AlliesAndEnemiesGameStateResolver extends BaseAlliesAndEnemiesResol
 
     @FieldResolver(() => [AlliesAndEnemiesPlayer])
     async players(
-        @Root() { gameId, playerId }: IGameState
+        @Root() { gameId, playerId }: IGameState,
+        @Ctx() { dataSources: { alliesAndEnemies } }: Context
     ): Promise<AlliesAndEnemiesPlayer[]> {
-        try {
-            const { state } = await this.getActiveViewingPlayerState({
-                gameId,
-                playerId,
-            })
-            return state.players()
-        } catch (e) {
-            if (e instanceof DescriptiveError) {
-                return []
-            }
-            throw e
-        }
+        const state = await alliesAndEnemies.get(gameId, playerId)
+        return state.players()
     }
 
     @FieldResolver(() => CurrentTurn)
     async currentTurn(
-        @Root() { gameId, playerId }: IGameState
-    ): Promise<CurrentTurnRoot> {
-        return await this.getActiveViewingPlayerState({ gameId, playerId })
+        @Root() { gameId, playerId }: IGameState,
+        @Ctx() { dataSources: { alliesAndEnemies } }: Context
+    ): Promise<ActiveAlliesAndEnemiesState> {
+        return await alliesAndEnemies.get(gameId, playerId)
     }
 
     @FieldResolver(() => AlliesAndEnemiesVictoryStatus, { nullable: true })
     async victoryStatus(
-        @Root() { gameId, playerId }: IGameState
+        @Root() { gameId, playerId }: IGameState,
+        @Ctx() { dataSources: { alliesAndEnemies } }: Context
     ): Promise<Victory | null> {
-        const { state } = await this.getActiveViewingPlayerState({
-            gameId,
-            playerId,
-        })
+        const state = await alliesAndEnemies.get(gameId, playerId)
         return state.victory
     }
 }

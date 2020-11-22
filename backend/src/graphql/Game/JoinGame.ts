@@ -1,5 +1,6 @@
 import {
     Arg,
+    Ctx,
     FieldResolver,
     Mutation,
     ObjectType,
@@ -17,6 +18,8 @@ import { DescriptiveError, ApiResponse } from '@shared/api'
 import { getTopicName, Topics } from '@shared/topics'
 import { IPlayer, PlayerId } from '@entities/Player'
 import { Player } from '@graphql/Player'
+import { IGameState } from '@graphql/GameState'
+import Context from '@shared/Context'
 
 @ObjectType({ implements: [Event, GameEvent] })
 export class JoinGameEvent extends GameEvent {
@@ -40,9 +43,10 @@ class JoinResolver {
         @Arg('gameId', () => String) gameId: GameId,
         @Arg('playerId', () => String) playerId: PlayerId,
         @Arg('playerNickname', () => String) nickname: string,
+        @Ctx() { dataSources: { games } }: Context,
         @PubSub() pubSub: PubSubEngine
     ): Promise<ApiResponse<JoinGameEvent>> {
-        const game = await GamesClient.games.get(gameId)
+        const game = await games.get(gameId)
         if (!game) {
             return new DescriptiveError(
                 'Unable to look up game.',
