@@ -9,11 +9,11 @@ import {
 import PlayerStatusText from 'Games/AlliesAndEnemies/Components/PlayerStatusText'
 import { RoleText } from 'Games/AlliesAndEnemies/Components/RoleText'
 
-const ColorRecord: Record<PlayerRole | 'default', string> = {
+const ColorRecord: Record<PlayerRole, string> = {
     [PlayerRole.Ally]: 'ally-1',
     [PlayerRole.Enemy]: 'enemy-1',
     [PlayerRole.EnemyLeader]: 'enemy-1',
-    default: 'dark-6',
+    [PlayerRole.Unknown]: 'dark-6',
 }
 
 export type PlayerCardProps = Omit<PlayerState, 'position'> & {
@@ -30,7 +30,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
 }) => (
     <Box
         background={{
-            color: ColorRecord[role || 'default'],
+            color: ColorRecord[role],
             opacity:
                 status === PlayerStatus.Executed
                     ? 'weak'

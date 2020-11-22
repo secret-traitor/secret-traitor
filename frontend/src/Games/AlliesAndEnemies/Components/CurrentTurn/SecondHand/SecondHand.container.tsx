@@ -7,12 +7,13 @@ import { useSecondHandDiscard, useCallVeto } from './hooks'
 
 const SecondHand: React.FC<AlliesAndEnemiesState> = ({
     currentTurn,
-    playId,
+    game,
+    viewingPlayer,
 }) => {
-    const [discard] = useSecondHandDiscard(playId)
-    const [callVeto] = useCallVeto(playId)
+    const [discard] = useSecondHandDiscard(game.id, viewingPlayer.id)
+    const [callVeto] = useCallVeto(game.id, viewingPlayer.id)
     if (!currentTurn.secondHand) {
-        return <>Uh Oh</>
+        return <>Uh Oh</> // TODO: Handle SecondHand error case
     }
     return (
         <SecondHandComponent

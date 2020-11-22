@@ -1,9 +1,11 @@
 import { getMainDefinition } from 'apollo-utilities'
 import { WebSocketLink } from 'apollo-link-ws'
-
 import { ApolloClient } from 'apollo-client'
 import { split, HttpLink, InMemoryCache } from 'apollo-boost'
 import { Operation } from 'apollo-link/lib/types'
+import { IntrospectionFragmentMatcher } from 'apollo-cache-inmemory'
+
+import introspectionQueryResultData from './fragmentTypes.json'
 
 const WS_URL = 'ws://localhost:4000/graphql'
 const HTTP_URL = 'http://localhost:4000/graphql'
@@ -24,5 +26,9 @@ const getLink = () =>
 export const bootstrapClient = async () =>
     new ApolloClient({
         link: getLink(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache({
+            fragmentMatcher: new IntrospectionFragmentMatcher({
+                introspectionQueryResultData,
+            }),
+        }),
     })

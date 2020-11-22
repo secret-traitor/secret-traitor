@@ -5,30 +5,29 @@ import { MutationResult, ExecutionResult } from '@apollo/react-common'
 import { Player } from 'types/Player'
 
 const NominationMutation = gql`
-    mutation nominatePlayer($playId: ID!, $nominatedPlayerId: ID!) {
+    mutation nominatePlayer(
+        $gameId: ID!
+        $playerId: ID!
+        $nominatedPlayerId: ID!
+    ) {
         alliesAndEnemiesNominate(
+            playerId: $playerId
+            gameId: $gameId
             nominatedPlayerId: $nominatedPlayerId
-            playId: $playId
         ) {
-            ... on AlliesAndEnemiesNominationEvent {
-                nomination {
-                    id
-                    nickname
-                    position
-                    role
-                }
-            }
+            timestamp
         }
     }
 `
 
 export const useNominate = (
-    playId: string
+    gameId: string,
+    playerId: string
 ): [(player: Player) => Promise<ExecutionResult>, MutationResult] => {
     const [nominateFn, results] = useMutation(NominationMutation)
     const nominate = async (player: Player) =>
         await nominateFn({
-            variables: { playId, nominatedPlayerId: player.id },
+            variables: { gameId, playerId, nominatedPlayerId: player.id },
         })
     return [nominate, results]
 }

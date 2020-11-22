@@ -1,1 +1,1 @@
-export * from './GameState.types'
+export * from './GameState'
