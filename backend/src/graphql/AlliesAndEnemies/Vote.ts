@@ -1,5 +1,6 @@
 import {
     Arg,
+    Ctx,
     Field,
     ID,
     Mutation,
@@ -9,22 +10,21 @@ import {
 } from 'type-graphql'
 import { PubSubEngine } from 'graphql-subscriptions'
 
-import { GamePlayerId } from '@entities/GamePlayer'
 import { GameId, GameType } from '@entities/Game'
 import { PlayerId } from '@entities/Player'
-import { VoteValue } from '@games/AlliesAndEnemies'
+import { VoteValue } from '@entities/AlliesAndEnemies'
 import { Event } from '@graphql/Event'
 import { GameEvent } from '@graphql/GameEvent'
-import { BaseAlliesAndEnemiesResolver } from '@graphql/AlliesAndEnemies/resolver'
 import { ApiResponse } from '@shared/api'
 import { getTopicName, Topics } from '@shared/topics'
+import Context from '@shared/Context'
 
 @ObjectType({ implements: [Event, GameEvent] })
-export class AlliesAndEnemiesVoteEvent extends GameEvent {
+class AlliesAndEnemiesVoteEvent extends GameEvent {
     @Field(() => VoteValue)
     public readonly vote: VoteValue
 
-    constructor(vote: VoteValue, gameId: GamePlayerId, playerId: PlayerId) {
+    constructor(vote: VoteValue, gameId: GameId, playerId: PlayerId) {
         const state = { gameId, playerId, gameType: GameType.AlliesNEnemies }
         super(state, playerId, AlliesAndEnemiesVoteEvent.name)
         this.vote = vote
@@ -32,25 +32,23 @@ export class AlliesAndEnemiesVoteEvent extends GameEvent {
 }
 
 @Resolver(() => AlliesAndEnemiesVoteEvent)
-class AlliesAndEnemiesVoteEventResolver extends BaseAlliesAndEnemiesResolver {
+class AlliesAndEnemiesVoteEventResolver {
     @Mutation(() => AlliesAndEnemiesVoteEvent)
     async alliesAndEnemiesVote(
         @Arg('gameId', () => ID) gameId: GameId,
         @Arg('playerId', () => ID) playerId: PlayerId,
         @Arg('vote', () => VoteValue) vote: VoteValue,
+        @Ctx() { dataSources: { alliesAndEnemies } }: Context,
         @PubSub() pubSub: PubSubEngine
     ): Promise<ApiResponse<AlliesAndEnemiesVoteEvent>> {
-        const { state } = await this.getActiveViewingPlayerState({
-            gameId,
-            playerId,
-        })
+        const state = await alliesAndEnemies.get(gameId, playerId)
         const result = state.vote(vote)
         if ('error' in result) {
             return result.error
         }
         await state.save()
         const payload = new AlliesAndEnemiesVoteEvent(vote, gameId, playerId)
-        await pubSub.publish(getTopicName(Topics.Play, state.gameId), payload)
+        await pubSub.publish(getTopicName(Topics.Play, gameId), payload)
         return payload
     }
 }

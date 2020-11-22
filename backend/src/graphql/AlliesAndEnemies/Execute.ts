@@ -1,5 +1,6 @@
 import {
     Arg,
+    Ctx,
     Field,
     ID,
     Mutation,
@@ -7,26 +8,26 @@ import {
     PubSub,
     Resolver,
 } from 'type-graphql'
-import { Event } from '@graphql/Event'
-import { GameEvent } from '@graphql/GameEvent'
-import { GamePlayerId } from '@entities/GamePlayer'
+import { PubSubEngine } from 'graphql-subscriptions'
+
+import { ViewingPlayerState } from '@entities/AlliesAndEnemies'
 import { PlayerId } from '@entities/Player'
 import { GameId, GameType } from '@entities/Game'
-import { BaseAlliesAndEnemiesResolver } from '@graphql/AlliesAndEnemies/resolver'
-import { PubSubEngine } from 'graphql-subscriptions'
+import { AlliesAndEnemiesPlayer } from '@graphql/AlliesAndEnemies/Player'
+import { Event } from '@graphql/Event'
+import { GameEvent } from '@graphql/GameEvent'
 import { ApiResponse } from '@shared/api'
 import { getTopicName, Topics } from '@shared/topics'
-import { AlliesAndEnemiesPlayer } from '@graphql/AlliesAndEnemies/Player'
-import { ViewingPlayerState } from '@games/AlliesAndEnemies'
+import Context from '@shared/Context'
 
 @ObjectType({ implements: [Event, GameEvent] })
-export class AlliesAndEnemiesExecutePlayer extends GameEvent {
+class AlliesAndEnemiesExecutePlayer extends GameEvent {
     @Field(() => AlliesAndEnemiesPlayer)
     public readonly executedPlayer: AlliesAndEnemiesPlayer
 
     constructor(
         executedPlayer: ViewingPlayerState,
-        gameId: GamePlayerId,
+        gameId: GameId,
         playerId: PlayerId
     ) {
         const state = { gameId, playerId, gameType: GameType.AlliesNEnemies }
@@ -36,18 +37,16 @@ export class AlliesAndEnemiesExecutePlayer extends GameEvent {
 }
 
 @Resolver(() => AlliesAndEnemiesExecutePlayer)
-class AlliesAndEnemiesExecutePlayerResolver extends BaseAlliesAndEnemiesResolver {
+class AlliesAndEnemiesExecutePlayerResolver {
     @Mutation(() => AlliesAndEnemiesExecutePlayer)
     async alliesAndEnemiesExecutePlayer(
         @Arg('gameId', () => ID) gameId: GameId,
         @Arg('playerId', () => ID) playerId: PlayerId,
         @Arg('executePlayerId', () => ID) executePlayerId: PlayerId,
+        @Ctx() { dataSources: { alliesAndEnemies } }: Context,
         @PubSub() pubSub: PubSubEngine
     ): Promise<ApiResponse<AlliesAndEnemiesExecutePlayer>> {
-        const { state } = await this.getActiveViewingPlayerState({
-            gameId,
-            playerId,
-        })
+        const state = await alliesAndEnemies.get(gameId, playerId)
         const result = state.executePlayer(executePlayerId)
         if ('error' in result) {
             return result.error
@@ -59,7 +58,7 @@ class AlliesAndEnemiesExecutePlayerResolver extends BaseAlliesAndEnemiesResolver
             gameId,
             playerId
         )
-        await pubSub.publish(getTopicName(Topics.Play, state.gameId), payload)
+        await pubSub.publish(getTopicName(Topics.Play, gameId), payload)
         return payload
     }
 }

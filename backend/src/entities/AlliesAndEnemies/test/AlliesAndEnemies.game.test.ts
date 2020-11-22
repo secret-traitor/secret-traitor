@@ -16,8 +16,8 @@ import {
     TurnStatus,
     VictoryType,
     VoteValue,
-} from '@games/AlliesAndEnemies'
-import { buildPlayers } from '@games/AlliesAndEnemies/test/helpers'
+} from '@entities/AlliesAndEnemies'
+import { buildPlayers } from '@entities/AlliesAndEnemies/test/helpers'
 
 export const firstRound = () => ({
     consecutiveFailedElections: 0,

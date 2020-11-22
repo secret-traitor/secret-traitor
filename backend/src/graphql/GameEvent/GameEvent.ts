@@ -1,5 +1,6 @@
 import {
     Arg,
+    Ctx,
     FieldResolver,
     ID,
     InterfaceType,
@@ -16,6 +17,7 @@ import { Game } from '@graphql/Game'
 import { GameState, IGameState } from '@graphql/GameState'
 import { Player } from '@graphql/Player'
 import { getTopicName, Topics } from '@shared/topics'
+import Context from '@shared/Context'
 
 export type IGameEvent = {
     source: PlayerId
@@ -39,9 +41,10 @@ export abstract class GameEvent extends Event implements IGameEvent {
 class GameEventResolver {
     @FieldResolver(() => Game, { nullable: true })
     async game(
-        @Root() { state: { gameId } }: IGameEvent
+        @Root() { state: { gameId } }: IGameEvent,
+        @Ctx() { dataSources: { games } }: Context
     ): Promise<IGame | null> {
-        return (await GamesClient.games.get(gameId)) || null
+        return (await games.get(gameId)) || null
     }
 
     @FieldResolver(() => Player, { nullable: true })

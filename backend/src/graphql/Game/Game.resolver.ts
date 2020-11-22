@@ -1,4 +1,12 @@
-import { Arg, FieldResolver, ID, Query, Resolver, Root } from 'type-graphql'
+import {
+    Arg,
+    Ctx,
+    FieldResolver,
+    ID,
+    Query,
+    Resolver,
+    Root,
+} from 'type-graphql'
 
 import GamesClient from '@clients/Games'
 import { GameId, GameStatus, IGame, IGameDescription } from '@entities/Game'
@@ -7,6 +15,7 @@ import { GameState, IGameState } from '@graphql/GameState'
 import { Player } from '@graphql/Player'
 
 import { Game, GameDescription, GameDescriptions } from './Game.types'
+import Context from '@shared/Context'
 
 @Resolver(() => Game)
 export class GameResolver {
@@ -18,9 +27,10 @@ export class GameResolver {
     @FieldResolver(() => GameState, { nullable: true })
     async state(
         @Arg('playerId', () => ID) playerId: PlayerId,
-        @Root() game: IGame
+        @Root() game: IGame,
+        @Ctx() { dataSources: { games } }: Context
     ): Promise<IGameState | null> {
-        const state = await GamesClient.state.get(game.id)
+        const state = await games.get(game.id)
         return state
             ? ({
                   gameId: game.id,
@@ -39,8 +49,11 @@ export class GameResolver {
     }
 
     @Query(() => Game, { nullable: true })
-    async game(@Arg('id', () => ID) id: GameId): Promise<IGame | null> {
-        return (await GamesClient.games.get(id)) ?? null
+    async game(
+        @Arg('id', () => ID) id: GameId,
+        @Ctx() { dataSources: { games } }: Context
+    ): Promise<IGame | null> {
+        return (await games.get(id)) ?? null
     }
 
     @Query(() => [Game])

@@ -55,6 +55,7 @@ const find = async ({ client, EntityType, ScanFilter, TableName }: FindArgs) =>
 interface IGamesClient {
     create(type: GameType): Promise<IGame>
     get(id: GameId): Promise<IGame | undefined>
+    list(ids: GameId[]): Promise<IGame[]>
     put(game: IGame): Promise<any>
 }
 
@@ -115,6 +116,28 @@ class GamesClient implements IGamesClient {
             .promise()
             .then((result) =>
                 result.Item ? this.fromDynamo(result.Item) : undefined
+            )
+    }
+
+    async list(ids: GameId[]): Promise<IGame[]> {
+        const AttributeValueList = ids.map((id) => `g#${id}`)
+        return await this.client
+            .query({
+                TableName: this.tableName,
+                KeyConditions: {
+                    PK: {
+                        ComparisonOperator: 'EQ',
+                        AttributeValueList,
+                    },
+                    SK: {
+                        ComparisonOperator: 'EQ',
+                        AttributeValueList,
+                    },
+                },
+            })
+            .promise()
+            .then((results) =>
+                results.Items ? results.Items.map(this.fromDynamo) : []
             )
     }
 
@@ -294,6 +317,29 @@ class StateClient implements IStateClient {
             .then((result) => result as T)
     }
 
+    async list<T>(ids: GameId[]): Promise<T[]> {
+        return await this.client
+            .query({
+                TableName: this.tableName,
+                KeyConditions: {
+                    PK: {
+                        ComparisonOperator: 'EQ',
+                        AttributeValueList: ids.map((id) => `g#${id}`),
+                    },
+                    SK: {
+                        ComparisonOperator: 'EQ',
+                        AttributeValueList: ['state'],
+                    },
+                },
+            })
+            .promise()
+            .then((results) =>
+                results.Items
+                    ? results.Items.map((i) => this.fromDynamo<T>(i))
+                    : []
+            )
+    }
+
     async put(gameId: GameId, state: any): Promise<any> {
         return put({
             client: this.client,
@@ -321,7 +367,7 @@ class StateClient implements IStateClient {
         State: state,
     })
 
-    private readonly fromDynamo = (result: any): any => result.State
+    private readonly fromDynamo = <T>(result: any): any => result.State as T
 }
 
 export default {

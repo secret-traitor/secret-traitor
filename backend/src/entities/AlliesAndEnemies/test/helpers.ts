@@ -1,6 +1,6 @@
 import shuffle from 'lodash/shuffle'
 
-import { PlayerRole, PlayerState } from '@games/AlliesAndEnemies'
+import { PlayerRole, PlayerState } from '@entities/AlliesAndEnemies'
 
 export const buildPlayers = (
     allyCount: number,

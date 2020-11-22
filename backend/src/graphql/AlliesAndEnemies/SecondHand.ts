@@ -1,36 +1,41 @@
-import { Arg, ID, Mutation, ObjectType, PubSub, Resolver } from 'type-graphql'
+import {
+    Arg,
+    Ctx,
+    ID,
+    Mutation,
+    ObjectType,
+    PubSub,
+    Resolver,
+} from 'type-graphql'
 import { PubSubEngine } from 'graphql-subscriptions'
 
-import { GamePlayerId } from '@entities/GamePlayer'
 import { GameId, GameType } from '@entities/Game'
 import { PlayerId } from '@entities/Player'
 import { Event } from '@graphql/Event'
 import { GameEvent } from '@graphql/GameEvent'
-import { BaseAlliesAndEnemiesResolver } from '@graphql/AlliesAndEnemies/resolver'
 import { ApiResponse } from '@shared/api'
 import { getTopicName, Topics } from '@shared/topics'
+import Context from '@shared/Context'
 
 @ObjectType({ implements: [Event, GameEvent] })
-export class AlliesAndEnemiesSecondHandDiscardEvent extends GameEvent {
-    constructor(gameId: GamePlayerId, playerId: PlayerId) {
+class AlliesAndEnemiesSecondHandDiscardEvent extends GameEvent {
+    constructor(gameId: GameId, playerId: PlayerId) {
         const state = { gameId, playerId, gameType: GameType.AlliesNEnemies }
         super(state, playerId, AlliesAndEnemiesSecondHandDiscardEvent.name)
     }
 }
 
 @Resolver(() => AlliesAndEnemiesSecondHandDiscardEvent)
-class AlliesAndEnemiesSecondHandDiscardEventResolver extends BaseAlliesAndEnemiesResolver {
+class AlliesAndEnemiesSecondHandDiscardEventResolver {
     @Mutation(() => AlliesAndEnemiesSecondHandDiscardEvent)
     async alliesAndEnemiesSecondHandDiscard(
         @Arg('gameId', () => ID) gameId: GameId,
         @Arg('playerId', () => ID) playerId: PlayerId,
         @Arg('index', () => Number) index: 0 | 1,
+        @Ctx() { dataSources: { alliesAndEnemies } }: Context,
         @PubSub() pubSub: PubSubEngine
     ): Promise<ApiResponse<AlliesAndEnemiesSecondHandDiscardEvent>> {
-        const { state } = await this.getActiveViewingPlayerState({
-            gameId,
-            playerId,
-        })
+        const state = await alliesAndEnemies.get(gameId, playerId)
         const result = state.secondHand(index)
         if ('error' in result) {
             return result.error
@@ -40,7 +45,7 @@ class AlliesAndEnemiesSecondHandDiscardEventResolver extends BaseAlliesAndEnemie
             gameId,
             playerId
         )
-        await pubSub.publish(getTopicName(Topics.Play, state.gameId), payload)
+        await pubSub.publish(getTopicName(Topics.Play, gameId), payload)
         return payload
     }
 }

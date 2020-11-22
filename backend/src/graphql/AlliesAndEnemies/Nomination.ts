@@ -1,5 +1,6 @@
 import {
     Arg,
+    Ctx,
     Field,
     ID,
     Mutation,
@@ -9,26 +10,25 @@ import {
 } from 'type-graphql'
 import { PubSubEngine } from 'graphql-subscriptions'
 
-import { GamePlayerId } from '@entities/GamePlayer'
 import { GameId, GameType } from '@entities/Game'
 import { PlayerId } from '@entities/Player'
-import { ViewingPlayerState } from '@games/AlliesAndEnemies'
-import { AlliesAndEnemiesPlayer } from '@graphql/AlliesAndEnemies'
+import { ViewingPlayerState } from '@entities/AlliesAndEnemies'
 import { Event } from '@graphql/Event'
 import { GameEvent } from '@graphql/GameEvent'
 import { ApiResponse } from '@shared/api'
 import { getTopicName, Topics } from '@shared/topics'
+import Context from '@shared/Context'
 
-import { BaseAlliesAndEnemiesResolver } from './resolver'
+import { AlliesAndEnemiesPlayer } from './Player'
 
 @ObjectType({ implements: [Event, GameEvent] })
-export class AlliesAndEnemiesNominationEvent extends GameEvent {
+class AlliesAndEnemiesNominationEvent extends GameEvent {
     @Field(() => AlliesAndEnemiesPlayer)
     public readonly nomination: AlliesAndEnemiesPlayer
 
     constructor(
         nominatedPlayer: ViewingPlayerState,
-        gameId: GamePlayerId,
+        gameId: GameId,
         playerId: PlayerId
     ) {
         const state = { gameId, playerId, gameType: GameType.AlliesNEnemies }
@@ -38,18 +38,16 @@ export class AlliesAndEnemiesNominationEvent extends GameEvent {
 }
 
 @Resolver(() => AlliesAndEnemiesNominationEvent)
-class AlliesAndEnemiesNominationEventResolver extends BaseAlliesAndEnemiesResolver {
+class AlliesAndEnemiesNominationEventResolver {
     @Mutation(() => AlliesAndEnemiesNominationEvent)
     async alliesAndEnemiesNominate(
         @Arg('gameId', () => ID) gameId: GameId,
         @Arg('playerId', () => ID) playerId: PlayerId,
         @Arg('nominatedPlayerId', () => ID) nominatedPlayerId: PlayerId,
+        @Ctx() { dataSources: { alliesAndEnemies } }: Context,
         @PubSub() pubSub: PubSubEngine
     ): Promise<ApiResponse<AlliesAndEnemiesNominationEvent>> {
-        const { state } = await this.getActiveViewingPlayerState({
-            gameId,
-            playerId,
-        })
+        const state = await alliesAndEnemies.get(gameId, playerId)
         const result = state.nominate(nominatedPlayerId)
         if ('error' in result) {
             return result.error
@@ -61,7 +59,7 @@ class AlliesAndEnemiesNominationEventResolver extends BaseAlliesAndEnemiesResolv
             gameId,
             playerId
         )
-        await pubSub.publish(getTopicName(Topics.Play, state.gameId), payload)
+        await pubSub.publish(getTopicName(Topics.Play, gameId), payload)
         return payload
     }
 }

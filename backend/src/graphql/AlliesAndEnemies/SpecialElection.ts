@@ -1,5 +1,6 @@
 import {
     Arg,
+    Ctx,
     Field,
     ID,
     Mutation,
@@ -9,26 +10,25 @@ import {
 } from 'type-graphql'
 import { PubSubEngine } from 'graphql-subscriptions'
 
-import { GamePlayerId } from '@entities/GamePlayer'
 import { GameId, GameType } from '@entities/Game'
 import { PlayerId } from '@entities/Player'
-import { ViewingPlayerState } from '@games/AlliesAndEnemies'
-import { AlliesAndEnemiesPlayer } from '@graphql/AlliesAndEnemies'
+import { ViewingPlayerState } from '@entities/AlliesAndEnemies'
 import { Event } from '@graphql/Event'
 import { GameEvent } from '@graphql/GameEvent'
 import { ApiResponse } from '@shared/api'
 import { getTopicName, Topics } from '@shared/topics'
+import Context from '@shared/Context'
 
-import { BaseAlliesAndEnemiesResolver } from './resolver'
+import { AlliesAndEnemiesPlayer } from './Player'
 
 @ObjectType({ implements: [Event, GameEvent] })
-export class AlliesAndEnemiesSpecialElectionEvent extends GameEvent {
+class AlliesAndEnemiesSpecialElectionEvent extends GameEvent {
     @Field(() => AlliesAndEnemiesPlayer)
     public readonly specialElectedPlayer: AlliesAndEnemiesPlayer
 
     constructor(
         specialElectedPlayer: ViewingPlayerState,
-        gameId: GamePlayerId,
+        gameId: GameId,
         playerId: PlayerId
     ) {
         const state = { gameId, playerId, gameType: GameType.AlliesNEnemies }
@@ -38,18 +38,16 @@ export class AlliesAndEnemiesSpecialElectionEvent extends GameEvent {
 }
 
 @Resolver(() => AlliesAndEnemiesSpecialElectionEvent)
-class AlliesAndEnemiesSpecialElectionEventResolver extends BaseAlliesAndEnemiesResolver {
+class AlliesAndEnemiesSpecialElectionEventResolver {
     @Mutation(() => AlliesAndEnemiesSpecialElectionEvent)
     async alliesAndEnemiesSpecialElection(
         @Arg('gameId', () => ID) gameId: GameId,
         @Arg('playerId', () => ID) playerId: PlayerId,
         @Arg('selectedPlayerId', () => ID) selectedPlayerId: PlayerId,
+        @Ctx() { dataSources: { alliesAndEnemies } }: Context,
         @PubSub() pubSub: PubSubEngine
     ): Promise<ApiResponse<AlliesAndEnemiesSpecialElectionEvent>> {
-        const { state } = await this.getActiveViewingPlayerState({
-            gameId,
-            playerId,
-        })
+        const state = await alliesAndEnemies.get(gameId, playerId)
         const result = state.specialElection(playerId)
         if ('error' in result) {
             return result.error
@@ -60,7 +58,7 @@ class AlliesAndEnemiesSpecialElectionEventResolver extends BaseAlliesAndEnemiesR
             gameId,
             playerId
         )
-        await pubSub.publish(getTopicName(Topics.Play, state.gameId), payload)
+        await pubSub.publish(getTopicName(Topics.Play, gameId), payload)
         return payload
     }
 }

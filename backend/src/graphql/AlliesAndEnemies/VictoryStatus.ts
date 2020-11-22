@@ -1,7 +1,6 @@
-import { Field, ObjectType, registerEnumType } from 'type-graphql'
+import { Field, ObjectType } from 'type-graphql'
 
-import { Faction, VictoryType } from '@games/AlliesAndEnemies'
-import { Victory } from '@games/AlliesAndEnemies/AlliesAndEnemies.types'
+import { Faction, VictoryType, Victory } from '@entities/AlliesAndEnemies'
 
 @ObjectType()
 export class AlliesAndEnemiesVictoryStatus implements Victory {
