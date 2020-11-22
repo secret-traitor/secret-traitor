@@ -1,6 +1,6 @@
 import { Field, ObjectType } from 'type-graphql'
 
-import { BoardAction, Card as ICard } from '@games/AlliesAndEnemies'
+import { BoardAction, Card as ICard } from '@entities/AlliesAndEnemies'
 
 import { Card } from './Card'
 

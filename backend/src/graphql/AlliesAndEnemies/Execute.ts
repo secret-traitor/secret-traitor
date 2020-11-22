@@ -1,65 +1,64 @@
-import { Arg, ID, Mutation, ObjectType, PubSub, Resolver } from 'type-graphql'
+import {
+    Arg,
+    Ctx,
+    Field,
+    ID,
+    Mutation,
+    ObjectType,
+    PubSub,
+    Resolver,
+} from 'type-graphql'
+import { PubSubEngine } from 'graphql-subscriptions'
+
+import { ViewingPlayerState } from '@entities/AlliesAndEnemies'
+import { PlayerId } from '@entities/Player'
+import { GameId, GameType } from '@entities/Game'
+import { AlliesAndEnemiesPlayer } from '@graphql/AlliesAndEnemies/Player'
 import { Event } from '@graphql/Event'
 import { GameEvent } from '@graphql/GameEvent'
-import { GamePlayerId } from '@entities/GamePlayer'
-import { PlayerId } from '@entities/Player'
-import { GameType } from '@entities/Game'
-import { BaseAlliesAndEnemiesResolver } from '@graphql/AlliesAndEnemies/resolver'
-import { Inject } from 'typedi'
-import { IAlliesAndEnemiesDao } from '@daos/AlliesAndEnemies'
-import { IGamePlayerDao } from '@daos/GamePlayer'
-import { IGameDao } from '@daos/Game'
-import { IPlayerDao } from '@daos/Player'
-import { PubSubEngine } from 'graphql-subscriptions'
-import { ApiResponse, DescriptiveError } from '@shared/api'
+import { ApiResponse } from '@shared/api'
 import { getTopicName, Topics } from '@shared/topics'
+import Context from '@shared/Context'
 
 @ObjectType({ implements: [Event, GameEvent] })
-export class AlliesAndEnemiesExecutePlayer extends GameEvent {
-    constructor(gamePlayerId: GamePlayerId, activePlayerId: PlayerId) {
-        const state = { gamePlayerId, gameType: GameType.AlliesNEnemies }
-        super(state, activePlayerId, AlliesAndEnemiesExecutePlayer.name)
+class AlliesAndEnemiesExecutePlayer extends GameEvent {
+    @Field(() => AlliesAndEnemiesPlayer)
+    public readonly executedPlayer: AlliesAndEnemiesPlayer
+
+    constructor(
+        executedPlayer: ViewingPlayerState,
+        gameId: GameId,
+        playerId: PlayerId
+    ) {
+        const state = { gameId, playerId, gameType: GameType.AlliesNEnemies }
+        super(state, playerId, AlliesAndEnemiesExecutePlayer.name)
+        this.executedPlayer = executedPlayer
     }
 }
 
 @Resolver(() => AlliesAndEnemiesExecutePlayer)
-class AlliesAndEnemiesExecutePlayerResolver extends BaseAlliesAndEnemiesResolver {
-    constructor(
-        @Inject('AlliesAndEnemies')
-        protected readonly gameStateDao: IAlliesAndEnemiesDao,
-        @Inject('GamePlayers') protected readonly gamePlayerDao: IGamePlayerDao,
-        @Inject('Games') protected readonly gameDao: IGameDao,
-        @Inject('Players') protected readonly playerDao: IPlayerDao
-    ) {
-        super()
-    }
-
+class AlliesAndEnemiesExecutePlayerResolver {
     @Mutation(() => AlliesAndEnemiesExecutePlayer)
     async alliesAndEnemiesExecutePlayer(
-        @Arg('playId', () => ID) gamePlayerId: GamePlayerId,
+        @Arg('gameId', () => ID) gameId: GameId,
         @Arg('playerId', () => ID) playerId: PlayerId,
+        @Arg('executePlayerId', () => ID) executePlayerId: PlayerId,
+        @Ctx() { dataSources: { alliesAndEnemies } }: Context,
         @PubSub() pubSub: PubSubEngine
     ): Promise<ApiResponse<AlliesAndEnemiesExecutePlayer>> {
-        const { viewingPlayer, state } = await this.getViewingPlayerState(
-            gamePlayerId
-        )
-        if (viewingPlayer.position !== state.currentRound.position) {
-            return new DescriptiveError(
-                'Unable to play second hand.',
-                'It is not your turn.',
-                'Please refresh the page before trying again.'
-            )
+        const state = await alliesAndEnemies.get(gameId, playerId)
+        const result = state.executePlayer(executePlayerId)
+        if ('error' in result) {
+            return result.error
         }
-        const [, error] = state.executePlayer(playerId)
-        if (error) {
-            return error
-        }
-        await state.saveTo(this.gameStateDao)
+        const executedPlayer = result.executedPlayer
+        await state.save()
         const payload = new AlliesAndEnemiesExecutePlayer(
-            gamePlayerId,
-            viewingPlayer.id
+            executedPlayer,
+            gameId,
+            playerId
         )
-        await pubSub.publish(getTopicName(Topics.Play, state.gameId), payload)
+        await pubSub.publish(getTopicName(Topics.Play, gameId), payload)
         return payload
     }
 }

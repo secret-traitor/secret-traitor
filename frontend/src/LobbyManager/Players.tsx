@@ -1,10 +1,9 @@
 import React from 'react'
 import { Box } from 'grommet'
-
-import { HostPlayer } from 'types/Player'
+import { Player } from '../types/Player'
 
 type PlayerCardProps = {
-    player: HostPlayer
+    player: Player
 }
 
 const PlayerCard: React.FC<PlayerCardProps> = ({ player }) => (
@@ -12,7 +11,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player }) => (
 )
 
 type PlayersProps = {
-    players: HostPlayer[]
+    players: Player[]
 }
 
 const Players: React.FC<PlayersProps> = ({ players }) => (

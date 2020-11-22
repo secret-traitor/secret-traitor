@@ -1,5 +1,6 @@
 import {
     Arg,
+    Ctx,
     Field,
     ID,
     Mutation,
@@ -8,29 +9,26 @@ import {
     Resolver,
 } from 'type-graphql'
 import { PubSubEngine } from 'graphql-subscriptions'
-import { Inject } from 'typedi'
 
-import { IGamePlayerDao } from '@daos/GamePlayer'
-import { IGameDao } from '@daos/Game'
-
-import { GameId, GameStatus, GameType, IGame } from '@entities/Game'
-import { GamePlayerId, IGamePlayer } from '@entities/GamePlayer'
+import GamesClient from '@clients/Games'
+import { GameId, GameStatus, IGame } from '@entities/Game'
 import { PlayerId } from '@entities/Player'
-
-import GameManager from '@games/GameManager'
-
+import {
+    ActiveAlliesAndEnemiesState,
+    StandardConfiguration,
+} from '@entities/AlliesAndEnemies'
 import { Event } from '@graphql/Event'
 import { GameEvent } from '@graphql/GameEvent'
-
-import { DescriptiveError, ApiResponse, UnexpectedError } from '@shared/api'
+import { ApiResponse, DescriptiveError } from '@shared/api'
 import { getTopicName, Topics } from '@shared/topics'
+import { IGameState } from '@graphql/GameState'
+import Context from '@shared/Context'
 
 type GameStateEvent = {
-    gamePlayerId: GamePlayerId
-    gameType: GameType
+    game: IGame
     newStatus: GameStatus
     oldStatus: GameStatus
-    source: PlayerId
+    playerId: PlayerId
 }
 
 @ObjectType({ implements: [Event, GameEvent] })
@@ -40,15 +38,9 @@ export class GameStatusEvent extends GameEvent {
     @Field(() => GameStatus, { name: 'changedFrom' })
     public readonly oldStatus: GameStatus
 
-    constructor({
-        gamePlayerId,
-        gameType,
-        source,
-        newStatus,
-        oldStatus,
-    }: GameStateEvent) {
-        const state = { gamePlayerId, gameType }
-        super(state, source, GameStatusEvent.name)
+    constructor({ game, newStatus, oldStatus, playerId }: GameStateEvent) {
+        const state = { gameId: game.id, gameType: game.type, playerId }
+        super(state, playerId, GameStatusEvent.name)
         this.newStatus = newStatus
         this.oldStatus = oldStatus
     }
@@ -56,71 +48,55 @@ export class GameStatusEvent extends GameEvent {
 
 @Resolver()
 export class SetGameStatusResolver {
-    constructor(
-        @Inject('GamePlayers') private readonly gamePlayerDao: IGamePlayerDao,
-        @Inject('Games') private readonly gameDao: IGameDao
-    ) {}
-
-    private async getGamePlayer(id: GamePlayerId): Promise<IGamePlayer> {
-        const gamePlayer = await this.gamePlayerDao.get({ id })
-        if (!gamePlayer) {
-            throw new DescriptiveError(
-                'Unable to look up player for this game.',
-                'No game and player with this id found.'
-            )
-        }
-        return gamePlayer
-    }
-
-    private async getGame(id: GameId): Promise<IGame> {
-        const game = await this.gameDao.get({ id })
-        if (!game) {
-            throw new DescriptiveError(
-                'Unable to look up game.',
-                'No game with this code found.'
-            )
-        }
-        return game
-    }
-
     @Mutation(() => GameStatusEvent, { nullable: true })
     async setGameStatus(
-        @Arg('playId', () => ID) gamePlayerId: GamePlayerId,
+        @Arg('gameId', () => ID) gameId: GameId,
+        @Arg('playerId', () => ID) playerId: PlayerId,
         @Arg('status', () => GameStatus) status: GameStatus,
+        @Ctx() { dataSources: { games } }: Context,
         @PubSub() pubSub: PubSubEngine
     ): Promise<ApiResponse<GameStatusEvent | null>> {
-        try {
-            const gamePlayer = await this.getGamePlayer(gamePlayerId)
-            const oldGame = await this.getGame(gamePlayer.gameId)
-            const newGame = await this.gameDao.put({ ...oldGame, status })
-
-            const gameManager = new GameManager(newGame.id, newGame.type)
-            if (
-                oldGame.status === GameStatus.InLobby &&
-                newGame.status === GameStatus.InProgress
-            ) {
-                const state = await gameManager.start({
-                    gamePlayerId: gamePlayer.id,
-                })
-                if (!state) {
-                    await this.gameDao.put(oldGame)
-                    return new UnexpectedError('Something happened!')
-                }
-            }
-            const payload = new GameStatusEvent({
-                gamePlayerId,
-                gameType: newGame.type,
-                newStatus: newGame.status,
-                oldStatus: oldGame.status,
-                source: gamePlayer.playerId,
-            })
-            await pubSub.publish(getTopicName(Topics.Play, newGame.id), payload)
-            return payload
-        } catch (e) {
-            if (e instanceof UnexpectedError) {
-                return e
-            }
-            throw e
+        const oldGame = await games.get(gameId)
+        if (!oldGame) {
+            return new DescriptiveError('')
         }
+        const newGame = { ...oldGame, status }
+        if (
+            oldGame.status === GameStatus.InLobby &&
+            newGame.status === GameStatus.InProgress
+        ) {
+            const players = await GamesClient.players.find({
+                PK: {
+                    ComparisonOperator: 'CONTAINS',
+                    AttributeValueList: [gameId],
+                },
+                Name: { ComparisonOperator: 'NOT_NULL' },
+            })
+            if (!players) {
+                return new DescriptiveError('no players')
+            }
+            const configuration = StandardConfiguration[players.length] || null
+            if (!configuration) {
+                return new DescriptiveError('no configuration')
+            }
+            const state = ActiveAlliesAndEnemiesState.newGame(
+                gameId,
+                players,
+                configuration,
+                playerId
+            )
+            await state.save()
+        } else {
+            await GamesClient.state.delete(gameId)
+        }
+        await GamesClient.games.put(newGame)
+        const payload = new GameStatusEvent({
+            game: newGame,
+            playerId,
+            oldStatus: oldGame.status,
+            newStatus: newGame.status,
+        })
+        await pubSub.publish(getTopicName(Topics.Play, newGame.id), payload)
+        return payload
     }
 }

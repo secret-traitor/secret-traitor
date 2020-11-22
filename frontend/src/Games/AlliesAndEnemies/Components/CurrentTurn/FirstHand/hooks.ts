@@ -4,8 +4,12 @@ import { MutationResult } from '@apollo/react-common'
 import { ExecutionResult } from '@apollo/react-common'
 
 const FirstHandDiscardMutation = gql`
-    mutation firstHand($playId: ID!, $index: Float!) {
-        alliesAndEnemiesFirstHandDiscard(playId: $playId, index: $index) {
+    mutation firstHand($gameId: ID!, $playerId: ID!, $index: Float!) {
+        alliesAndEnemiesFirstHandDiscard(
+            gameId: $gameId
+            playerId: $playerId
+            index: $index
+        ) {
             timestamp
         }
     }
@@ -14,11 +18,12 @@ const FirstHandDiscardMutation = gql`
 export type DiscardIndex = 0 | 1 | 2
 
 export const useFirstHandDiscard = (
-    playId: string
+    gameId: string,
+    playerId: string
 ): [(index: DiscardIndex) => Promise<ExecutionResult>, MutationResult] => {
     const [discardFn, results] = useMutation(FirstHandDiscardMutation)
     const discard = async (index: DiscardIndex) => {
-        return await discardFn({ variables: { index, playId } })
+        return await discardFn({ variables: { index, gameId, playerId } })
     }
     return [discard, results]
 }

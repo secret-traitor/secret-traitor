@@ -17,9 +17,6 @@
       "@clients/*": [
         "src/clients/*"
       ],
-      "@daos/*": [
-        "src/daos/*"
-      ],
       "@entities/*": [
         "src/entities/*"
       ],

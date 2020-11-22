@@ -6,58 +6,75 @@ import { ExecutionResult } from '@apollo/react-common'
 import { PlayerState } from 'Games/AlliesAndEnemies/types'
 
 const InvestigateLoyaltyQuery = gql`
-    query investigateLoyalty($playId: ID!, $playerId: ID!) {
+    query investigateLoyalty(
+        $gameId: ID!
+        $playerId: ID!
+        $investigatePlayerId: ID!
+    ) {
         player: alliesAndEnemiesInvestigateLoyalty(
-            playId: $playId
+            gameId: $gameId
             playerId: $playerId
+            investigatePlayerId: $investigatePlayerId
         ) {
+            host
             id
             nickname
             position
             role
+            status
+            __typename
         }
     }
 `
 
 export const useInvestigateLoyalty = (
-    playId: string
+    gameId: string,
+    playerId: string
 ): [(player: PlayerState) => void, QueryResult & { player?: PlayerState }] => {
+    const key = `AlliesAndEnemies::${gameId}::InvestigateLoyalty`
     const [investigateLoyaltyQuery, results] = useLazyQuery(
         InvestigateLoyaltyQuery
     )
-    let player = results?.data?.player
-    if (player) {
-        localStorage.setItem(playId + 'player', JSON.stringify(player))
+    let investigatedPlayer = results?.data?.player
+    if (investigatedPlayer) {
+        localStorage.setItem(key, JSON.stringify(investigatedPlayer))
     }
-    if (!player) {
-        const stored = localStorage.getItem(playId + 'player')
+    if (!investigatedPlayer) {
+        const stored = localStorage.getItem(key)
         if (stored) {
-            player = JSON.parse(stored)
+            investigatedPlayer = JSON.parse(stored)
         }
     }
+    const investigateLoyalty = async (player: PlayerState) => {
+        await investigateLoyaltyQuery({
+            variables: { gameId, playerId, investigatePlayerId: player.id },
+        })
+    }
     return [
-        async (player) => {
-            await investigateLoyaltyQuery({
-                variables: { playId, playerId: player.id },
-            })
-        },
+        investigateLoyalty,
         {
             ...(results as QueryResult),
-            player,
+            player: investigatedPlayer,
         },
     ]
 }
 
 const InvestigateLoyaltyOkMutation = gql`
-    mutation investigateLoyalty($playId: ID!) {
-        alliesAndEnemiesInvestigateLoyaltyOk(playId: $playId) {
+    mutation investigateLoyalty($gameId: ID!, $playerId: ID!) {
+        alliesAndEnemiesInvestigateLoyaltyOk(
+            playerId: $playerId
+            gameId: $gameId
+        ) {
             timestamp
         }
     }
 `
 export const useInvestigateLoyaltyOk = (
-    playId: string
-): [() => Promise<ExecutionResult>, MutationResult] =>
-    useMutation(InvestigateLoyaltyOkMutation, {
-        variables: { playId },
+    gameId: string,
+    playerId: string
+): [() => Promise<ExecutionResult>, MutationResult] => {
+    const [okFn, results] = useMutation(InvestigateLoyaltyOkMutation, {
+        variables: { gameId, playerId },
     })
+    return [() => okFn(), results]
+}

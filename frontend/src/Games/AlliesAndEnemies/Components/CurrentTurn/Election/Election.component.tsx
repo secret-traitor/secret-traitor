@@ -1,12 +1,16 @@
 import React, { useState } from 'react'
 import { Box, Button, Text } from 'grommet'
 
-import { PlayerState, PlayerStatus } from 'Games/AlliesAndEnemies/types'
+import {
+    PlayerState,
+    PlayerStatus,
+    PlayerVote,
+} from 'Games/AlliesAndEnemies/types'
 
 import Popup from 'Components/Popup'
 import { PlayerCard } from 'Games/AlliesAndEnemies/Components/Cards'
 
-export type Vote = (vote: 'yes' | 'no') => void
+export type Vote = (vote: PlayerVote) => void
 export type ElectionProps = {
     governorNominee: PlayerState
     presidentNominee: PlayerState
@@ -20,7 +24,7 @@ const Election: React.FC<ElectionProps> = ({
     presidentNominee,
     vote,
 }) => {
-    const [selected, setSelected] = useState<'yes' | 'no'>()
+    const [selected, setSelected] = useState<PlayerVote>()
     return (
         <Popup>
             <Box dir="row" gap="medium" align="center">
@@ -56,10 +60,10 @@ const Election: React.FC<ElectionProps> = ({
                 <Box direction="row" gap="medium">
                     <Box
                         round="xlarge"
-                        onClick={() => setSelected('no')}
+                        onClick={() => setSelected('No')}
                         border={{
                             color:
-                                selected === 'no' ? 'orange' : 'rgba(0,0,0,0)',
+                                selected === 'No' ? 'orange' : 'rgba(0,0,0,0)',
                             size: 'medium',
                             style: 'dashed',
                         }}
@@ -70,15 +74,15 @@ const Election: React.FC<ElectionProps> = ({
                             color="brand-2"
                             size="large"
                             label="Nay!"
-                            onClick={() => vote('no')}
+                            onClick={() => vote('No')}
                         />
                     </Box>
                     <Box
                         round="xlarge"
-                        onClick={() => setSelected('yes')}
+                        onClick={() => setSelected('Yes')}
                         border={{
                             color:
-                                selected === 'yes' ? 'orange' : 'rgba(0,0,0,0)',
+                                selected === 'Yes' ? 'orange' : 'rgba(0,0,0,0)',
                             size: 'medium',
                             style: 'dashed',
                         }}
@@ -89,7 +93,7 @@ const Election: React.FC<ElectionProps> = ({
                             color="brand-3"
                             size="large"
                             label="Yay!"
-                            onClick={() => vote('yes')}
+                            onClick={() => vote('Yes')}
                         />
                     </Box>
                 </Box>

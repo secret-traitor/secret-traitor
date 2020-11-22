@@ -49,8 +49,6 @@ const JoinContainer: React.FC<JoinContainerProps> = ({ gameId, playerId }) => {
         return <>Uh Oh! {errorJoin}</>
     }
 
-    console.log(player)
-
     return (
         <>
             {!loading && !game && <BadGameRedirect gameId={gameId} />}

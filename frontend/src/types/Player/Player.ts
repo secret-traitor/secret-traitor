@@ -1,6 +1,5 @@
 export type Player = {
     id: string
     nickname: string
+    host: boolean
 }
-
-export type HostPlayer = Player & { host: boolean }

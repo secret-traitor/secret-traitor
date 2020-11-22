@@ -1,20 +1,16 @@
 import {
+    Ctx,
     FieldResolver,
     ObjectType,
     registerEnumType,
     Resolver,
     Root,
 } from 'type-graphql'
-import { Inject, Service } from 'typedi'
 
-import { IAlliesAndEnemiesDao } from '@daos/AlliesAndEnemies'
-import { IGameDao } from '@daos/Game'
-import { IGamePlayerDao } from '@daos/GamePlayer'
-import { IPlayerDao } from '@daos/Player'
-
-import { GameType } from '@entities/Game'
-
+import { GameId, GameType } from '@entities/Game'
+import { PlayerId } from '@entities/Player'
 import {
+    ActiveAlliesAndEnemiesState,
     BoardAction,
     Faction,
     PlayerRole,
@@ -23,58 +19,42 @@ import {
     Victory,
     VictoryType,
     VoteValue,
-} from '@games/AlliesAndEnemies'
+} from '@entities/AlliesAndEnemies'
 
-import {
-    AlliesAndEnemiesPlayer,
-    CurrentTurn,
-    BoardState,
-    BoardRow,
-    CurrentTurnRoot,
-} from '@graphql/AlliesAndEnemies'
-import { GameState, IGameState } from '@graphql/GameState'
-
-import { DescriptiveError, ApiResponse } from '@shared/api'
-
-import { BaseAlliesAndEnemiesResolver } from './resolver'
 import { AlliesAndEnemiesVictoryStatus } from '@graphql/AlliesAndEnemies/VictoryStatus'
+import { GameState, IGameState } from '@graphql/GameState'
+import { DescriptiveError, ApiResponse } from '@shared/api'
+import Context from '@shared/Context'
+
+import { AlliesAndEnemiesPlayer } from './Player'
+import { BoardState } from './BoardState'
+import { CurrentTurn } from './CurrentTurn'
 
 @ObjectType({ implements: [GameState] })
 export class AlliesAndEnemiesGameState extends GameState {
-    constructor(gamePlayerId: string) {
-        super(gamePlayerId, GameType.AlliesNEnemies)
+    constructor(playerId: PlayerId, gameId: GameId) {
+        super(playerId, gameId, GameType.AlliesNEnemies)
     }
 }
 
-@Service()
 @Resolver(() => AlliesAndEnemiesGameState)
-export class AlliesAndEnemiesGameStateResolver extends BaseAlliesAndEnemiesResolver {
-    constructor(
-        @Inject('AlliesAndEnemies')
-        protected readonly gameStateDao: IAlliesAndEnemiesDao,
-        @Inject('GamePlayers') protected readonly gamePlayerDao: IGamePlayerDao,
-        @Inject('Games') protected readonly gameDao: IGameDao,
-        @Inject('Players') protected readonly playerDao: IPlayerDao
-    ) {
-        super()
-    }
-
+class AlliesAndEnemiesGameStateResolver {
     @FieldResolver(() => BoardState)
     async board(
-        @Root() { gamePlayerId }: IGameState
+        @Root() { gameId, playerId }: IGameState,
+        @Ctx() { dataSources: { alliesAndEnemies } }: Context
     ): Promise<ApiResponse<BoardState>> {
         try {
-            const gamePlayer = await this.getGamePlayer(gamePlayerId)
-            const state = await this.getState(gamePlayer.gameId)
+            const state = await alliesAndEnemies.get(gameId, playerId)
             return {
                 ally: {
                     cards: state.board.ally,
                     maxCards: state.config.victory.allyCards,
-                } as BoardRow,
+                },
                 enemy: {
                     cards: state.board.enemy,
                     maxCards: state.config.victory.enemyCards,
-                } as BoardRow,
+                },
                 actions: state.config.actions,
             } as BoardState
         } catch (e) {
@@ -87,13 +67,12 @@ export class AlliesAndEnemiesGameStateResolver extends BaseAlliesAndEnemiesResol
 
     @FieldResolver(() => AlliesAndEnemiesPlayer)
     async viewingPlayer(
-        @Root() { gamePlayerId }: IGameState
+        @Root() { gameId, playerId }: IGameState,
+        @Ctx() { dataSources: { alliesAndEnemies } }: Context
     ): Promise<ApiResponse<AlliesAndEnemiesPlayer>> {
         try {
-            const { state, viewingPlayer } = await this.getViewingPlayerState(
-                gamePlayerId
-            )
-            const playerState = state.viewingPlayer(viewingPlayer)
+            const state = await alliesAndEnemies.get(gameId, playerId)
+            const playerState = state.players().find((p) => p.id === playerId)
             if (!playerState) {
                 return new DescriptiveError('unable to look up player state')
             }
@@ -108,36 +87,27 @@ export class AlliesAndEnemiesGameStateResolver extends BaseAlliesAndEnemiesResol
 
     @FieldResolver(() => [AlliesAndEnemiesPlayer])
     async players(
-        @Root() { gamePlayerId }: IGameState
+        @Root() { gameId, playerId }: IGameState,
+        @Ctx() { dataSources: { alliesAndEnemies } }: Context
     ): Promise<AlliesAndEnemiesPlayer[]> {
-        try {
-            const { state, viewingPlayer } = await this.getViewingPlayerState(
-                gamePlayerId
-            )
-            if (!viewingPlayer) {
-                return []
-            }
-            return state.players(viewingPlayer)
-        } catch (e) {
-            if (e instanceof DescriptiveError) {
-                return []
-            }
-            throw e
-        }
+        const state = await alliesAndEnemies.get(gameId, playerId)
+        return state.players()
     }
 
     @FieldResolver(() => CurrentTurn)
     async currentTurn(
-        @Root() { gamePlayerId }: IGameState
-    ): Promise<CurrentTurnRoot> {
-        return await this.getViewingPlayerState(gamePlayerId)
+        @Root() { gameId, playerId }: IGameState,
+        @Ctx() { dataSources: { alliesAndEnemies } }: Context
+    ): Promise<ActiveAlliesAndEnemiesState> {
+        return await alliesAndEnemies.get(gameId, playerId)
     }
 
     @FieldResolver(() => AlliesAndEnemiesVictoryStatus, { nullable: true })
     async victoryStatus(
-        @Root() { gamePlayerId }: IGameState
+        @Root() { gameId, playerId }: IGameState,
+        @Ctx() { dataSources: { alliesAndEnemies } }: Context
     ): Promise<Victory | null> {
-        const { state } = await this.getViewingPlayerState(gamePlayerId)
+        const state = await alliesAndEnemies.get(gameId, playerId)
         return state.victory
     }
 }
