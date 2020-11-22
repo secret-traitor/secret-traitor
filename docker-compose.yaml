@@ -34,3 +34,7 @@ services:
         environment:
             - NGINX_HOST=foobar.com
             - NGINX_PORT=80
+    am:
+        image: amazon/aws-cli
+        entrypoint: tail
+        command: tail -F /dev/null
