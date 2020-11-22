@@ -39,7 +39,9 @@ const PolicyPeekOkMutation = gql`
 export const usePolicyPeekOk = (
     gameId: string,
     playerId: string
-): [() => Promise<ExecutionResult>, MutationResult] =>
-    useMutation(PolicyPeekOkMutation, {
+): [() => Promise<ExecutionResult>, MutationResult] => {
+    const [ok, results] = useMutation(PolicyPeekOkMutation, {
         variables: { gameId, playerId },
     })
+    return [() => ok(), results]
+}

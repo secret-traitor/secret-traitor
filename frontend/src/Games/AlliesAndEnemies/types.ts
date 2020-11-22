@@ -52,7 +52,6 @@ export enum PlayerStatus {
 }
 
 export type PlayerState = Player & {
-    hasBeenExecuted: boolean
     position: Required<number>
     role: PlayerRole
     status: PlayerStatus
@@ -64,6 +63,7 @@ export enum TurnStatus {
     Nomination = 'Nomination',
     SecondHand = 'SecondHand',
     TakeAction = 'TakeAction',
+    Veto = 'Veto',
 }
 
 export type TurnState = {

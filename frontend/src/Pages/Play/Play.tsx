@@ -7,7 +7,7 @@ import { GameState, GameStatus } from 'types/Game'
 import { getHomeUrl, getJoinUrl } from 'links'
 import { usePageTitle } from 'hooks'
 
-import { usePlayGame, usePlayer, useStartGame } from './hooks'
+import { usePlayGame, useStartGame } from './hooks'
 
 const GameManager = React.lazy(() => import('GameManager'))
 const LobbyManager = React.lazy(() => import('LobbyManager'))
@@ -32,20 +32,20 @@ const Play: React.FC<{
     }
     const loading = loadingPlay
 
-    // if (!loading && !player?.nickname) {
-    //     return (
-    //         <ConfirmRedirect push to={getJoinUrl({ gameId, playerId })}>
-    //             You need to join this game first!
-    //         </ConfirmRedirect>
-    //     )
-    // }
-    // if (!loading && !(player || game)) {
-    //     return (
-    //         <ConfirmRedirect push to={getHomeUrl()}>
-    //             This game does not exists or is not playable.
-    //         </ConfirmRedirect>
-    //     )
-    // }
+    if (!loading && !player?.nickname) {
+        return (
+            <ConfirmRedirect push to={getJoinUrl({ gameId, playerId })}>
+                You need to join this game first!
+            </ConfirmRedirect>
+        )
+    }
+    if (!loading && !(player || game)) {
+        return (
+            <ConfirmRedirect push to={getHomeUrl()}>
+                This game does not exists or is not playable.
+            </ConfirmRedirect>
+        )
+    }
     return (
         <React.Suspense fallback={<LoadingScreen />}>
             {loading && <LoadingScreen />}

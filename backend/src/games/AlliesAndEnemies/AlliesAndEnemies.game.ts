@@ -132,17 +132,20 @@ export class ActiveAlliesAndEnemiesState {
     }
 
     private ineligiblePlayerIds() {
-        if (
-            this.state.players.filter(({ hasBeenExecuted }) => !hasBeenExecuted)
-                .length <= 5
-        ) {
-            return [this.currentPlayerId()]
-        }
+        const executedPlayerIds = this.state.players
+            .filter(({ hasBeenExecuted }) => hasBeenExecuted)
+            .map((p) => p.id)
+        const playerIds = new Set([
+            this.currentPlayerId(),
+            ...executedPlayerIds,
+        ])
+        const remainingPlayerCount = this.state.players.filter(
+            ({ hasBeenExecuted }) => !hasBeenExecuted
+        ).length
         const previousElections = this.state.rounds
             .sort((r) => r.number)
             .filter((r) => r.elected)
-        const playerIds = new Set([this.currentPlayerId()])
-        if (previousElections.length > 0) {
+        if (previousElections.length > 0 && remainingPlayerCount > 5) {
             const last = previousElections[previousElections.length - 1]
             const president = this.state.players.find(
                 (p) => p.position === last.position
@@ -157,11 +160,6 @@ export class ActiveAlliesAndEnemiesState {
                 playerIds.add(governor.id)
             }
         }
-        this.state.players.forEach((p) => {
-            if (p.hasBeenExecuted) {
-                playerIds.add(p.id)
-            }
-        })
         return [...playerIds]
     }
 
@@ -398,7 +396,6 @@ export class ActiveAlliesAndEnemiesState {
         const neededVotes = this.state.players.filter(
             ({ hasBeenExecuted }) => !hasBeenExecuted
         ).length
-
         if (this.currentRound.votes.length >= neededVotes) {
             const groupedVotes = groupBy(
                 this.currentRound.votes,
@@ -428,7 +425,7 @@ export class ActiveAlliesAndEnemiesState {
         ) {
             this.enemyVictory(
                 VictoryType.Election,
-                `${nominatedPlayer.nickname} has been elected. ${nominatedPlayer.nickname} is the enemy leader!`
+                `${nominatedPlayer.nickname} has been elected. ${nominatedPlayer.nickname} is the Enemy Leader!`
             )
         }
         this.updateCurrentRound({
@@ -738,7 +735,7 @@ export class ActiveAlliesAndEnemiesState {
         if (executedPlayer.role === PlayerRole.EnemyLeader) {
             this.allyVictory(
                 VictoryType.Execution,
-                `${executedPlayer.nickname} has been executed. ${executedPlayer.nickname} is the enemy leader!`
+                `${executedPlayer.nickname} has been executed. ${executedPlayer.nickname} is the Enemy Leader!`
             )
         }
         this.advanceRound()
@@ -750,7 +747,7 @@ export class ActiveAlliesAndEnemiesState {
     }
 
     public callVeto(): ActionResponse {
-        if (!this.isCurrentViewingPlayer()) {
+        if (!this.isNominatedViewingPlayer()) {
             return {
                 error: new DescriptiveError(
                     'Unable to call veto.',
@@ -835,6 +832,7 @@ export class ActiveAlliesAndEnemiesState {
             status: TurnStatus.FirstHand,
             firstHand: [this.drawCard(), this.drawCard(), this.drawCard()],
             secondHand: undefined,
+            enableVeto: false,
         })
         return { success: true }
     }
