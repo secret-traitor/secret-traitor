@@ -5,7 +5,7 @@ import LoadingScreen from 'Components/LoadingScreen'
 
 import { GameState, GameStatus } from 'types/Game'
 import { getHomeUrl, getJoinUrl } from 'links'
-import { usePageTitle } from 'hooks'
+import { usePageTitle } from 'hooks/document'
 
 import { usePlayGame, useStartGame } from './hooks'
 
@@ -31,7 +31,6 @@ const Play: React.FC<{
         if (gameId && playerId) await startGameMutation(gameId, playerId)
     }
     const loading = loadingPlay
-
     if (!loading && !player?.nickname) {
         return (
             <ConfirmRedirect push to={getJoinUrl({ gameId, playerId })}>

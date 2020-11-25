@@ -1,88 +1,30 @@
-import dynamoDb from '@clients/dynamo'
+import dynamoDb, {
+    Condition,
+    scan,
+    put,
+    putMany,
+    waitForTable as waitFor,
+} from '@clients/dynamoDb'
 import { GameId, GameStatus, GameType, IGame } from '@entities/Game'
 import { IPlayer, PlayerId } from '@entities/Player'
-import { DocumentClient } from 'aws-sdk/lib/dynamodb/document_client'
 
-type Item = { [key: string]: any }
-
-type PutArgs = {
-    client: DocumentClient
-    Item: Item
-    TableName: string
-}
-
-const put = async ({ client, Item, TableName }: PutArgs) =>
-    await client.put({ TableName, Item }).promise()
-
-type PutManyArgs = {
-    client: DocumentClient
-    Items: Item[]
-    TableName: string
-}
-
-const putMany = async ({ client, Items, TableName }: PutManyArgs) =>
-    await client
-        .batchWrite({
-            RequestItems: {
-                [TableName]: Items.map((Item) => ({
-                    PutRequest: { Item },
-                })),
-            },
-        })
-        .promise()
-
-type FindArgs = {
-    client: DocumentClient
-    EntityType: string
-    ScanFilter: { [key: string]: Condition }
-    TableName: string
-}
-
-const find = async ({ client, EntityType, ScanFilter, TableName }: FindArgs) =>
-    await client
-        .scan({
-            TableName,
-            ScanFilter: {
-                ...ScanFilter,
-                EntityType: {
-                    ComparisonOperator: 'EQ',
-                    AttributeValueList: [EntityType],
-                },
-            },
-        })
-        .promise()
+const TableName = 'Games'
+export const waitForTable = async () => waitFor(TableName)
 
 interface IGamesClient {
     create(type: GameType): Promise<IGame>
     get(id: GameId): Promise<IGame | undefined>
     list(ids: GameId[]): Promise<IGame[]>
     put(game: IGame): Promise<any>
+    scan(filter: { [key: string]: Condition }): Promise<IGame[]>
 }
 
-type ComparisonOperator =
-    | 'EQ'
-    | 'NE'
-    | 'IN'
-    | 'LE'
-    | 'LT'
-    | 'GE'
-    | 'GT'
-    | 'BETWEEN'
-    | 'NOT_NULL'
-    | 'NULL'
-    | 'CONTAINS'
-    | 'NOT_CONTAINS'
-    | 'BEGINS_WITH'
-
-type Condition = {
-    AttributeValueList?: any
-    ComparisonOperator: ComparisonOperator
+type NoUndefinedField<T> = {
+    [P in keyof T]-?: Exclude<T[P], null | undefined>
 }
 
 class GamesClient implements IGamesClient {
-    private client = dynamoDb
     private entityType = 'game'
-    private tableName = 'Games'
 
     async create(type: GameType): Promise<IGame> {
         const game: IGame = {
@@ -94,20 +36,19 @@ class GamesClient implements IGamesClient {
         return game
     }
 
-    async find(filter: { [key: string]: Condition }): Promise<IGame[]> {
-        const result = await find({
+    async scan(filter: { [key: string]: Condition }): Promise<IGame[]> {
+        const result = await scan({
             ScanFilter: filter,
             EntityType: this.entityType,
-            client: this.client,
-            TableName: this.tableName,
+            TableName,
         })
         return result.Items?.map(this.fromDynamo) ?? []
     }
 
     async get(id: GameId): Promise<IGame | undefined> {
-        return this.client
+        return dynamoDb
             .get({
-                TableName: this.tableName,
+                TableName,
                 Key: {
                     PK: `g#${id}`,
                     SK: `g#${id}`,
@@ -121,9 +62,9 @@ class GamesClient implements IGamesClient {
 
     async list(ids: GameId[]): Promise<IGame[]> {
         const AttributeValueList = ids.map((id) => `g#${id}`)
-        return await this.client
+        return await dynamoDb
             .query({
-                TableName: this.tableName,
+                TableName,
                 KeyConditions: {
                     PK: {
                         ComparisonOperator: 'EQ',
@@ -134,6 +75,7 @@ class GamesClient implements IGamesClient {
                         AttributeValueList,
                     },
                 },
+                Limit: ids.length,
             })
             .promise()
             .then((results) =>
@@ -141,17 +83,15 @@ class GamesClient implements IGamesClient {
             )
     }
 
-    async put(args: IGame | IGame[]): Promise<any> {
+    async put(args: IGame | IGame[], update?: boolean): Promise<any> {
         return Array.isArray(args)
             ? putMany({
-                  client: this.client,
                   Items: args.map(this.toDynamo),
-                  TableName: this.tableName,
+                  TableName,
               })
             : put({
-                  client: this.client,
                   Item: this.toDynamo(args),
-                  TableName: this.tableName,
+                  TableName,
               })
     }
 
@@ -163,11 +103,12 @@ class GamesClient implements IGamesClient {
         Type: game.type,
     })
 
-    private readonly fromDynamo = (result: any): IGame => ({
-        id: result.PK.replace('g#', '').toLowerCase(),
-        status: result.Status,
-        type: result.Type,
-    })
+    private readonly fromDynamo = (result: any): IGame =>
+        ({
+            id: result.PK.replace('g#', '').toLowerCase(),
+            status: result.Status,
+            type: result.Type,
+        } as NoUndefinedField<IGame>)
 
     private readonly makeCode = () => {
         const length = 6
@@ -182,7 +123,8 @@ class GamesClient implements IGamesClient {
     }
 }
 
-type PutPlayer = IPlayer & {
+type PutPlayer = Partial<Omit<IPlayer, 'id'>> & {
+    id: PlayerId
     gameId: GameId
 }
 
@@ -194,14 +136,13 @@ interface IPlayersClient {
         nickname?: string
     ): Promise<IPlayer>
     get(gameId: GameId, playerId: PlayerId): Promise<IPlayer | undefined>
+    put(args: PutPlayer | PutPlayer[], update?: boolean): Promise<any>
     list(gameId: GameId): Promise<IPlayer[]>
-    put(args: PutPlayer | PutPlayer[]): Promise<any>
+    scan(filter: { [key: string]: Condition }): Promise<IPlayer[]>
 }
 
 class PlayersClient implements IPlayersClient {
-    private client = dynamoDb
     private entityType = 'player'
-    private tableName = 'Games'
 
     async create(
         gameId: GameId,
@@ -214,12 +155,11 @@ class PlayersClient implements IPlayersClient {
         return player
     }
 
-    async find(filter: { [key: string]: Condition }): Promise<IPlayer[]> {
-        const result = await find({
+    async scan(filter: { [key: string]: Condition }): Promise<IPlayer[]> {
+        const result = await scan({
             ScanFilter: filter,
             EntityType: this.entityType,
-            client: this.client,
-            TableName: this.tableName,
+            TableName,
         })
         return result.Items?.map(this.fromDynamo) ?? []
     }
@@ -228,9 +168,9 @@ class PlayersClient implements IPlayersClient {
         gameId: GameId,
         playerId: PlayerId
     ): Promise<IPlayer | undefined> {
-        return this.client
+        return dynamoDb
             .get({
-                TableName: this.tableName,
+                TableName,
                 Key: {
                     PK: `g#${gameId}`,
                     SK: `p#${playerId}`,
@@ -243,9 +183,9 @@ class PlayersClient implements IPlayersClient {
     }
 
     async list(gameId: GameId): Promise<IPlayer[]> {
-        return await this.client
+        return await dynamoDb
             .query({
-                TableName: this.tableName,
+                TableName,
                 KeyConditions: {
                     PK: {
                         ComparisonOperator: 'EQ',
@@ -266,24 +206,23 @@ class PlayersClient implements IPlayersClient {
     async put(args: PutPlayer | PutPlayer[]): Promise<any> {
         return Array.isArray(args)
             ? putMany({
-                  client: this.client,
                   Items: args.map(this.toDynamo),
-                  TableName: this.tableName,
+                  TableName,
               })
             : put({
-                  client: this.client,
                   Item: this.toDynamo(args),
-                  TableName: this.tableName,
+                  TableName,
               })
     }
 
-    private readonly toDynamo = (player: PutPlayer) => ({
-        EntityType: this.entityType,
-        PK: `g#${player.gameId}`,
-        SK: `p#${player.id}`,
-        Name: player.nickname,
-        Host: player.host,
-    })
+    private readonly toDynamo = (player: PutPlayer) =>
+        ({
+            EntityType: this.entityType,
+            PK: `g#${player.gameId}`,
+            SK: `p#${player.id}`,
+            Name: player.nickname,
+            Host: player.host,
+        } as NoUndefinedField<any>)
 
     private readonly fromDynamo = (result: any): IPlayer => ({
         id: result.SK.replace('p#', ''),
@@ -293,18 +232,17 @@ class PlayersClient implements IPlayersClient {
 }
 
 interface IStateClient {
-    get<T>(gameId: GameId): Promise<T>
-    put(gameId: GameId, state: any): Promise<any>
+    get<T = any>(gameId: GameId): Promise<T>
+    put<T = any>(gameId: GameId, state: T): Promise<any>
 }
 
 class StateClient implements IStateClient {
     private client = dynamoDb
-    private tableName = 'Games'
 
     async get<T>(gameId: GameId): Promise<T> {
         return this.client
             .get({
-                TableName: this.tableName,
+                TableName,
                 Key: {
                     PK: `g#${gameId}`,
                     SK: 'state',
@@ -320,7 +258,7 @@ class StateClient implements IStateClient {
     async list<T>(ids: GameId[]): Promise<T[]> {
         return await this.client
             .query({
-                TableName: this.tableName,
+                TableName,
                 KeyConditions: {
                     PK: {
                         ComparisonOperator: 'EQ',
@@ -331,6 +269,7 @@ class StateClient implements IStateClient {
                         AttributeValueList: ['state'],
                     },
                 },
+                Limit: ids.length,
             })
             .promise()
             .then((results) =>
@@ -340,18 +279,17 @@ class StateClient implements IStateClient {
             )
     }
 
-    async put(gameId: GameId, state: any): Promise<any> {
+    async put<T>(gameId: GameId, state: T): Promise<any> {
         return put({
-            client: this.client,
             Item: this.toDynamo(gameId, state),
-            TableName: this.tableName,
+            TableName,
         })
     }
 
     async delete(gameId: GameId): Promise<any> {
         return await this.client
             .delete({
-                TableName: this.tableName,
+                TableName,
                 Key: {
                     PK: `g#${gameId}`,
                     SK: 'state',
@@ -361,6 +299,13 @@ class StateClient implements IStateClient {
     }
 
     private readonly toDynamo = (gameId: GameId, state: any) => ({
+        EntityType: 'state',
+        PK: `g#${gameId}`,
+        SK: `state`,
+        State: state,
+    })
+
+    private readonly toDynamo2 = (gameId: GameId, state: any) => ({
         EntityType: 'state',
         PK: `g#${gameId}`,
         SK: `state`,

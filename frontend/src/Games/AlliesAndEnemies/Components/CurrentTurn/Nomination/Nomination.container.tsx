@@ -9,11 +9,11 @@ import { useNominate } from './hooks'
 
 const Nomination: React.FC<AlliesAndEnemiesState> = ({
     currentTurn,
-    game,
+    gameId,
     players,
     viewingPlayer,
 }) => {
-    const [nominate, result] = useNominate(game.id, viewingPlayer.id)
+    const [nominate, result] = useNominate(gameId, viewingPlayer.id)
     const disabledForPositions = map(
         currentTurn.ineligibleNominations,
         'position'

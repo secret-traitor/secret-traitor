@@ -7,11 +7,11 @@ import PolicyPeak from './PolicyPeek.component'
 import { usePolicyPeekOk, usePolicyPeek } from './hooks'
 
 const PolicyPeekContainer: React.FC<AlliesAndEnemiesState> = ({
-    game,
+    gameId,
     viewingPlayer,
 }) => {
-    const { cards, loading, error } = usePolicyPeek(game.id, viewingPlayer.id)
-    const [ok] = usePolicyPeekOk(game.id, viewingPlayer.id)
+    const { cards, loading, error } = usePolicyPeek(gameId, viewingPlayer.id)
+    const [ok] = usePolicyPeekOk(gameId, viewingPlayer.id)
     if (error) {
         return <>{error.message}</>
     }

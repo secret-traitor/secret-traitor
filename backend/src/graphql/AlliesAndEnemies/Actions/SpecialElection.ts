@@ -19,7 +19,7 @@ import { ApiResponse } from '@shared/api'
 import { getTopicName, Topics } from '@shared/topics'
 import Context from '@shared/Context'
 
-import { AlliesAndEnemiesPlayer } from './Player'
+import { AlliesAndEnemiesPlayer } from '../Player'
 
 @ObjectType({ implements: [Event, GameEvent] })
 class AlliesAndEnemiesSpecialElectionEvent extends GameEvent {
@@ -29,10 +29,14 @@ class AlliesAndEnemiesSpecialElectionEvent extends GameEvent {
     constructor(
         specialElectedPlayer: ViewingPlayerState,
         gameId: GameId,
-        playerId: PlayerId
+        viewingPlayerId: PlayerId
     ) {
-        const state = { gameId, playerId, gameType: GameType.AlliesNEnemies }
-        super(state, playerId, AlliesAndEnemiesSpecialElectionEvent.name)
+        const state = {
+            gameId,
+            viewingPlayerId,
+            gameType: GameType.AlliesNEnemies,
+        }
+        super(state, viewingPlayerId, AlliesAndEnemiesSpecialElectionEvent.name)
         this.specialElectedPlayer = specialElectedPlayer
     }
 }
@@ -42,13 +46,13 @@ class AlliesAndEnemiesSpecialElectionEventResolver {
     @Mutation(() => AlliesAndEnemiesSpecialElectionEvent)
     async alliesAndEnemiesSpecialElection(
         @Arg('gameId', () => ID) gameId: GameId,
-        @Arg('playerId', () => ID) playerId: PlayerId,
+        @Arg('playerId', () => ID) viewingPlayerId: PlayerId,
         @Arg('selectedPlayerId', () => ID) selectedPlayerId: PlayerId,
         @Ctx() { dataSources: { alliesAndEnemies } }: Context,
         @PubSub() pubSub: PubSubEngine
     ): Promise<ApiResponse<AlliesAndEnemiesSpecialElectionEvent>> {
-        const state = await alliesAndEnemies.get(gameId, playerId)
-        const result = state.specialElection(playerId)
+        const state = await alliesAndEnemies.load(gameId, viewingPlayerId)
+        const result = state.specialElection(selectedPlayerId)
         if ('error' in result) {
             return result.error
         }
@@ -56,7 +60,7 @@ class AlliesAndEnemiesSpecialElectionEventResolver {
         const payload = new AlliesAndEnemiesSpecialElectionEvent(
             result.specialElectedPlayer,
             gameId,
-            playerId
+            viewingPlayerId
         )
         await pubSub.publish(getTopicName(Topics.Play, gameId), payload)
         return payload

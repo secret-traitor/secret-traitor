@@ -3,14 +3,17 @@ version: '3'
 services:
     backend:
         build: ./backend
+        depends_on:
+            - db-setup
         environment:
             - AWS_DEFAULT_REGION=us-east-1
             - AWS_ACCESS_KEY_ID=not-specified-not-needed
             - AWS_SECRET_ACCESS_KEY=not-specified-not-needed
-        depends_on:
-            - db-setup
+            - DYNAMODB_ENDPOINT=http://dynamodb-local:8000
         ports:
             - '4000:4000'
+        volumes:
+          - './backend:/app'
     dynamodb-local:
         command:
             [
@@ -32,6 +35,8 @@ services:
         ports:
             - '7328:3000'
         stdin_open: true
+        volumes:
+          - './frontend:/app'
     web:
         image: nginx
         ports:
@@ -75,6 +80,10 @@ services:
         depends_on:
             - dynamodb-local
     am:
-        image: amazon/aws-cli
-        entrypoint: tail
         command: tail -F /dev/null
+        entrypoint: tail
+        environment:
+            - AWS_DEFAULT_REGION=us-east-1
+            - AWS_ACCESS_KEY_ID=not-specified-not-needed
+            - AWS_SECRET_ACCESS_KEY=not-specified-not-needed
+        image: amazon/aws-cli

@@ -10,16 +10,16 @@ import {
 import { useInvestigateLoyaltyOk, useInvestigateLoyalty } from './hooks'
 
 const InvestigateLoyaltyContainer: React.FC<AlliesAndEnemiesState> = ({
+    gameId,
     players,
-    game,
     viewingPlayer,
 }) => {
     const [investigateLoyalty, result] = useInvestigateLoyalty(
-        game.id,
+        gameId,
         viewingPlayer.id
     )
     const { player, error, loading } = result
-    const [ok] = useInvestigateLoyaltyOk(game.id, viewingPlayer.id)
+    const [ok] = useInvestigateLoyaltyOk(gameId, viewingPlayer.id)
     if (error) {
         return <>{error.message}</>
     }

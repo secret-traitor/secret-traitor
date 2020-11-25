@@ -21,9 +21,13 @@ import Context from '@shared/Context'
 
 @ObjectType({ implements: [Event, GameEvent] })
 class AlliesAndEnemiesCallVetoEvent extends GameEvent {
-    constructor(gameId: GameId, playerId: PlayerId) {
-        const state = { gameId, playerId, gameType: GameType.AlliesNEnemies }
-        super(state, playerId, AlliesAndEnemiesCallVetoEvent.name)
+    constructor(gameId: GameId, viewingPlayerId: PlayerId) {
+        const state = {
+            gameId,
+            viewingPlayerId,
+            gameType: GameType.AlliesNEnemies,
+        }
+        super(state, viewingPlayerId, AlliesAndEnemiesCallVetoEvent.name)
     }
 }
 
@@ -32,17 +36,20 @@ class AlliesAndEnemiesCallVetoEventResolver {
     @Mutation(() => AlliesAndEnemiesCallVetoEvent)
     async alliesAndEnemiesCallVeto(
         @Arg('gameId', () => ID) gameId: GameId,
-        @Arg('playerId', () => ID) playerId: PlayerId,
+        @Arg('playerId', () => ID) viewingPlayerId: PlayerId,
         @Ctx() { dataSources: { alliesAndEnemies } }: Context,
         @PubSub() pubSub: PubSubEngine
     ): Promise<ApiResponse<AlliesAndEnemiesCallVetoEvent>> {
-        const state = await alliesAndEnemies.get(gameId, playerId)
+        const state = await alliesAndEnemies.load(gameId, viewingPlayerId)
         const result = state.callVeto()
         if ('error' in result) {
             return result.error
         }
         await state.save()
-        const payload = new AlliesAndEnemiesCallVetoEvent(gameId, playerId)
+        const payload = new AlliesAndEnemiesCallVetoEvent(
+            gameId,
+            viewingPlayerId
+        )
         await pubSub.publish(getTopicName(Topics.Play, gameId), payload)
         return payload
     }
@@ -53,9 +60,13 @@ export class AlliesAndEnemiesVetoVoteEvent extends GameEvent {
     @Field(() => VoteValue)
     public readonly vote: VoteValue
 
-    constructor(vote: VoteValue, gameId: GameId, playerId: PlayerId) {
-        const state = { gameId, playerId, gameType: GameType.AlliesNEnemies }
-        super(state, playerId, AlliesAndEnemiesVetoVoteEvent.name)
+    constructor(vote: VoteValue, gameId: GameId, viewingPlayerId: PlayerId) {
+        const state = {
+            gameId,
+            viewingPlayerId,
+            gameType: GameType.AlliesNEnemies,
+        }
+        super(state, viewingPlayerId, AlliesAndEnemiesVetoVoteEvent.name)
         this.vote = vote
     }
 }
@@ -65,12 +76,12 @@ class AlliesAndEnemiesVetoVoteEventResolver {
     @Mutation(() => AlliesAndEnemiesVetoVoteEvent)
     async alliesAndEnemiesVetoVote(
         @Arg('gameId', () => ID) gameId: GameId,
-        @Arg('playerId', () => ID) playerId: PlayerId,
+        @Arg('playerId', () => ID) viewingPlayerId: PlayerId,
         @Arg('vote', () => VoteValue) vote: VoteValue,
         @Ctx() { dataSources: { alliesAndEnemies } }: Context,
         @PubSub() pubSub: PubSubEngine
     ): Promise<ApiResponse<AlliesAndEnemiesVetoVoteEvent>> {
-        const state = await alliesAndEnemies.get(gameId, playerId)
+        const state = await alliesAndEnemies.load(gameId, viewingPlayerId)
         const result = state.vetoVote(vote)
         if ('error' in result) {
             return result.error
@@ -79,7 +90,7 @@ class AlliesAndEnemiesVetoVoteEventResolver {
         const payload = new AlliesAndEnemiesVetoVoteEvent(
             vote,
             gameId,
-            playerId
+            viewingPlayerId
         )
         await pubSub.publish(getTopicName(Topics.Play, gameId), payload)
         return payload

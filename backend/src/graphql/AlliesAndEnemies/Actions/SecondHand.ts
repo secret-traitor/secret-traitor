@@ -19,9 +19,17 @@ import Context from '@shared/Context'
 
 @ObjectType({ implements: [Event, GameEvent] })
 class AlliesAndEnemiesSecondHandDiscardEvent extends GameEvent {
-    constructor(gameId: GameId, playerId: PlayerId) {
-        const state = { gameId, playerId, gameType: GameType.AlliesNEnemies }
-        super(state, playerId, AlliesAndEnemiesSecondHandDiscardEvent.name)
+    constructor(gameId: GameId, viewingPlayerId: PlayerId) {
+        const state = {
+            gameId,
+            viewingPlayerId,
+            gameType: GameType.AlliesNEnemies,
+        }
+        super(
+            state,
+            viewingPlayerId,
+            AlliesAndEnemiesSecondHandDiscardEvent.name
+        )
     }
 }
 
@@ -30,12 +38,12 @@ class AlliesAndEnemiesSecondHandDiscardEventResolver {
     @Mutation(() => AlliesAndEnemiesSecondHandDiscardEvent)
     async alliesAndEnemiesSecondHandDiscard(
         @Arg('gameId', () => ID) gameId: GameId,
-        @Arg('playerId', () => ID) playerId: PlayerId,
+        @Arg('playerId', () => ID) viewingPlayerId: PlayerId,
         @Arg('index', () => Number) index: 0 | 1,
         @Ctx() { dataSources: { alliesAndEnemies } }: Context,
         @PubSub() pubSub: PubSubEngine
     ): Promise<ApiResponse<AlliesAndEnemiesSecondHandDiscardEvent>> {
-        const state = await alliesAndEnemies.get(gameId, playerId)
+        const state = await alliesAndEnemies.load(gameId, viewingPlayerId)
         const result = state.secondHand(index)
         if ('error' in result) {
             return result.error
@@ -43,7 +51,7 @@ class AlliesAndEnemiesSecondHandDiscardEventResolver {
         await state.save()
         const payload = new AlliesAndEnemiesSecondHandDiscardEvent(
             gameId,
-            playerId
+            viewingPlayerId
         )
         await pubSub.publish(getTopicName(Topics.Play, gameId), payload)
         return payload

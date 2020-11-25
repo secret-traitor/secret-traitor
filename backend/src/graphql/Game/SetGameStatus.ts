@@ -2,61 +2,75 @@ import {
     Arg,
     Ctx,
     Field,
+    FieldResolver,
     ID,
     Mutation,
     ObjectType,
     PubSub,
     Resolver,
+    Root,
 } from 'type-graphql'
 import { PubSubEngine } from 'graphql-subscriptions'
 
-import GamesClient from '@clients/Games'
 import { GameId, GameStatus, IGame } from '@entities/Game'
 import { PlayerId } from '@entities/Player'
-import {
-    ActiveAlliesAndEnemiesState,
-    StandardConfiguration,
-} from '@entities/AlliesAndEnemies'
 import { Event } from '@graphql/Event'
 import { GameEvent } from '@graphql/GameEvent'
 import { ApiResponse, DescriptiveError } from '@shared/api'
 import { getTopicName, Topics } from '@shared/topics'
-import { IGameState } from '@graphql/GameState'
 import Context from '@shared/Context'
 
 type GameStateEvent = {
     game: IGame
     newStatus: GameStatus
     oldStatus: GameStatus
-    playerId: PlayerId
+    viewingPlayerId: PlayerId
 }
 
 @ObjectType({ implements: [Event, GameEvent] })
 export class GameStatusEvent extends GameEvent {
-    @Field(() => GameStatus, { name: 'changedTo' })
-    public readonly newStatus: GameStatus
-    @Field(() => GameStatus, { name: 'changedFrom' })
-    public readonly oldStatus: GameStatus
+    readonly newStatus: GameStatus
+    readonly oldStatus: GameStatus
 
-    constructor({ game, newStatus, oldStatus, playerId }: GameStateEvent) {
-        const state = { gameId: game.id, gameType: game.type, playerId }
-        super(state, playerId, GameStatusEvent.name)
+    constructor({
+        game,
+        newStatus,
+        oldStatus,
+        viewingPlayerId,
+    }: GameStateEvent) {
+        const state = { gameId: game.id, gameType: game.type, viewingPlayerId }
+        super(state, viewingPlayerId, GameStatusEvent.name)
         this.newStatus = newStatus
         this.oldStatus = oldStatus
     }
 }
 
-@Resolver()
+@ObjectType()
+class UpdatedGameStatus {
+    @Field(() => GameStatus)
+    public readonly current: GameStatus
+    @Field(() => GameStatus)
+    public readonly last: GameStatus
+}
+
+@Resolver(() => GameStatusEvent)
 export class SetGameStatusResolver {
+    @FieldResolver(() => UpdatedGameStatus)
+    status(
+        @Root() { oldStatus, newStatus }: GameStatusEvent
+    ): UpdatedGameStatus {
+        return { last: oldStatus, current: newStatus }
+    }
+
     @Mutation(() => GameStatusEvent, { nullable: true })
     async setGameStatus(
         @Arg('gameId', () => ID) gameId: GameId,
-        @Arg('playerId', () => ID) playerId: PlayerId,
+        @Arg('playerId', () => ID) viewingPlayerId: PlayerId,
         @Arg('status', () => GameStatus) status: GameStatus,
-        @Ctx() { dataSources: { games } }: Context,
+        @Ctx() { dataSources: { games, alliesAndEnemies } }: Context,
         @PubSub() pubSub: PubSubEngine
     ): Promise<ApiResponse<GameStatusEvent | null>> {
-        const oldGame = await games.get(gameId)
+        const oldGame = await games.load(gameId)
         if (!oldGame) {
             return new DescriptiveError('')
         }
@@ -65,34 +79,18 @@ export class SetGameStatusResolver {
             oldGame.status === GameStatus.InLobby &&
             newGame.status === GameStatus.InProgress
         ) {
-            const players = await GamesClient.players.find({
-                PK: {
-                    ComparisonOperator: 'CONTAINS',
-                    AttributeValueList: [gameId],
-                },
-                Name: { ComparisonOperator: 'NOT_NULL' },
-            })
-            if (!players) {
-                return new DescriptiveError('no players')
-            }
-            const configuration = StandardConfiguration[players.length] || null
-            if (!configuration) {
-                return new DescriptiveError('no configuration')
-            }
-            const state = ActiveAlliesAndEnemiesState.newGame(
-                gameId,
-                players,
-                configuration,
-                playerId
-            )
-            await state.save()
-        } else {
-            await GamesClient.state.delete(gameId)
+            await alliesAndEnemies.start(gameId, viewingPlayerId)
         }
-        await GamesClient.games.put(newGame)
+        if (
+            oldGame.status === GameStatus.InProgress &&
+            newGame.status === GameStatus.InLobby
+        ) {
+            await alliesAndEnemies.delete(gameId)
+        }
+        await games.put(newGame)
         const payload = new GameStatusEvent({
             game: newGame,
-            playerId,
+            viewingPlayerId,
             oldStatus: oldGame.status,
             newStatus: newGame.status,
         })

@@ -1,5 +1,4 @@
 import { Player } from 'types/Player'
-import { Game } from 'types/Game'
 
 export enum BoardAction {
     Execution = 'Execution',
@@ -27,14 +26,6 @@ export type BoardState = {
     actions: BoardAction[]
     ally: BoardRow
     enemy: BoardRow
-}
-
-export enum PlayerAction {
-    Nominate = 'Nominate',
-    None = 'None',
-    PlayCard = 'PlayCard',
-    TakeBoardAction = 'TakeBoardAction',
-    Vote = 'Vote',
 }
 
 export enum PlayerRole {
@@ -85,10 +76,10 @@ export type TurnState = {
 export type AlliesAndEnemiesState = {
     board: BoardState
     currentTurn: TurnState
+    gameId: string
     players: PlayerState[]
-    game: Game
-    viewingPlayer: PlayerState
     victoryStatus?: Victory
+    viewingPlayer: PlayerState
 }
 
 export type Victory = {

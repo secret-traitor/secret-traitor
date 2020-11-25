@@ -108,7 +108,7 @@ export class ActiveAlliesAndEnemiesState {
         return this.state.players.map((p) => ({
             ...p,
             role: this.getRole(p, this.viewingPlayer),
-            status: this.getStatus(this.viewingPlayer),
+            status: this.getStatus(p),
         }))
     }
 

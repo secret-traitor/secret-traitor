@@ -15,6 +15,7 @@ export const AlliesAndEnemiesGameStateFragment = gql`
         status
     }
     fragment AlliesAndEnemiesGameStateFragment on AlliesAndEnemiesGameState {
+        gameId
         players {
             ...AlliesAndEnemiesPlayerFragment
         }
@@ -59,6 +60,32 @@ export const AlliesAndEnemiesGameStateFragment = gql`
             message
             team
             type
+        }
+    }
+`
+
+export const AlliesAndEnemiesGameEventFragment = gql`
+    fragment AlliesAndEnemiesGameEventFragment on GameEvent {
+        ... on AlliesAndEnemiesExecutePlayer {
+            executedPlayer {
+                ...AlliesAndEnemiesPlayerFragment
+            }
+        }
+        ... on AlliesAndEnemiesNominationEvent {
+            nomination {
+                ...AlliesAndEnemiesPlayerFragment
+            }
+        }
+        ... on AlliesAndEnemiesSpecialElectionEvent {
+            specialElectedPlayer {
+                ...AlliesAndEnemiesPlayerFragment
+            }
+        }
+        ... on AlliesAndEnemiesVoteEvent {
+            vote
+        }
+        ... on AlliesAndEnemiesVetoVoteEvent {
+            vote
         }
     }
 `

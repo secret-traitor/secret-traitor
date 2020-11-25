@@ -2,9 +2,9 @@ import express from 'express'
 import { ApolloServer } from 'apollo-server-express'
 import { createServer } from 'http'
 
-import buildDataSources from './buildDataSources'
 import plugins from './plugins'
 import schema from './schema'
+import { buildDataSources } from './buildDataSources'
 
 const app = express()
 const server = createServer(app)
@@ -12,6 +12,20 @@ const apollo = new ApolloServer({
     schema,
     plugins,
     dataSources: buildDataSources,
+    context: async ({ req, connection }) => {
+        let context = {
+            request: req,
+            headers: req?.headers,
+        }
+        if (connection) {
+            context = {
+                ...context,
+                ...connection.context,
+                dataSources: buildDataSources(),
+            }
+        }
+        return context
+    },
 })
 apollo.applyMiddleware({ app, path: '/graphql' })
 apollo.applyMiddleware({ app, cors: { credentials: false, origin: false } })

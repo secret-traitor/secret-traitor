@@ -3,8 +3,8 @@ import { Redirect } from 'react-router-dom'
 
 import LoadingScreen from 'Components/LoadingScreen'
 import { getJoinUrl } from 'links'
-import { usePageTitle } from 'hooks'
 import { usePlayerId } from 'types/Player'
+import { usePageTitle } from 'hooks/document'
 
 import Create from './Create.component'
 import { useCreateGame, useGameTypes } from './hooks'

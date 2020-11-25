@@ -1,12 +1,14 @@
-import { DataSources as IDataSources } from 'apollo-server-core/src/graphqlOptions'
+import { DataSources as BaseDataSources } from 'apollo-server-core/src/graphqlOptions'
 
-import Context from '@shared/Context'
-import GamesDataSource from '@entities/Game/DataSource'
 import AlliesAndEnemiesStateDataSource from '@entities/AlliesAndEnemies/DataSource'
+import GamesDataSource from '@entities/Game/DataSource'
+import PlayersDataSource from '@entities/Player/DataSource'
+import Context from '@shared/Context'
 
-interface DataSources extends IDataSources<Context> {
-    games: GamesDataSource
+interface DataSources extends BaseDataSources<Context> {
     alliesAndEnemies: AlliesAndEnemiesStateDataSource
+    games: GamesDataSource
+    players: PlayersDataSource
 }
 
 export default DataSources

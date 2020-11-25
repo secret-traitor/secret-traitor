@@ -6,10 +6,10 @@ import { useVote } from './hooks'
 
 const Election: React.FC<AlliesAndEnemiesState> = ({
     currentTurn,
-    game,
+    gameId,
     viewingPlayer,
 }) => {
-    const [vote] = useVote(game.id, viewingPlayer.id)
+    const [vote] = useVote(gameId, viewingPlayer.id)
     if (!currentTurn.nominatedPlayer) {
         return <>Uh Oh</> // TODO: handle no nominated player
     }

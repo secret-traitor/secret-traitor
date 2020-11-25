@@ -1,6 +1,7 @@
 import {
     Arg,
     Ctx,
+    Field,
     FieldResolver,
     Mutation,
     ObjectType,
@@ -10,43 +11,42 @@ import {
 } from 'type-graphql'
 import { PubSubEngine } from 'graphql-subscriptions'
 
-import GamesClient from '@clients/Games'
 import { GameStatus, GameId, IGame } from '@entities/Game'
 import { Event } from '@graphql/Event'
-import { GameEvent, IGameEvent } from '@graphql/GameEvent'
+import { GameEvent } from '@graphql/GameEvent'
 import { DescriptiveError, ApiResponse } from '@shared/api'
 import { getTopicName, Topics } from '@shared/topics'
 import { IPlayer, PlayerId } from '@entities/Player'
 import { Player } from '@graphql/Player'
-import { IGameState } from '@graphql/GameState'
 import Context from '@shared/Context'
 
 @ObjectType({ implements: [Event, GameEvent] })
 export class JoinGameEvent extends GameEvent {
-    constructor(game: IGame, playerId: PlayerId) {
-        const state = { gameId: game.id, gameType: game.type, playerId }
-        super(state, playerId, JoinGameEvent.name)
+    @Field(() => Player)
+    readonly joined: IPlayer
+
+    constructor(game: IGame, player: IPlayer) {
+        const state = {
+            gameId: game.id,
+            gameType: game.type,
+            viewingPlayerId: player.id,
+        }
+        super(state, player.id, JoinGameEvent.name)
+        this.joined = player
     }
 }
 
 @Resolver(() => JoinGameEvent)
 class JoinResolver {
-    @FieldResolver(() => Player, { nullable: true })
-    async joined(
-        @Root() { state: { gameId }, source }: IGameEvent
-    ): Promise<IPlayer | null> {
-        return (await GamesClient.players.get(gameId, source)) ?? null
-    }
-
     @Mutation(() => JoinGameEvent)
     async joinGame(
         @Arg('gameId', () => String) gameId: GameId,
         @Arg('playerId', () => String) playerId: PlayerId,
         @Arg('playerNickname', () => String) nickname: string,
-        @Ctx() { dataSources: { games } }: Context,
+        @Ctx() { dataSources: { games, players } }: Context,
         @PubSub() pubSub: PubSubEngine
     ): Promise<ApiResponse<JoinGameEvent>> {
-        const game = await games.get(gameId)
+        const game = await games.load(gameId)
         if (!game) {
             return new DescriptiveError(
                 'Unable to look up game.',
@@ -61,8 +61,7 @@ class JoinResolver {
                 'Please join games from the home page or using recently copied links.'
             )
         }
-        const player = await GamesClient.players.put({
-            gameId,
+        const player = await players.put(gameId, {
             id: playerId,
             nickname,
         })

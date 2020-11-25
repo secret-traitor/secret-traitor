@@ -1,20 +1,41 @@
-import { DataSource, DataSourceConfig } from 'apollo-datasource'
+import { DataSource } from 'apollo-datasource'
 import DataLoader from 'dataloader'
 
 import GamesClient from '@clients/Games'
 import Context from '@shared/Context'
-import { GameId, IGame } from '@entities/Game'
-import { AlliesAndEnemiesState } from '@entities/AlliesAndEnemies/AlliesAndEnemies.types'
-import { ActiveAlliesAndEnemiesState } from '@entities/AlliesAndEnemies/AlliesAndEnemies.game'
+import { GameId } from '@entities/Game'
 import { PlayerId } from '@entities/Player'
+
+import { AlliesAndEnemiesState } from './AlliesAndEnemies.types'
+import { ActiveAlliesAndEnemiesState } from './AlliesAndEnemies.game'
+import { StandardConfiguration } from './AlliesAndEnemies.config'
 import { DescriptiveError } from '@shared/api'
 
 class AlliesAndEnemiesStateDataSource extends DataSource<Context> {
     private loader = new DataLoader<GameId, AlliesAndEnemiesState>(
-        async (keys) =>
-            await GamesClient.state.list<AlliesAndEnemiesState>([...keys])
+        async (keys) => {
+            const results: any[] = await GamesClient.state.list([...keys])
+            const reduced: Record<
+                string,
+                AlliesAndEnemiesState
+            > = results.reduce(
+                (acc, s) => ({
+                    ...acc,
+                    [s.gameId]: s,
+                }),
+                {}
+            )
+            return keys.map((k) => reduced[k] || undefined)
+        }
     )
-    async get(
+    async delete(gameId: GameId): Promise<any> {
+        return await GamesClient.state.delete(gameId)
+    }
+    async exists(gameId: GameId): Promise<boolean> {
+        const state = await this.loader.load(gameId)
+        return !!state
+    }
+    async load(
         gameId: GameId,
         playerId: PlayerId
     ): Promise<ActiveAlliesAndEnemiesState> {
@@ -26,6 +47,29 @@ class AlliesAndEnemiesStateDataSource extends DataSource<Context> {
             )
         }
         return new ActiveAlliesAndEnemiesState(state, playerId)
+    }
+    async start(gameId: GameId, playerId: PlayerId) {
+        const players = await GamesClient.players.scan({
+            PK: {
+                ComparisonOperator: 'CONTAINS',
+                AttributeValueList: [gameId],
+            },
+            Name: { ComparisonOperator: 'NOT_NULL' },
+        })
+        if (!players) {
+            throw new DescriptiveError('no players')
+        }
+        const configuration = StandardConfiguration[players.length] || null
+        if (!configuration) {
+            throw new DescriptiveError('no configuration')
+        }
+        const state = ActiveAlliesAndEnemiesState.newGame(
+            gameId,
+            players,
+            configuration,
+            playerId
+        )
+        await state.save()
     }
 }
 export default AlliesAndEnemiesStateDataSource

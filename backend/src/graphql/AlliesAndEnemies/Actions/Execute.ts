@@ -28,10 +28,14 @@ class AlliesAndEnemiesExecutePlayer extends GameEvent {
     constructor(
         executedPlayer: ViewingPlayerState,
         gameId: GameId,
-        playerId: PlayerId
+        viewingPlayerId: PlayerId
     ) {
-        const state = { gameId, playerId, gameType: GameType.AlliesNEnemies }
-        super(state, playerId, AlliesAndEnemiesExecutePlayer.name)
+        const state = {
+            gameId,
+            viewingPlayerId,
+            gameType: GameType.AlliesNEnemies,
+        }
+        super(state, viewingPlayerId, AlliesAndEnemiesExecutePlayer.name)
         this.executedPlayer = executedPlayer
     }
 }
@@ -41,12 +45,12 @@ class AlliesAndEnemiesExecutePlayerResolver {
     @Mutation(() => AlliesAndEnemiesExecutePlayer)
     async alliesAndEnemiesExecutePlayer(
         @Arg('gameId', () => ID) gameId: GameId,
-        @Arg('playerId', () => ID) playerId: PlayerId,
+        @Arg('playerId', () => ID) viewingPlayerId: PlayerId,
         @Arg('executePlayerId', () => ID) executePlayerId: PlayerId,
         @Ctx() { dataSources: { alliesAndEnemies } }: Context,
         @PubSub() pubSub: PubSubEngine
     ): Promise<ApiResponse<AlliesAndEnemiesExecutePlayer>> {
-        const state = await alliesAndEnemies.get(gameId, playerId)
+        const state = await alliesAndEnemies.load(gameId, viewingPlayerId)
         const result = state.executePlayer(executePlayerId)
         if ('error' in result) {
             return result.error
@@ -56,7 +60,7 @@ class AlliesAndEnemiesExecutePlayerResolver {
         const payload = new AlliesAndEnemiesExecutePlayer(
             executedPlayer,
             gameId,
-            playerId
+            viewingPlayerId
         )
         await pubSub.publish(getTopicName(Topics.Play, gameId), payload)
         return payload

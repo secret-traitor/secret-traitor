@@ -19,7 +19,7 @@ import { ApiResponse } from '@shared/api'
 import { getTopicName, Topics } from '@shared/topics'
 import Context from '@shared/Context'
 
-import { AlliesAndEnemiesPlayer } from './Player'
+import { AlliesAndEnemiesPlayer } from '../Player'
 
 @ObjectType({ implements: [Event, GameEvent] })
 class AlliesAndEnemiesNominationEvent extends GameEvent {
@@ -29,10 +29,14 @@ class AlliesAndEnemiesNominationEvent extends GameEvent {
     constructor(
         nominatedPlayer: ViewingPlayerState,
         gameId: GameId,
-        playerId: PlayerId
+        viewingPlayerId: PlayerId
     ) {
-        const state = { gameId, playerId, gameType: GameType.AlliesNEnemies }
-        super(state, playerId, AlliesAndEnemiesNominationEvent.name)
+        const state = {
+            gameId,
+            viewingPlayerId,
+            gameType: GameType.AlliesNEnemies,
+        }
+        super(state, viewingPlayerId, AlliesAndEnemiesNominationEvent.name)
         this.nomination = nominatedPlayer
     }
 }
@@ -42,12 +46,12 @@ class AlliesAndEnemiesNominationEventResolver {
     @Mutation(() => AlliesAndEnemiesNominationEvent)
     async alliesAndEnemiesNominate(
         @Arg('gameId', () => ID) gameId: GameId,
-        @Arg('playerId', () => ID) playerId: PlayerId,
+        @Arg('playerId', () => ID) viewingPlayerId: PlayerId,
         @Arg('nominatedPlayerId', () => ID) nominatedPlayerId: PlayerId,
         @Ctx() { dataSources: { alliesAndEnemies } }: Context,
         @PubSub() pubSub: PubSubEngine
     ): Promise<ApiResponse<AlliesAndEnemiesNominationEvent>> {
-        const state = await alliesAndEnemies.get(gameId, playerId)
+        const state = await alliesAndEnemies.load(gameId, viewingPlayerId)
         const result = state.nominate(nominatedPlayerId)
         if ('error' in result) {
             return result.error
@@ -57,7 +61,7 @@ class AlliesAndEnemiesNominationEventResolver {
         const payload = new AlliesAndEnemiesNominationEvent(
             nominatedPlayer,
             gameId,
-            playerId
+            viewingPlayerId
         )
         await pubSub.publish(getTopicName(Topics.Play, gameId), payload)
         return payload

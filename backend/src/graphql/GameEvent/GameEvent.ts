@@ -1,6 +1,7 @@
 import {
     Arg,
     Ctx,
+    Field,
     FieldResolver,
     ID,
     InterfaceType,
@@ -9,19 +10,19 @@ import {
     Subscription,
 } from 'type-graphql'
 
-import GamesClient from '@clients/Games'
 import { GameId, IGame } from '@entities/Game'
 import { PlayerId, IPlayer } from '@entities/Player'
 import { Event } from '@graphql/Event'
 import { Game } from '@graphql/Game'
-import { GameState, IGameState } from '@graphql/GameState'
+import { IGameState } from '@graphql/GameState'
 import { Player } from '@graphql/Player'
 import { getTopicName, Topics } from '@shared/topics'
 import Context from '@shared/Context'
+import logger from '@shared/Logger'
 
 export type IGameEvent = {
-    source: PlayerId
-    state: IGameState
+    readonly source: PlayerId
+    readonly state: IGameState
 }
 
 @InterfaceType({
@@ -29,7 +30,7 @@ export type IGameEvent = {
 })
 export abstract class GameEvent extends Event implements IGameEvent {
     protected constructor(
-        public readonly state: Required<IGameState>,
+        public state: Required<IGameState>,
         public readonly source: Required<PlayerId>,
         public readonly eventType: Required<string>
     ) {
@@ -43,42 +44,31 @@ class GameEventResolver {
     async game(
         @Root() { state: { gameId } }: IGameEvent,
         @Ctx() { dataSources: { games } }: Context
-    ): Promise<IGame | null> {
-        return (await games.get(gameId)) || null
+    ): Promise<IGame | undefined> {
+        return await games.load(gameId)
     }
 
-    @FieldResolver(() => Player, { nullable: true })
-    async player(
-        @Root() { state: { gameId, playerId } }: IGameEvent
-    ): Promise<IPlayer | null> {
-        return (await GamesClient.players.get(gameId, playerId)) || null
-    }
-
-    @FieldResolver(() => GameState, { nullable: true })
-    async state(
-        @Arg('gameId', () => ID) gameId: GameId,
-        @Arg('playerId', () => ID) playerId: PlayerId,
-        @Root() { state: { gameType } }: IGameEvent
-    ): Promise<IGameState | null> {
-        const state = await GamesClient.state.get(gameId)
-        if (!state) {
-            return null
-        }
-        return { gameId, playerId, gameType }
-    }
-
-    @FieldResolver(() => Player, { name: 'source' })
-    async sourcePlayer(@Root() { state: { gameId }, source }: IGameEvent) {
-        return await GamesClient.players.get(gameId, source)
+    @FieldResolver(() => Player, { name: 'source', nullable: true })
+    async sourcePlayer(
+        @Root() { state: { gameId }, source }: IGameEvent,
+        @Ctx() { dataSources: { players } }: Context
+    ): Promise<IPlayer | undefined> {
+        return await players.get(gameId, source)
     }
 
     @Subscription(() => GameEvent, {
-        topics: ({ args }) => getTopicName(Topics.Play, args.gameId),
+        topics: ({ args }) => {
+            const topic = getTopicName(Topics.Play, args.gameId)
+            logger.debug(`Listening on "${topic}"`)
+            return topic
+        },
     })
     play(
         @Arg('gameId', () => ID) gameId: GameId,
         @Root() event: IGameEvent
     ): IGameEvent {
+        const topic = getTopicName(Topics.Play, gameId)
+        logger.debug(`Event on  "${topic}": ${JSON.stringify(event)}`)
         return event
     }
 }

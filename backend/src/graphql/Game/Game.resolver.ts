@@ -8,7 +8,6 @@ import {
     Root,
 } from 'type-graphql'
 
-import GamesClient from '@clients/Games'
 import { GameId, GameStatus, IGame, IGameDescription } from '@entities/Game'
 import { IPlayer, PlayerId } from '@entities/Player'
 import { GameState, IGameState } from '@graphql/GameState'
@@ -16,49 +15,55 @@ import { Player } from '@graphql/Player'
 
 import { Game, GameDescription, GameDescriptions } from './Game.types'
 import Context from '@shared/Context'
+import { ApiResponse, DescriptiveError } from '@shared/api'
 
 @Resolver(() => Game)
 export class GameResolver {
-    @FieldResolver(() => [Player], { name: 'players' })
-    async players(@Root() game: IGame): Promise<IPlayer[]> {
-        return GamesClient.players.list(game.id)
+    @FieldResolver(() => [Player])
+    async players(
+        @Root() game: IGame,
+        @Ctx() { dataSources: { players } }: Context
+    ): Promise<IPlayer[]> {
+        return await players.list(game.id)
     }
 
     @FieldResolver(() => GameState, { nullable: true })
     async state(
-        @Arg('playerId', () => ID) playerId: PlayerId,
+        @Arg('playerId', () => ID) viewingPlayerId: PlayerId,
         @Root() game: IGame,
-        @Ctx() { dataSources: { games } }: Context
-    ): Promise<IGameState | null> {
-        const state = await games.get(game.id)
-        return state
-            ? ({
+        @Ctx() { dataSources: { alliesAndEnemies } }: Context
+    ): Promise<ApiResponse<IGameState | null>> {
+        return (await alliesAndEnemies.exists(game.id))
+            ? {
                   gameId: game.id,
                   gameType: game.type,
-                  playerId,
-              } as IGameState)
+                  viewingPlayerId,
+              }
             : null
     }
 
-    @Query(() => Player, { nullable: true })
+    @FieldResolver(() => Player, { nullable: true })
     async player(
-        @Arg('gameId', () => ID) gameId: GameId,
-        @Arg('playerId', () => ID) playerId: PlayerId
-    ): Promise<IPlayer | null> {
-        return (await GamesClient.players.get(gameId, playerId)) ?? null
+        @Arg('playerId', () => ID) playerId: PlayerId,
+        @Root() { id: gameId }: IGame,
+        @Ctx() { dataSources: { players } }: Context
+    ): Promise<IPlayer | undefined> {
+        return await players.get(gameId, playerId)
     }
 
     @Query(() => Game, { nullable: true })
     async game(
         @Arg('id', () => ID) id: GameId,
         @Ctx() { dataSources: { games } }: Context
-    ): Promise<IGame | null> {
-        return (await games.get(id)) ?? null
+    ): Promise<IGame | undefined> {
+        return await games.load(id)
     }
 
     @Query(() => [Game])
-    async joinableGames(): Promise<IGame[]> {
-        return GamesClient.games.find({
+    async joinableGames(
+        @Ctx() { dataSources: { games } }: Context
+    ): Promise<IGame[]> {
+        return games.scan({
             Status: {
                 AttributeValueList: [GameStatus.InLobby, GameStatus.InProgress],
                 ComparisonOperator: 'IN',

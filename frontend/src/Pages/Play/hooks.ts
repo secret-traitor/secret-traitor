@@ -1,5 +1,5 @@
-import { gql } from 'apollo-boost'
-import { useEffect } from 'react'
+import { ApolloError, gql } from 'apollo-boost'
+import { useEffect, useRef } from 'react'
 import {
     ExecutionResult,
     MutationResult,
@@ -67,30 +67,27 @@ export const usePlayGame = (gameId: string, playerId: string): PlayGame => {
         variables: { gameId, playerId },
         skip: !gameId || !playerId,
     })
+    const errorRef = useRef(result.error)
     useEffect(() => {
-        let unsubscribe: (() => void) | undefined
-        if (gameId && playerId) {
-            unsubscribe = result?.subscribeToMore({
-                document: GameSubscription,
-                variables: { gameId, playerId },
-                updateQuery: (prev, { subscriptionData }) => {
-                    console.log('subscriptionData:', subscriptionData?.data)
-                    const { game, state } = subscriptionData?.data?.play
-                    return { game, state }
-                },
-            })
-        }
-        if (unsubscribe) return unsubscribe
+        return result?.subscribeToMore({
+            document: GameSubscription,
+            variables: { gameId, playerId },
+            updateQuery: (prev, { subscriptionData }) => {
+                if (subscriptionData?.data) {
+                    return { ...prev, ...subscriptionData.data.play }
+                }
+            },
+            onError: (e) => {
+                errorRef.current = e as ApolloError
+            },
+        })
     }, [gameId, playerId, result])
-    const game = result?.data?.game
-    const state = result?.data?.game?.state
-    const players = result?.data?.game?.players
     return {
         ...result,
-        game: game as Game,
-        player: find(players, (p) => p.id === playerId),
-        players: players as Player[],
-        state: { game, ...state } as GameState,
+        game: result?.data?.game as Game,
+        players: result?.data?.game?.players as Player[],
+        state: result?.data?.game?.state as GameState,
+        error: errorRef.current,
     }
 }
 

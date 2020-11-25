@@ -13,22 +13,20 @@ interface Event {
 
 interface GameEvent {
     game: Game
-    player: Player
-    source: Player!
-    state(gameId: ID!, playerId: ID!): GameState
+    source: Player
     timestamp: DateTime!
     type: String!
 }
 
 interface GameState {
-    game: Game!
+    gameId: String!
+    gameType: GameType!
+    viewingPlayerId: String!
 }
 
 type AlliesAndEnemiesCallVetoEvent implements Event & GameEvent {
     game: Game
-    player: Player
-    source: Player!
-    state(gameId: ID!, playerId: ID!): GameState
+    source: Player
     timestamp: DateTime!
     type: String!
 }
@@ -36,18 +34,14 @@ type AlliesAndEnemiesCallVetoEvent implements Event & GameEvent {
 type AlliesAndEnemiesExecutePlayer implements Event & GameEvent {
     executedPlayer: AlliesAndEnemiesPlayer!
     game: Game
-    player: Player
-    source: Player!
-    state(gameId: ID!, playerId: ID!): GameState
+    source: Player
     timestamp: DateTime!
     type: String!
 }
 
 type AlliesAndEnemiesFirstHandDiscardEvent implements Event & GameEvent {
     game: Game
-    player: Player
-    source: Player!
-    state(gameId: ID!, playerId: ID!): GameState
+    source: Player
     timestamp: DateTime!
     type: String!
 }
@@ -55,17 +49,17 @@ type AlliesAndEnemiesFirstHandDiscardEvent implements Event & GameEvent {
 type AlliesAndEnemiesGameState implements GameState {
     board: BoardState!
     currentTurn: CurrentTurn!
-    game: Game!
+    gameId: String!
+    gameType: GameType!
     players: [AlliesAndEnemiesPlayer!]!
     victoryStatus: AlliesAndEnemiesVictoryStatus
     viewingPlayer: AlliesAndEnemiesPlayer!
+    viewingPlayerId: String!
 }
 
 type AlliesAndEnemiesInvestigateLoyaltyEvent implements Event & GameEvent {
     game: Game
-    player: Player
-    source: Player!
-    state(gameId: ID!, playerId: ID!): GameState
+    source: Player
     timestamp: DateTime!
     type: String!
 }
@@ -73,9 +67,7 @@ type AlliesAndEnemiesInvestigateLoyaltyEvent implements Event & GameEvent {
 type AlliesAndEnemiesNominationEvent implements Event & GameEvent {
     game: Game
     nomination: AlliesAndEnemiesPlayer!
-    player: Player
-    source: Player!
-    state(gameId: ID!, playerId: ID!): GameState
+    source: Player
     timestamp: DateTime!
     type: String!
 }
@@ -91,37 +83,29 @@ type AlliesAndEnemiesPlayer {
 
 type AlliesAndEnemiesPolicyPeekEvent implements Event & GameEvent {
     game: Game
-    player: Player
-    source: Player!
-    state(gameId: ID!, playerId: ID!): GameState
+    source: Player
     timestamp: DateTime!
     type: String!
 }
 
 type AlliesAndEnemiesSecondHandDiscardEvent implements Event & GameEvent {
     game: Game
-    player: Player
-    source: Player!
-    state(gameId: ID!, playerId: ID!): GameState
+    source: Player
     timestamp: DateTime!
     type: String!
 }
 
 type AlliesAndEnemiesSpecialElectionEvent implements Event & GameEvent {
     game: Game
-    player: Player
-    source: Player!
+    source: Player
     specialElectedPlayer: AlliesAndEnemiesPlayer!
-    state(gameId: ID!, playerId: ID!): GameState
     timestamp: DateTime!
     type: String!
 }
 
 type AlliesAndEnemiesVetoVoteEvent implements Event & GameEvent {
     game: Game
-    player: Player
-    source: Player!
-    state(gameId: ID!, playerId: ID!): GameState
+    source: Player
     timestamp: DateTime!
     type: String!
     vote: AlliesAndEnemiesVoteValue!
@@ -135,9 +119,7 @@ type AlliesAndEnemiesVictoryStatus {
 
 type AlliesAndEnemiesVoteEvent implements Event & GameEvent {
     game: Game
-    player: Player
-    source: Player!
-    state(gameId: ID!, playerId: ID!): GameState
+    source: Player
     timestamp: DateTime!
     type: String!
     vote: AlliesAndEnemiesVoteValue!
@@ -177,6 +159,7 @@ type CurrentTurn {
 "Provides high level details about a game."
 type Game {
     id: ID!
+    player(playerId: ID!): Player
     players: [Player!]!
     state(playerId: ID!): GameState
     status: GameStatus!
@@ -191,12 +174,9 @@ type GameDescription {
 }
 
 type GameStatusEvent implements Event & GameEvent {
-    changedFrom: GameStatus!
-    changedTo: GameStatus!
     game: Game
-    player: Player
-    source: Player!
-    state(gameId: ID!, playerId: ID!): GameState
+    source: Player
+    status: UpdatedGameStatus!
     timestamp: DateTime!
     type: String!
 }
@@ -204,9 +184,7 @@ type GameStatusEvent implements Event & GameEvent {
 type JoinGameEvent implements Event & GameEvent {
     game: Game
     joined: Player
-    player: Player
-    source: Player!
-    state(gameId: ID!, playerId: ID!): GameState
+    source: Player
     timestamp: DateTime!
     type: String!
 }
@@ -240,12 +218,15 @@ type Query {
     game(id: ID!): Game
     gameTypes: [GameDescription!]!
     joinableGames: [Game!]!
-    player(gameId: ID!, playerId: ID!): Player
-    state(gameId: ID!, playerId: ID!): GameState
 }
 
 type Subscription {
     play(gameId: ID!): GameEvent!
+}
+
+type UpdatedGameStatus {
+    current: GameStatus!
+    last: GameStatus!
 }
 
 enum AlliesAndEnemiesBoardActionType {

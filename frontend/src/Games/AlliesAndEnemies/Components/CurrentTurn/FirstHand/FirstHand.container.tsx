@@ -8,9 +8,9 @@ import { useFirstHandDiscard } from './hooks'
 const FirstHand: React.FC<AlliesAndEnemiesState> = ({
     currentTurn,
     viewingPlayer,
-    game,
+    gameId,
 }) => {
-    const [discard] = useFirstHandDiscard(game.id, viewingPlayer.id)
+    const [discard] = useFirstHandDiscard(gameId, viewingPlayer.id)
     if (!currentTurn.firstHand) {
         return <>Uh Oh</>
     }

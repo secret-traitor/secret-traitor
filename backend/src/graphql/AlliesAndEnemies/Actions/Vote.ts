@@ -24,9 +24,13 @@ class AlliesAndEnemiesVoteEvent extends GameEvent {
     @Field(() => VoteValue)
     public readonly vote: VoteValue
 
-    constructor(vote: VoteValue, gameId: GameId, playerId: PlayerId) {
-        const state = { gameId, playerId, gameType: GameType.AlliesNEnemies }
-        super(state, playerId, AlliesAndEnemiesVoteEvent.name)
+    constructor(vote: VoteValue, gameId: GameId, viewingPlayerId: PlayerId) {
+        const state = {
+            gameId,
+            viewingPlayerId,
+            gameType: GameType.AlliesNEnemies,
+        }
+        super(state, viewingPlayerId, AlliesAndEnemiesVoteEvent.name)
         this.vote = vote
     }
 }
@@ -36,18 +40,22 @@ class AlliesAndEnemiesVoteEventResolver {
     @Mutation(() => AlliesAndEnemiesVoteEvent)
     async alliesAndEnemiesVote(
         @Arg('gameId', () => ID) gameId: GameId,
-        @Arg('playerId', () => ID) playerId: PlayerId,
+        @Arg('playerId', () => ID) viewingPlayerId: PlayerId,
         @Arg('vote', () => VoteValue) vote: VoteValue,
         @Ctx() { dataSources: { alliesAndEnemies } }: Context,
         @PubSub() pubSub: PubSubEngine
     ): Promise<ApiResponse<AlliesAndEnemiesVoteEvent>> {
-        const state = await alliesAndEnemies.get(gameId, playerId)
+        const state = await alliesAndEnemies.load(gameId, viewingPlayerId)
         const result = state.vote(vote)
         if ('error' in result) {
             return result.error
         }
         await state.save()
-        const payload = new AlliesAndEnemiesVoteEvent(vote, gameId, playerId)
+        const payload = new AlliesAndEnemiesVoteEvent(
+            vote,
+            gameId,
+            viewingPlayerId
+        )
         await pubSub.publish(getTopicName(Topics.Play, gameId), payload)
         return payload
     }

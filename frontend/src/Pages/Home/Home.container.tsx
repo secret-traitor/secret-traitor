@@ -3,7 +3,7 @@ import { useClipboard } from 'use-clipboard-copy'
 
 import LoadingScreen from 'Components/LoadingScreen'
 import { SuccessToast } from 'Components/Toast'
-import { usePageTitle } from 'hooks'
+import { usePageTitle } from 'hooks/document'
 
 import Home from './Home.component'
 import { usePollGames } from './hooks'
