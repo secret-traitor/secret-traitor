@@ -5,12 +5,23 @@ import {
     MutationResult,
     QueryResult,
 } from '@apollo/react-common'
-import { useQuery, useMutation } from '@apollo/react-hooks'
-import find from 'lodash/find'
+import { useMutation } from '@apollo/react-hooks'
 
 import { Game, GameState } from 'types/Game'
 import { Player } from 'types/Player'
-import { AlliesAndEnemiesGameStateFragment } from 'Games/AlliesAndEnemies'
+import {
+    AlliesAndEnemiesGameStateFragment,
+    AlliesAndEnemiesGameEventFragment,
+} from 'Games/AlliesAndEnemies'
+import { usePollingQuery } from '../../hooks/apollo'
+
+const PlayerFragment = gql`
+    fragment PlayerFragement on Player {
+        id
+        nickname
+        host
+    }
+`
 
 const GameFragment = gql`
     fragment GameFragment on Game {
@@ -18,24 +29,58 @@ const GameFragment = gql`
         type
         status
         players {
-            id
-            nickname
-            host
+            ...PlayerFragement
         }
     }
+    ${PlayerFragment}
+`
+
+const GameEventFragment = gql`
+    fragment GameEventFragment on GameEvent {
+        source {
+            ...PlayerFragement
+        }
+        timestamp
+        ... on GameStatusEvent {
+            status {
+                current
+                last
+            }
+        }
+        ... on JoinGameEvent {
+            joined {
+                ...PlayerFragement
+            }
+        }
+        ...AlliesAndEnemiesGameEventFragment
+        __typename
+    }
+    ${AlliesAndEnemiesGameEventFragment}
+    ${PlayerFragment}
+`
+
+const GameStateFragment = gql`
+    fragment GameStateFragment on GameState {
+        ...AlliesAndEnemiesGameStateFragment
+    }
+    ${AlliesAndEnemiesGameStateFragment}
 `
 
 const GameQuery = gql`
     query playQuery($gameId: ID!, $playerId: ID!) {
         game(id: $gameId) {
             ...GameFragment
+            player(playerId: $playerId) {
+                ...PlayerFragement
+            }
             state(playerId: $playerId) {
-                ...AlliesAndEnemiesGameStateFragment
+                ...GameStateFragment
             }
         }
     }
     ${GameFragment}
-    ${AlliesAndEnemiesGameStateFragment}
+    ${GameStateFragment}
+    ${PlayerFragment}
 `
 
 const GameSubscription = gql`
@@ -43,16 +88,20 @@ const GameSubscription = gql`
         play(gameId: $gameId) {
             game {
                 ...GameFragment
+                player(playerId: $playerId) {
+                    ...PlayerFragement
+                }
                 state(playerId: $playerId) {
-                    ...AlliesAndEnemiesGameStateFragment
+                    ...GameStateFragment
                 }
             }
-            timestamp
-            __typename
+            ...GameEventFragment
         }
     }
     ${GameFragment}
-    ${AlliesAndEnemiesGameStateFragment}
+    ${GameEventFragment}
+    ${GameStateFragment}
+    ${PlayerFragment}
 `
 
 type PlayGame = QueryResult & {
@@ -63,7 +112,8 @@ type PlayGame = QueryResult & {
 }
 
 export const usePlayGame = (gameId: string, playerId: string): PlayGame => {
-    const result = useQuery(GameQuery, {
+    const events = useRef<any[]>([])
+    const result = usePollingQuery(GameQuery, {
         variables: { gameId, playerId },
         skip: !gameId || !playerId,
     })
@@ -74,7 +124,9 @@ export const usePlayGame = (gameId: string, playerId: string): PlayGame => {
             variables: { gameId, playerId },
             updateQuery: (prev, { subscriptionData }) => {
                 if (subscriptionData?.data) {
-                    return { ...prev, ...subscriptionData.data.play }
+                    const { game, ...event } = subscriptionData.data.play
+                    events.current.push(event)
+                    return { game }
                 }
             },
             onError: (e) => {
@@ -84,10 +136,11 @@ export const usePlayGame = (gameId: string, playerId: string): PlayGame => {
     }, [gameId, playerId, result])
     return {
         ...result,
+        error: errorRef.current,
         game: result?.data?.game as Game,
+        player: result?.data?.game?.player as Player,
         players: result?.data?.game?.players as Player[],
         state: result?.data?.game?.state as GameState,
-        error: errorRef.current,
     }
 }
 

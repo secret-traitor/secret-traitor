@@ -13,14 +13,14 @@ const Nomination: React.FC<AlliesAndEnemiesState> = ({
     players,
     viewingPlayer,
 }) => {
-    const [nominate, result] = useNominate(gameId, viewingPlayer.id)
+    const [nominate, { loading }] = useNominate(gameId, viewingPlayer.id)
     const disabledForPositions = map(
         currentTurn.ineligibleNominations,
         'position'
     )
     return (
         <>
-            {result.loading && <LoadingScreen />}
+            {loading && <LoadingScreen />}
             <NominationComponent
                 viewingPlayer={viewingPlayer}
                 players={players}

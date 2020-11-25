@@ -1,14 +1,13 @@
-import { isEmpty } from 'lodash'
-import { useCookies } from 'react-cookie'
-
 import { v4 as uuid } from 'uuid'
+import store from 'store2'
+import { useRef } from 'react'
 
 export const usePlayerId = () => {
-    const cookieName = 'playerId'
-    const [{ [cookieName]: cookie }, setCookie] = useCookies([cookieName])
-    if (isEmpty(cookie)) {
-        setCookie(cookieName, uuid())
+    const key = 'playerId'
+    const playerId = useRef<string>(store.get(key))
+    if (!playerId.current) {
+        playerId.current = uuid()
+        store.set(key, playerId.current)
     }
-    console.log(`use player id: ${cookie}`)
-    return cookie
+    return playerId.current
 }

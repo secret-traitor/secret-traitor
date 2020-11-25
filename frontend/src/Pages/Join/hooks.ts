@@ -1,10 +1,10 @@
 import { gql } from 'apollo-boost'
 import { useMutation, useQuery } from '@apollo/react-hooks'
+import { MutationResult, QueryResult } from '@apollo/react-common'
+import { ExecutionResult } from '@apollo/react-common'
 
 import { Game } from 'types/Game'
 import { Player } from 'types/Player'
-import { MutationResult, QueryResult } from '@apollo/react-common'
-import { ExecutionResult } from '@apollo/react-common'
 
 const GamePlayersMutation = gql`
     query gameWithPlayers($gameId: ID!) {

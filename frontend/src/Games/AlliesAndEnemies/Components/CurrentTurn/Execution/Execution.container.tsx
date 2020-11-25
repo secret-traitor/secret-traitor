@@ -1,6 +1,7 @@
 import React from 'react'
 
 import { AlliesAndEnemiesState } from 'Games/AlliesAndEnemies/types'
+import LoadingScreen from 'Components/LoadingScreen'
 
 import Execution from './Execution.component'
 import { useExecutePlayer } from './hooks'
@@ -10,13 +11,16 @@ const ExecutionContainer: React.FC<AlliesAndEnemiesState> = ({
     players,
     viewingPlayer,
 }) => {
-    const [execute] = useExecutePlayer(gameId, viewingPlayer.id)
+    const [execute, { loading }] = useExecutePlayer(gameId, viewingPlayer.id)
     return (
-        <Execution
-            viewingPlayer={viewingPlayer}
-            players={players}
-            execute={execute}
-        />
+        <>
+            {loading && <LoadingScreen />}
+            <Execution
+                viewingPlayer={viewingPlayer}
+                players={players}
+                execute={execute}
+            />
+        </>
     )
 }
 

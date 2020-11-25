@@ -10,17 +10,23 @@ const PolicyPeekContainer: React.FC<AlliesAndEnemiesState> = ({
     gameId,
     viewingPlayer,
 }) => {
-    const { cards, loading, error } = usePolicyPeek(gameId, viewingPlayer.id)
-    const [ok] = usePolicyPeekOk(gameId, viewingPlayer.id)
+    const { cards, loading: peekLoading, error } = usePolicyPeek(
+        gameId,
+        viewingPlayer.id
+    )
+    const [ok, { loading: okLoading }] = usePolicyPeekOk(
+        gameId,
+        viewingPlayer.id
+    )
     if (error) {
         return <>{error.message}</>
     }
-    if (!cards && !loading) {
+    if (!cards && !peekLoading) {
         return <>Uh Oh!</>
     }
     return (
         <>
-            {loading && <LoadingScreen />}
+            {(peekLoading || okLoading) && <LoadingScreen />}
             {cards && <PolicyPeak cards={cards} ok={ok} />}
         </>
     )

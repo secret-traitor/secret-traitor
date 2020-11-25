@@ -1,8 +1,8 @@
 import { gql } from 'apollo-boost'
-import { useMutation } from '@apollo/react-hooks'
 import { MutationResult, ExecutionResult } from '@apollo/react-common'
 
 import { Player } from 'types/Player'
+import { useGameMutation } from 'hooks/games'
 
 const NominationMutation = gql`
     mutation nominatePlayer(
@@ -24,7 +24,7 @@ export const useNominate = (
     gameId: string,
     playerId: string
 ): [(player: Player) => Promise<ExecutionResult>, MutationResult] => {
-    const [nominateFn, results] = useMutation(NominationMutation)
+    const [nominateFn, results] = useGameMutation(NominationMutation, gameId)
     const nominate = async (player: Player) =>
         await nominateFn({
             variables: { gameId, playerId, nominatedPlayerId: player.id },

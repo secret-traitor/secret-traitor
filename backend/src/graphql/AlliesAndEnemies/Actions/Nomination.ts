@@ -15,7 +15,7 @@ import { PlayerId } from '@entities/Player'
 import { ViewingPlayerState } from '@entities/AlliesAndEnemies'
 import { Event } from '@graphql/Event'
 import { GameEvent } from '@graphql/GameEvent'
-import { ApiResponse } from '@shared/api'
+import { ApiResponse, DescriptiveError } from '@shared/api'
 import { getTopicName, Topics } from '@shared/topics'
 import Context from '@shared/Context'
 

@@ -1,7 +1,11 @@
 import { OperationVariables, QueryResult } from '@apollo/react-common'
 import { DocumentNode } from 'graphql'
-import { QueryHookOptions, useQuery } from '@apollo/react-hooks'
+import { QueryHookOptions, useMutation, useQuery } from '@apollo/react-hooks'
 import { useEffect } from 'react'
+import {
+    MutationHookOptions,
+    MutationTuple,
+} from '@apollo/react-hooks/lib/types'
 
 export function usePollingQuery<TData = any, TVariables = OperationVariables>(
     query: DocumentNode,
@@ -28,3 +32,15 @@ export function usePollingQuery<TData = any, TVariables = OperationVariables>(
     }, [pollInterval, startPolling, stopPolling, stopPollingAfter])
     return results
 }
+
+export const useErrorHandlingMutation = <
+    TData = any,
+    TVariables = OperationVariables
+>(
+    mutation: DocumentNode,
+    options?: MutationHookOptions<TData, TVariables>
+): MutationTuple<TData, TVariables> =>
+    useMutation(mutation, {
+        ...options,
+        onError: options?.onError ? options.onError : () => ({}),
+    })

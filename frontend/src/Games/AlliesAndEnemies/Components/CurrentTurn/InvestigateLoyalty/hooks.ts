@@ -2,6 +2,7 @@ import { gql } from 'apollo-boost'
 import { useLazyQuery, useMutation } from '@apollo/react-hooks'
 import { MutationResult, QueryResult } from '@apollo/react-common'
 import { ExecutionResult } from '@apollo/react-common'
+import store from 'store2'
 
 import { PlayerState } from 'Games/AlliesAndEnemies/types'
 
@@ -37,13 +38,10 @@ export const useInvestigateLoyalty = (
     )
     let investigatedPlayer = results?.data?.player
     if (investigatedPlayer) {
-        localStorage.setItem(key, JSON.stringify(investigatedPlayer))
+        store.set(key, investigatedPlayer)
     }
     if (!investigatedPlayer) {
-        const stored = localStorage.getItem(key)
-        if (stored) {
-            investigatedPlayer = JSON.parse(stored)
-        }
+        investigatedPlayer = store.get(key)
     }
     const investigateLoyalty = async (player: PlayerState) => {
         await investigateLoyaltyQuery({
