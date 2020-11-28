@@ -1,6 +1,5 @@
 *.js
 !jest.config.js
-!backend/build.js
 *.d.ts
 node_modules
 
