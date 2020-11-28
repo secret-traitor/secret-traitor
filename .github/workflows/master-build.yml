@@ -31,6 +31,17 @@ jobs:
                   cd backend
                   npm install
 
+            - name: install frontend
+              run: |
+                  cd frontend
+                  npm install
+
+            - name: install deploy
+              run: |
+                  cd deploy
+                  npm install
+                  ls deploy
+
             - name: build
               run: |
                   make build
