@@ -56,10 +56,10 @@ jobs:
                   cd deploy
                   npm run build
 
-            - name: test
+            - name: test deploy
               run: |
-                  ls
-                  make tests
+                  cd deploy
+                  npm test
 
             - name: Deploy to prod
               env:
