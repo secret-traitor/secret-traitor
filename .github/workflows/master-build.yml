@@ -44,8 +44,6 @@ jobs:
             - name: build backend
               run: |
                   cd backend
-                  ls
-                  ls node_modules
                   npm run build
 
             - name: build frontend
