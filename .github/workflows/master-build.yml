@@ -67,7 +67,8 @@ jobs:
                   AWS_SECRET_ACCESS_KEY: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
                   AWS_DEFAULT_REGION: ${{ secrets.PROD_AWS_DEFAULT_REGION }}
               run: |
-                  make deploy
+                  cd deploy
+                  npm run deploy-prod
 
             - name: Verify prod deployment
               run:

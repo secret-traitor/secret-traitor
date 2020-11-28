@@ -1,38 +1,39 @@
 {
-  "name": "secret-traitor",
-  "version": "0.1.0",
-  "bin": {
-    "secret-traitor": "bin/secret-traitor.js"
-  },
-  "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w",
-    "test": "jest",
-    "cdk": "cdk"
-  },
-  "devDependencies": {
-    "@aws-cdk/assert": "1.67.0",
-    "@types/jest": "^26.0.10",
-    "@types/node": "10.17.27",
-    "aws-cdk": "^1.67.0",
-    "jest": "^26.5.2",
-    "ts-jest": "^26.4.1",
-    "ts-node": "^8.1.0",
-    "typescript": "~3.9.7"
-  },
-  "dependencies": {
-    "@aws-cdk/aws-apigateway": "^1.67.0",
-    "@aws-cdk/aws-cloudwatch": "^1.67.0",
-    "@aws-cdk/aws-dynamodb": "^1.67.0",
-    "@aws-cdk/aws-events": "^1.67.0",
-    "@aws-cdk/aws-iam": "^1.67.0",
-    "@aws-cdk/aws-kms": "^1.67.0",
-    "@aws-cdk/aws-lambda": "^1.67.0",
-    "@aws-cdk/aws-route53": "^1.67.0",
-    "@aws-cdk/aws-route53-targets": "^1.67.0",
-    "@aws-cdk/cloud-assembly-schema": "^1.67.0",
-    "@aws-cdk/core": "^1.67.0",
-    "@aws-cdk/cx-api": "^1.67.0",
-    "@aws-cdk/region-info": "^1.67.0"
-  }
+    "name": "secret-traitor",
+    "version": "0.1.0",
+    "bin": {
+        "secret-traitor": "bin/secret-traitor.js"
+    },
+    "scripts": {
+        "build": "tsc",
+        "watch": "tsc -w",
+        "test": "jest",
+        "cdk": "cdk",
+        "deploy-prod": "npx cdk deploy --require-approval never"
+    },
+    "devDependencies": {
+        "@aws-cdk/assert": "1.67.0",
+        "@types/jest": "^26.0.10",
+        "@types/node": "10.17.27",
+        "aws-cdk": "^1.67.0",
+        "jest": "^26.5.2",
+        "ts-jest": "^26.4.1",
+        "ts-node": "^8.1.0",
+        "typescript": "~3.9.7"
+    },
+    "dependencies": {
+        "@aws-cdk/aws-apigateway": "^1.67.0",
+        "@aws-cdk/aws-cloudwatch": "^1.67.0",
+        "@aws-cdk/aws-dynamodb": "^1.67.0",
+        "@aws-cdk/aws-events": "^1.67.0",
+        "@aws-cdk/aws-iam": "^1.67.0",
+        "@aws-cdk/aws-kms": "^1.67.0",
+        "@aws-cdk/aws-lambda": "^1.67.0",
+        "@aws-cdk/aws-route53": "^1.67.0",
+        "@aws-cdk/aws-route53-targets": "^1.67.0",
+        "@aws-cdk/cloud-assembly-schema": "^1.67.0",
+        "@aws-cdk/core": "^1.67.0",
+        "@aws-cdk/cx-api": "^1.67.0",
+        "@aws-cdk/region-info": "^1.67.0"
+    }
 }
