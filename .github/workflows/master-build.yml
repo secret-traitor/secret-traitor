@@ -40,11 +40,21 @@ jobs:
               run: |
                   cd deploy
                   npm install
-                  ls deploy
 
-            - name: build
+            - name: build backend
               run: |
-                  make build
+                  cd backend
+                  npm run build
+
+            - name: build frontend
+              run: |
+                  cd frontend
+                  npm run build
+
+            - name: build deploy
+              run: |
+                  cd deploy
+                  npm run build
 
             - name: test
               run: |
