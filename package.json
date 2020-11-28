@@ -1,20 +1,21 @@
 {
-  "name": "monorepo-poc",
-  "devDependencies": {
-    "concurrently": "^5.1.0",
-    "nodemon": "^2.0.4",
-    "prettier": "^2.0.5"
-  },
-  "scripts": {
-    "install-all": "concurrently 'yarn frontend-install' 'yarn backend-install'",
-    "start": "concurrently 'yarn frontend' 'yarn backend' 'yarn start:containers'",
-    "frontend": "PORT=3000 BACKEND_PORT=4000 yarn --cwd frontend start:dev",
-    "frontend-install": "yarn --cwd frontend install",
-    "backend": "PORT=4000 DYNAMO_PORT=8000 yarn --cwd backend start:dev",
-    "backend-install": "yarn --cwd backend install",
-    "start:containers": "docker-compose up"
-  },
-  "dependencies": {
-    "npm": "^6.14.5"
-  }
+    "name": "monorepo-poc",
+    "devDependencies": {
+        "concurrently": "^5.1.0",
+        "nodemon": "^2.0.4",
+        "prettier": "^2.0.5"
+    },
+    "scripts": {
+        "install-backend": "cd backend && npm install",
+        "install-all": "concurrently 'yarn frontend-install' 'yarn backend-install'",
+        "start": "concurrently 'yarn frontend' 'yarn backend' 'yarn start:containers'",
+        "frontend": "PORT=3000 BACKEND_PORT=4000 yarn --cwd frontend start:dev",
+        "frontend-install": "yarn --cwd frontend install",
+        "backend": "PORT=4000 DYNAMO_PORT=8000 yarn --cwd backend start:dev",
+        "backend-install": "yarn --cwd backend install",
+        "start:containers": "docker-compose up"
+    },
+    "dependencies": {
+        "npm": "^6.14.5"
+    }
 }
