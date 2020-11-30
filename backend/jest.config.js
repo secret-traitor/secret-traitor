@@ -20,9 +20,8 @@ module.exports = {
     },
     setupFiles: ['./jest.setup-file.ts'],
     moduleNameMapper: {
-        '@daos/(.*)': '<rootDir>/src/daos/$1',
+        '@clients/(.*)': '<rootDir>/src/clients/$1',
         '@entities/(.*)': '<rootDir>/src/entities/$1',
-        '@games/(.*)': '<rootDir>/src/games/$1',
         '@graphql/(.*)': '<rootDir>/src/graphql/$1',
         '@shared/(.*)': '<rootDir>/src/shared/$1',
     },

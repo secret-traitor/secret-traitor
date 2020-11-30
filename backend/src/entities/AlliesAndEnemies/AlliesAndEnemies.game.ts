@@ -28,7 +28,8 @@ import { GameId } from '@entities/Game'
 import { IPlayer, PlayerId } from '@entities/Player'
 import { DescriptiveError } from '@shared/api'
 
-type ActionResponse<T = { success: true }> = { error: DescriptiveError } | T
+export type ActionResponse<T = { success: true }> = ActionResponseError | T
+export type ActionResponseError = { error: DescriptiveError }
 
 const FirstHandDiscardRecord: Record<
     0 | 1 | 2,
@@ -52,22 +53,9 @@ export class ActiveAlliesAndEnemiesState {
 
     constructor(
         private state: AlliesAndEnemiesState,
-        private viewingPlayerId: PlayerId
+        viewingPlayerId: PlayerId
     ) {
-        const viewingPlayer = state.players.find(
-            (p) => p.id === viewingPlayerId
-        )
-        if (!viewingPlayer) {
-            throw new DescriptiveError(
-                'Unable to look up viewing player state.',
-                'No player state data for this game state found.'
-            )
-        }
-        this.viewingPlayer = {
-            ...viewingPlayer,
-            role: this.getRole(viewingPlayer, viewingPlayer),
-            status: this.getStatus(viewingPlayer),
-        }
+        this.setViewingPlayerId(viewingPlayerId)
     }
 
     private getRole = (
@@ -123,6 +111,12 @@ export class ActiveAlliesAndEnemiesState {
 
     get currentRound(): TurnState {
         return this.state.rounds[this.state.rounds.length - 1]
+    }
+
+    public currentPlayer(): ViewingPlayerState {
+        return this.players().find(
+            (p) => p.position === this.currentRound.position
+        ) as ViewingPlayerState
     }
 
     private updateCurrentRound(update: Readonly<Partial<TurnState>>) {
@@ -380,7 +374,7 @@ export class ActiveAlliesAndEnemiesState {
             }
         }
         const votingPlayer = this.state.players.find(
-            (p) => p.id === this.viewingPlayerId
+            (p) => p.id === this.viewingPlayer.id
         )
         if (!votingPlayer) {
             return {
@@ -404,34 +398,40 @@ export class ActiveAlliesAndEnemiesState {
             this.currentRound.votes as PlayerVote[],
             (v) => v.playerId
         )
-        remove(votes, (v) => v.playerId === this.viewingPlayerId)
+        remove(votes, (v) => v.playerId === this.viewingPlayer.id)
         this.updateCurrentRound({
-            votes: [...votes, { playerId: this.viewingPlayerId, vote }],
+            votes: [...votes, { playerId: this.viewingPlayer.id, vote }],
         })
         this.checkElectionResults()
         return { success: true }
     }
 
-    public checkElectionResults(): [completed: boolean, success?: boolean] {
+    public checkElectionResults(): 'inactive' | 'active' | 'passed' | 'failed' {
+        if (this.currentRound.status !== TurnStatus.Election) {
+            return 'inactive'
+        }
+
         const neededVotes = this.state.players.filter(
             ({ hasBeenExecuted }) => !hasBeenExecuted
         ).length
-        if (this.currentRound.votes.length >= neededVotes) {
-            const groupedVotes = groupBy(
-                this.currentRound.votes,
-                (v) => v.vote
-            ) as Record<VoteValue, PlayerVote[]>
-            const yesVotes = groupedVotes[VoteValue.Yes]?.length ?? 0
-            const noVotes = groupedVotes[VoteValue.No]?.length ?? 0
-            if (yesVotes > noVotes) {
-                this.votePass()
-                return [true, true]
-            } else {
-                this.voteFail()
-                return [true, false]
-            }
+        if (this.currentRound.votes.length < neededVotes) {
+            return 'active'
         }
-        return [false]
+
+        const groupedVotes = groupBy(
+            this.currentRound.votes,
+            (v) => v.vote
+        ) as Record<VoteValue, PlayerVote[]>
+        const yesVotes = groupedVotes[VoteValue.Yes]?.length ?? 0
+        const noVotes = groupedVotes[VoteValue.No]?.length ?? 0
+
+        if (yesVotes > noVotes) {
+            this.votePass()
+            return 'passed'
+        }
+
+        this.voteFail()
+        return 'failed'
     }
 
     private votePass() {
@@ -470,7 +470,9 @@ export class ActiveAlliesAndEnemiesState {
         this.advanceRound()
     }
 
-    public firstHand(discardIndex: 0 | 1 | 2): ActionResponse {
+    public firstHand(
+        discardIndex: 0 | 1 | 2
+    ): ActionResponse<{ remainingCards: [Card, Card] }> {
         if (!this.isCurrentViewingPlayer()) {
             return {
                 error: new DescriptiveError(
@@ -506,12 +508,12 @@ export class ActiveAlliesAndEnemiesState {
             status: TurnStatus.SecondHand,
         })
         this.updateState({ discard: [...this.state.discard, discard] })
-        return { success: true }
+        return { remainingCards: secondHand }
     }
 
     public secondHand(
         discardIndex: 0 | 1
-    ): { error: DescriptiveError } | { success: true } {
+    ): ActionResponse<{ playedCard: Card }> {
         if (!this.isNominatedViewingPlayer()) {
             return {
                 error: new DescriptiveError(
@@ -544,7 +546,7 @@ export class ActiveAlliesAndEnemiesState {
         )
         this.playCard(play)
         this.updateState({ discard: [...this.state.discard, discard] })
-        return { success: true }
+        return { playedCard: play }
     }
 
     private allyVictory(type: VictoryType, message?: string) {
@@ -975,14 +977,11 @@ export class ActiveAlliesAndEnemiesState {
         return new ActiveAlliesAndEnemiesState(
             {
                 gameId,
-                draw: this.buildDeck(
+                draw: buildDeck(
                     configuration.deck.allyCards,
                     configuration.deck.enemyCards
                 ),
-                players: this.buildPlayers(
-                    players,
-                    configuration.players.enemies
-                ),
+                players: buildPlayers(players, configuration.players.enemies),
                 config: configuration,
                 discard: [],
                 rounds: [
@@ -1004,35 +1003,55 @@ export class ActiveAlliesAndEnemiesState {
         )
     }
 
-    private static buildPlayers = (
-        players: IPlayer[],
-        enemies: number
-    ): PlayerState[] => {
-        if (players.length / 2 < enemies + 1) {
-            throw new DescriptiveError(
-                'Invalid game configuration.',
-                `You can not have ${enemies} enemies for ${players.length} players.`
-            )
-        }
-        const roles = shuffle([
-            PlayerRole.EnemyLeader,
-            ...range(enemies).map(() => PlayerRole.Enemy),
-            ...range(players.length - enemies - 1).map(() => PlayerRole.Ally),
-        ])
-        return shuffle(players).map((player, position) => ({
-            ...player,
-            role: roles[position],
-            position,
-        }))
-    }
-
-    private static buildDeck = (allyCards: number, enemyCards: number) =>
-        shuffle([
-            ...new Array(allyCards).fill({ suit: Faction.Ally }),
-            ...new Array(enemyCards).fill({ suit: Faction.Enemy }),
-        ])
-
     public async save() {
         return await GamesClient.state.put(this.gameId, this.state)
     }
+
+    public setViewingPlayerId(
+        viewingPlayerId: string
+    ): ActiveAlliesAndEnemiesState {
+        const viewingPlayer = this.state.players.find(
+            (p) => p.id === viewingPlayerId
+        )
+        if (!viewingPlayer) {
+            throw new DescriptiveError(
+                'Unable to look up viewing player state.',
+                'No player state data for this game state found.'
+            )
+        }
+        this.viewingPlayer = {
+            ...viewingPlayer,
+            role: this.getRole(viewingPlayer, viewingPlayer),
+            status: this.getStatus(viewingPlayer),
+        }
+        return this
+    }
 }
+
+export const buildPlayers = (
+    players: IPlayer[],
+    enemies: number
+): PlayerState[] => {
+    if (players.length / 2 < enemies + 1) {
+        throw new DescriptiveError(
+            'Invalid game configuration.',
+            `You can not have ${enemies} enemies for ${players.length} players.`
+        )
+    }
+    const roles = shuffle([
+        PlayerRole.EnemyLeader,
+        ...range(enemies).map(() => PlayerRole.Enemy),
+        ...range(players.length - enemies - 1).map(() => PlayerRole.Ally),
+    ])
+    return shuffle(players).map((player, position) => ({
+        ...player,
+        role: roles[position],
+        position,
+    }))
+}
+
+export const buildDeck = (allyCards: number, enemyCards: number) =>
+    shuffle([
+        ...new Array(allyCards).fill({ suit: Faction.Ally }),
+        ...new Array(enemyCards).fill({ suit: Faction.Enemy }),
+    ])

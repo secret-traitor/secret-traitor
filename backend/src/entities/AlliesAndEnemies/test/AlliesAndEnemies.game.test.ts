@@ -1,6 +1,7 @@
 import merge from 'lodash/merge'
 
 import {
+    ActionResponseError,
     ActiveAlliesAndEnemiesState,
     AlliesAndEnemiesState,
     BoardAction,
@@ -15,6 +16,7 @@ import {
     TurnState,
     TurnStatus,
     VictoryType,
+    ViewingPlayerState,
     VoteValue,
 } from '@entities/AlliesAndEnemies'
 import { buildPlayers } from '@entities/AlliesAndEnemies/test/helpers'
@@ -46,17 +48,20 @@ describe('Allies and Enemies', () => {
     describe('game active state management', () => {
         it('plays out a game with all enemy cards', () => {
             function passVote() {
-                state.vote('0', VoteValue.Yes)
-                state.vote('1', VoteValue.Yes)
-                state.vote('2', VoteValue.Yes)
-                state.vote('3', VoteValue.Yes)
-                state.vote('4', VoteValue.Yes)
+                const temp = state.viewingPlayer.id
+                state.setViewingPlayerId('0').vote(VoteValue.Yes)
+                state.setViewingPlayerId('1').vote(VoteValue.Yes)
+                state.setViewingPlayerId('2').vote(VoteValue.Yes)
+                state.setViewingPlayerId('3').vote(VoteValue.Yes)
+                state.setViewingPlayerId('4').vote(VoteValue.Yes)
+                state.setViewingPlayerId(temp)
             }
             const state = new ActiveAlliesAndEnemiesState(
                 merge(defaultState(StandardConfiguration[5]), {
                     draw: buildDeck(0, 17),
                     rounds: [firstRound()],
-                })
+                }),
+                viewingPlayer.id
             )
             let turnNumber = 1
             // ---- turn 1 ----
@@ -64,66 +69,65 @@ describe('Allies and Enemies', () => {
             expect(state.currentRound.status).toBe(TurnStatus.Nomination)
             state.nominate('1')
             expect(state.currentRound.nomination).toBe('1')
-            state.vote('0', VoteValue.Yes)
-            state.vote('1', VoteValue.Yes)
-            state.vote('2', VoteValue.Yes)
-            state.vote('3', VoteValue.Yes)
+            state.setViewingPlayerId('0').vote(VoteValue.Yes)
+            state.setViewingPlayerId('1').vote(VoteValue.Yes)
+            state.setViewingPlayerId('2').vote(VoteValue.Yes)
+            state.setViewingPlayerId('3').vote(VoteValue.Yes)
             expect(state.currentRound.votes.length).toBe(4)
-            state.vote('4', VoteValue.Yes)
+            state.setViewingPlayerId('4').vote(VoteValue.Yes)
             expect(state.currentRound.status).toBe(TurnStatus.FirstHand)
-            state.firstHand(1)
+            state.setViewingPlayerId('0').firstHand(1)
             expect(state.currentRound.status).toBe(TurnStatus.SecondHand)
             expect(state.discardSize).toBe(1)
-            state.secondHand(1)
+            state.setViewingPlayerId('1').secondHand(1)
             expect(state.discardSize).toBe(2)
             // ---- turn 2 ----
             expect(state.currentRound.number).toBe(turnNumber++)
             state.nominate('2')
             passVote()
-            state.firstHand(0)
-            state.secondHand(0)
+            state.setViewingPlayerId('1').firstHand(0)
+            state.setViewingPlayerId('2').secondHand(0)
             // ---- turn 3 ----
             expect(state.currentRound.number).toBe(turnNumber++)
-            state.nominate('3')
+            state.setViewingPlayerId('2').nominate('3')
             passVote()
-            state.firstHand(0)
-            state.secondHand(0)
+            state.setViewingPlayerId('2').firstHand(0)
+            state.setViewingPlayerId('3').secondHand(0)
             expect(state.currentRound.status).toBe(TurnStatus.TakeAction)
             expect(state.currentRound.action).toBe(BoardAction.PolicyPeek)
-            state.policyPeek()
-            state.policyPeekOk()
+            state.setViewingPlayerId('2').policyPeek()
+            state.setViewingPlayerId('2').policyPeekOk()
             // ---- turn 4 ----
             expect(state.currentRound.number).toBe(turnNumber++)
-            state.nominate('4')
+            state.setViewingPlayerId('3').nominate('4')
             passVote()
-            state.firstHand(0)
-            state.secondHand(0)
+            state.setViewingPlayerId('3').firstHand(0)
+            state.setViewingPlayerId('4').secondHand(0)
             expect(state.currentRound.status).toBe(TurnStatus.TakeAction)
             expect(state.currentRound.action).toBe(BoardAction.Execution)
-            state.executePlayer('0')
+            state.setViewingPlayerId('3').executePlayer('0')
             expect(
-                (state
-                    .players(viewingPlayer)
-                    .find((p) => p.id === '0') as PlayerState)?.hasBeenExecuted
+                (state.players().find((p) => p.id === '0') as PlayerState)
+                    ?.hasBeenExecuted
             ).toBe(true)
             // ---- turn 5 ----
             expect(state.currentRound.number).toBe(turnNumber++)
-            state.nominate('1')
+            state.setViewingPlayerId('4').nominate('1')
             passVote()
-            state.firstHand(0)
-            state.secondHand(0)
+            state.setViewingPlayerId('4').firstHand(0)
+            state.setViewingPlayerId('1').secondHand(0)
             expect(state.currentRound.status).toBe(TurnStatus.TakeAction)
             expect(state.currentRound.action).toBe(BoardAction.Execution)
-            expect(state.currentPlayer(viewingPlayer).position).toBe(4)
-            state.executePlayer('1')
-            expect(state.currentPlayer(viewingPlayer).position).toBe(2)
+            expect(state.currentPlayer().position).toBe(4)
+            state.setViewingPlayerId('4').executePlayer('1')
+            expect(state.currentPlayer().position).toBe(2)
             // ---- turn 6 ----
             expect(state.currentRound.number).toBe(turnNumber++)
-            state.nominate('3')
+            state.setViewingPlayerId('2').nominate('3')
             passVote()
-            state.firstHand(0)
+            state.setViewingPlayerId('2').firstHand(0)
             expect(state.victory).toBeNull()
-            state.secondHand(0)
+            state.setViewingPlayerId('3').secondHand(0)
             expect(state.victory).not.toBeNull()
             expect(state.victory?.team).toBe(Faction.Enemy)
             expect(state.victory?.type).toBe(VictoryType.Cards)
@@ -143,11 +147,14 @@ describe('Allies and Enemies', () => {
             const state = new ActiveAlliesAndEnemiesState(
                 initial({
                     rounds: [{ position: 0 } as TurnState],
-                })
+                }),
+                '0'
             )
-            const [ok, error] = state.nominate('0')
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(/does not allow/i)
+            const resp = state.nominate('0')
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
+                /does not allow/i
+            )
         })
         it('does not nominate invalid players', () => {
             const state = new ActiveAlliesAndEnemiesState(
@@ -158,11 +165,14 @@ describe('Allies and Enemies', () => {
                             status: TurnStatus.Nomination,
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
-            const [ok, error] = state.nominate('11111')
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(/does not exist/i)
+            const resp = state.nominate('11111')
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
+                /does not exist/i
+            )
         })
         it('does not nominate executed players', () => {
             const state = new ActiveAlliesAndEnemiesState(
@@ -174,15 +184,18 @@ describe('Allies and Enemies', () => {
                     ],
                     rounds: [
                         {
-                            position: 1,
+                            position: 0,
                             status: TurnStatus.Nomination,
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
-            const [nominated, error] = state.nominate('0')
-            expect(nominated).toBe(false)
-            expect(error?.toString()).toMatch(/executed/i)
+            const resp = state.nominate('0')
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
+                /This player has been executed./i
+            )
         })
         it('does not nominate ineligible players', () => {
             const state = new ActiveAlliesAndEnemiesState(
@@ -198,11 +211,14 @@ describe('Allies and Enemies', () => {
                             status: TurnStatus.Nomination,
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
-            const [ok, error] = state.nominate('0')
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(/ineligible/i)
+            const resp = state.nominate('0')
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
+                /This player is ineligible./i
+            )
         })
         it('nominates eligible players', () => {
             const state = new ActiveAlliesAndEnemiesState(
@@ -213,10 +229,16 @@ describe('Allies and Enemies', () => {
                             status: TurnStatus.Nomination,
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
-            const [ok] = state.nominate('3')
-            expect(ok).toBe(true)
+            const resp = state.nominate('3')
+            expect('error' in resp).toBeFalsy()
+            expect(
+                (resp as {
+                    nominatedPlayer: ViewingPlayerState
+                }).nominatedPlayer.id === '3'
+            )
         })
     })
 
@@ -231,26 +253,14 @@ describe('Allies and Enemies', () => {
             )
         it('does not allow voting when status is not election', () => {
             const state = new ActiveAlliesAndEnemiesState(
-                initial({ rounds: [{ position: 0 } as TurnState] })
+                initial({ rounds: [{ position: 0 } as TurnState] }),
+                '0'
             )
-            const [ok, error] = state.vote('0', VoteValue.Yes)
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(/turn state does not allow/i)
-        })
-        it('does not vote for an invalid player', () => {
-            const state = new ActiveAlliesAndEnemiesState(
-                initial({
-                    rounds: [
-                        {
-                            position: 0,
-                            status: TurnStatus.Election,
-                        } as TurnState,
-                    ],
-                })
+            const resp = state.vote(VoteValue.Yes)
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
+                /turn state does not allow./i
             )
-            const [ok, error] = state.vote('11111', VoteValue.Yes)
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(/does not exist/i)
         })
         it('does not vote for executed players', () => {
             const state = new ActiveAlliesAndEnemiesState(
@@ -266,11 +276,14 @@ describe('Allies and Enemies', () => {
                             status: TurnStatus.Election,
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
-            const [ok, error] = state.vote('0', VoteValue.Yes)
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(/executed/i)
+            const resp = state.vote(VoteValue.Yes)
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
+                /executed./i
+            )
         })
         it('does not require votes from executed players', () => {
             const state = new ActiveAlliesAndEnemiesState(
@@ -287,12 +300,14 @@ describe('Allies and Enemies', () => {
                             status: TurnStatus.Election,
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
-            state.vote('1', VoteValue.No)
-            state.vote('2', VoteValue.No)
-            state.vote('3', VoteValue.No)
-            state.vote('4', VoteValue.No)
+            state.setViewingPlayerId('0').vote(VoteValue.No)
+            state.setViewingPlayerId('1').vote(VoteValue.No)
+            state.setViewingPlayerId('2').vote(VoteValue.No)
+            state.setViewingPlayerId('3').vote(VoteValue.No)
+            state.setViewingPlayerId('4').vote(VoteValue.No)
             expect(state.currentRound.number).toBe(2)
         })
     })
@@ -325,11 +340,11 @@ describe('Allies and Enemies', () => {
                             ],
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
-            const [completed, success] = state.checkElectionResults()
-            expect(completed).toBe(true)
-            expect(success).toBe(true)
+            const results = state.checkElectionResults()
+            expect(results).toBe('passed')
             expect(state.currentRound.status).toBe(TurnStatus.FirstHand)
         })
         it('moves to next round for failed election', () => {
@@ -349,11 +364,11 @@ describe('Allies and Enemies', () => {
                             ],
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
-            const [completed, success] = state.checkElectionResults()
-            expect(completed).toBe(true)
-            expect(success).toBe(false)
+            const results = state.checkElectionResults()
+            expect(results).toBe('failed')
             expect(state.currentRound.number).toBe(2)
             expect(state.currentRound.status).toBe(TurnStatus.Nomination)
         })
@@ -374,15 +389,15 @@ describe('Allies and Enemies', () => {
                             ],
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
-            const [completed, success] = state.checkElectionResults()
-            expect(completed).toBe(true)
-            expect(success).toBe(false)
+            const results = state.checkElectionResults()
+            expect(results).toBe('failed')
             expect(state.currentRound.number).toBe(2)
             expect(state.currentRound.status).toBe(TurnStatus.Nomination)
         })
-        it('sets victory status when enemy leader is elected', () => {
+        it('plays top card after 3 consecutive failed elections', () => {
             const state = new ActiveAlliesAndEnemiesState(
                 initial({
                     rounds: [
@@ -399,13 +414,13 @@ describe('Allies and Enemies', () => {
                             ],
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
             expect(state.drawSize).toBe(17)
             expect(state.currentRound.consecutiveFailedElections).toBe(2)
-            const [completed, success] = state.checkElectionResults()
-            expect(completed).toBe(true)
-            expect(success).toBe(false)
+            const results = state.checkElectionResults()
+            expect(results).toBe('failed')
             expect(state.drawSize).toBe(16)
             expect(state.currentRound.consecutiveFailedElections).toBe(0)
         })
@@ -422,11 +437,14 @@ describe('Allies and Enemies', () => {
             )
         it('does not discard when the turn state is not first hand', () => {
             const state = new ActiveAlliesAndEnemiesState(
-                initial({ rounds: [{ position: 0 } as TurnState] })
+                initial({ rounds: [{ position: 0 } as TurnState] }),
+                '0'
             )
-            const [ok, error] = state.firstHand(0)
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(/turn state does not allow/i)
+            const resp = state.firstHand(0)
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
+                /turn state does not allow/i
+            )
         })
         it('provides an error when no cards have been drawn', () => {
             const state = new ActiveAlliesAndEnemiesState(
@@ -437,11 +455,14 @@ describe('Allies and Enemies', () => {
                             status: TurnStatus.FirstHand,
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
-            const [ok, error] = state.firstHand(0)
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(/No cards have been drawn/i)
+            const resp = state.firstHand(0)
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
+                /No cards have been drawn/i
+            )
         })
         it('puts card in the discard pile', () => {
             const state = new ActiveAlliesAndEnemiesState(
@@ -457,7 +478,8 @@ describe('Allies and Enemies', () => {
                             ],
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
             expect(state.discardSize).toBe(0)
             state.firstHand(0)
@@ -477,32 +499,42 @@ describe('Allies and Enemies', () => {
             )
         it('does not discard when the turn state is not second hand', () => {
             const state = new ActiveAlliesAndEnemiesState(
-                initial({ rounds: [{ position: 0 } as TurnState] })
+                initial({
+                    rounds: [{ nomination: '1', position: 0 } as TurnState],
+                }),
+                '1'
             )
-            const [ok, error] = state.secondHand(0)
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(/turn state does not allow/i)
+            const resp = state.secondHand(0)
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
+                /turn state does not allow/i
+            )
         })
         it('provides an error when no cards have been drawn', () => {
             const state = new ActiveAlliesAndEnemiesState(
                 initial({
                     rounds: [
                         {
+                            nomination: '1',
                             position: 0,
                             status: TurnStatus.SecondHand,
                         } as TurnState,
                     ],
-                })
+                }),
+                '1'
             )
-            const [ok, error] = state.secondHand(0)
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(/No cards have been drawn/i)
+            const resp = state.secondHand(0)
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
+                /No cards have been drawn/i
+            )
         })
         it('puts card in the discard pile', () => {
             const state = new ActiveAlliesAndEnemiesState(
                 initial({
                     rounds: [
                         {
+                            nomination: '1',
                             position: 0,
                             status: TurnStatus.SecondHand,
                             secondHand: [
@@ -511,7 +543,29 @@ describe('Allies and Enemies', () => {
                             ],
                         } as TurnState,
                     ],
-                })
+                }),
+                '1'
+            )
+            expect(state.discardSize).toBe(0)
+            state.secondHand(0)
+            expect(state.discardSize).toBe(1)
+        })
+        it('returns discarded card', () => {
+            const state = new ActiveAlliesAndEnemiesState(
+                initial({
+                    rounds: [
+                        {
+                            nomination: '1',
+                            position: 0,
+                            status: TurnStatus.SecondHand,
+                            secondHand: [
+                                card(Faction.Enemy),
+                                card(Faction.Ally),
+                            ],
+                        } as TurnState,
+                    ],
+                }),
+                '1'
             )
             expect(state.discardSize).toBe(0)
             state.secondHand(0)
@@ -534,6 +588,7 @@ describe('Allies and Enemies', () => {
                 initial({
                     rounds: [
                         {
+                            nomination: '1',
                             position: 0,
                             status: TurnStatus.SecondHand,
                             secondHand: [
@@ -550,7 +605,8 @@ describe('Allies and Enemies', () => {
                             card(Faction.Ally),
                         ],
                     } as BoardState,
-                })
+                }),
+                '1'
             )
             expect(state.victory).toBeNull()
             state.secondHand(0)
@@ -563,6 +619,7 @@ describe('Allies and Enemies', () => {
                 initial({
                     rounds: [
                         {
+                            nomination: '1',
                             position: 0,
                             status: TurnStatus.SecondHand,
                             secondHand: [
@@ -580,7 +637,8 @@ describe('Allies and Enemies', () => {
                             card(Faction.Enemy),
                         ],
                     } as BoardState,
-                })
+                }),
+                '1'
             )
             expect(state.victory).toBeNull()
             state.secondHand(0)
@@ -603,6 +661,7 @@ describe('Allies and Enemies', () => {
                 initial({
                     rounds: [
                         {
+                            nomination: '1',
                             number: 0,
                             position: 0,
                             status: TurnStatus.SecondHand,
@@ -615,7 +674,8 @@ describe('Allies and Enemies', () => {
                     config: {
                         actions: [BoardAction.Execution],
                     } as ConfigurationOptions,
-                })
+                }),
+                '1'
             )
             expect(state.currentRound.number).toBe(0)
             state.secondHand(0)
@@ -628,6 +688,7 @@ describe('Allies and Enemies', () => {
                 initial({
                     rounds: [
                         {
+                            nomination: '1',
                             number: 0,
                             position: 0,
                             status: TurnStatus.SecondHand,
@@ -640,7 +701,8 @@ describe('Allies and Enemies', () => {
                     config: {
                         actions: [BoardAction.None],
                     } as ConfigurationOptions,
-                })
+                }),
+                '1'
             )
             expect(state.currentRound.number).toBe(0)
             state.secondHand(0)
@@ -660,11 +722,14 @@ describe('Allies and Enemies', () => {
             )
         it('does not allow action when status is not take action', () => {
             const state = new ActiveAlliesAndEnemiesState(
-                initial({ rounds: [{ position: 0 } as TurnState] })
+                initial({ rounds: [{ position: 0 } as TurnState] }),
+                '0'
             )
-            const [cards, error] = state.policyPeek()
-            expect(cards).toBe(undefined)
-            expect(error?.toString()).toMatch(/turn state does not allow/i)
+            const resp = state.policyPeek()
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
+                /turn state does not allow/i
+            )
         })
         it('does not allow action when the turn state does not specify it', () => {
             const state = new ActiveAlliesAndEnemiesState(
@@ -676,11 +741,12 @@ describe('Allies and Enemies', () => {
                             action: BoardAction.None,
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
-            const [cards, error] = state.policyPeek()
-            expect(cards).toBe(undefined)
-            expect(error?.toString()).toMatch(
+            const resp = state.policyPeek()
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
                 /action for the current turn is not/i
             )
         })
@@ -701,12 +767,16 @@ describe('Allies and Enemies', () => {
                         } as TurnState,
                     ],
                     draw,
-                })
+                }),
+                '0'
             )
             expect(state.drawSize).toBe(3)
             expect(state.discardSize).toBe(0)
-            const [cards] = state.policyPeek()
-            expect(cards).toEqual(draw)
+            const response = state.policyPeek()
+            expect(response).toHaveProperty('cards')
+            expect((response as { cards: [Card, Card, Card] }).cards).toEqual(
+                draw
+            )
             expect(state.drawSize).toBe(3)
             expect(state.discardSize).toBe(0)
         })
@@ -726,7 +796,8 @@ describe('Allies and Enemies', () => {
                         { suit: Faction.Ally },
                         { suit: Faction.Enemy },
                     ],
-                })
+                }),
+                '0'
             )
             state.policyPeek()
             expect(state.currentRound.number).toBe(0)
@@ -739,11 +810,14 @@ describe('Allies and Enemies', () => {
             merge(defaultState(StandardConfiguration[5]), {}, state)
         it('does not allow action when status is not take action', () => {
             const state = new ActiveAlliesAndEnemiesState(
-                initial({ rounds: [{ position: 0 } as TurnState] })
+                initial({ rounds: [{ position: 0 } as TurnState] }),
+                '0'
             )
-            const [ok, error] = state.specialElection('0')
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(/turn state does not allow/i)
+            const resp = state.specialElection('0')
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
+                /turn state does not allow/i
+            )
         })
         it('provides an error when action is not special election', () => {
             const state = new ActiveAlliesAndEnemiesState(
@@ -754,11 +828,12 @@ describe('Allies and Enemies', () => {
                             status: TurnStatus.TakeAction,
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
-            const [ok, error] = state.specialElection('0')
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(
+            const resp = state.specialElection('0')
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
                 /action for the current turn is not special election/i
             )
         })
@@ -772,11 +847,14 @@ describe('Allies and Enemies', () => {
                             action: BoardAction.SpecialElection,
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
-            const [ok, error] = state.specialElection('11111')
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(/does not exist/i)
+            const resp = state.specialElection('11111')
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
+                /does not exist/i
+            )
         })
         it('provides an error when player is already executed', () => {
             const state = new ActiveAlliesAndEnemiesState(
@@ -793,11 +871,14 @@ describe('Allies and Enemies', () => {
                             action: BoardAction.SpecialElection,
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
-            const [ok, error] = state.specialElection('0')
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(/Can not elect executed players/i)
+            const resp = state.specialElection('0')
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
+                /Can not elect executed players/i
+            )
         })
         it('advances the turn, sets special election flag, and sets proper position', () => {
             const state = new ActiveAlliesAndEnemiesState(
@@ -810,7 +891,8 @@ describe('Allies and Enemies', () => {
                             action: BoardAction.SpecialElection,
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
             state.specialElection('4')
             expect(state.currentRound.number).toBe(1)
@@ -833,16 +915,18 @@ describe('Allies and Enemies', () => {
                             status: TurnStatus.Election,
                         } as TurnState,
                     ],
-                })
+                    draw: cards(Faction.Ally, 17),
+                }),
+                '0'
             )
             expect(state.currentRound.number).toBe(2)
             expect(state.currentRound.position).toBe(1)
             expect(state.currentRound.status).toBe(TurnStatus.Election)
-            state.vote('0', VoteValue.No)
-            state.vote('1', VoteValue.No)
-            state.vote('2', VoteValue.No)
-            state.vote('3', VoteValue.No)
-            state.vote('4', VoteValue.No)
+            state.setViewingPlayerId('0').vote(VoteValue.No)
+            state.setViewingPlayerId('1').vote(VoteValue.No)
+            state.setViewingPlayerId('2').vote(VoteValue.No)
+            state.setViewingPlayerId('3').vote(VoteValue.No)
+            state.setViewingPlayerId('4').vote(VoteValue.No)
             expect(state.currentRound.number).toBe(3)
             expect(state.currentRound.position).toBe(4)
             expect(state.currentRound.status).toBe(TurnStatus.Nomination)
@@ -853,11 +937,14 @@ describe('Allies and Enemies', () => {
             merge(defaultState(StandardConfiguration[5]), {}, state)
         it('does not allow action when status is not take action', () => {
             const state = new ActiveAlliesAndEnemiesState(
-                initial({ rounds: [{ position: 0 } as TurnState] })
+                initial({ rounds: [{ position: 0 } as TurnState] }),
+                '0'
             )
-            const [ok, error] = state.executePlayer('0')
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(/turn state does not allow/i)
+            const resp = state.executePlayer('0')
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
+                /turn state does not allow/i
+            )
         })
         it('provides an error when action is not execute', () => {
             const state = new ActiveAlliesAndEnemiesState(
@@ -868,11 +955,12 @@ describe('Allies and Enemies', () => {
                             status: TurnStatus.TakeAction,
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
-            const [ok, error] = state.executePlayer('0')
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(
+            const resp = state.executePlayer('0')
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
                 /action for the current turn is not/i
             )
         })
@@ -891,11 +979,14 @@ describe('Allies and Enemies', () => {
                             action: BoardAction.Execution,
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
-            const [ok, error] = state.executePlayer('0')
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(/already been executed/i)
+            const resp = state.executePlayer('0')
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
+                /already been executed/i
+            )
         })
         it('provides an error when player does not exist', () => {
             const state = new ActiveAlliesAndEnemiesState(
@@ -912,11 +1003,14 @@ describe('Allies and Enemies', () => {
                             action: BoardAction.Execution,
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
-            const [ok, error] = state.executePlayer('11111')
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(/does not exist/i)
+            const resp = state.executePlayer('11111')
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
+                /does not exist/i
+            )
         })
         it('updates player status with `hasBeenExecuted` true', () => {
             const state = new ActiveAlliesAndEnemiesState(
@@ -928,16 +1022,15 @@ describe('Allies and Enemies', () => {
                             action: BoardAction.Execution,
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
             expect(
-                state.players(viewingPlayer).find((p) => p.id === '0')
-                    ?.hasBeenExecuted
+                state.players().find((p) => p.id === '0')?.hasBeenExecuted
             ).toBeFalsy()
             state.executePlayer('0')
             expect(
-                state.players(viewingPlayer).find((p) => p.id === '0')
-                    ?.hasBeenExecuted
+                state.players().find((p) => p.id === '0')?.hasBeenExecuted
             ).toBeTruthy()
         })
         it('advances the turn', () => {
@@ -951,7 +1044,8 @@ describe('Allies and Enemies', () => {
                             action: BoardAction.Execution,
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
             state.executePlayer('0')
             expect(state.currentRound.number).toBe(1)
@@ -962,11 +1056,14 @@ describe('Allies and Enemies', () => {
             merge(defaultState(StandardConfiguration[5]), {}, state)
         it('does not allow action when status is not take second hand', () => {
             const state = new ActiveAlliesAndEnemiesState(
-                initial({ rounds: [{ position: 0 } as TurnState] })
+                initial({
+                    rounds: [{ nomination: '1', position: 0 } as TurnState],
+                }),
+                '1'
             )
-            const [ok, error] = state.callVeto()
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(
+            const resp = state.callVeto()
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
                 /must occur during the second hand/i
             )
         })
@@ -975,14 +1072,16 @@ describe('Allies and Enemies', () => {
                 initial({
                     rounds: [
                         {
+                            nomination: '1',
                             status: TurnStatus.SecondHand,
                         } as TurnState,
                     ],
-                })
+                }),
+                '1'
             )
-            const [ok, error] = state.callVeto()
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(
+            const resp = state.callVeto()
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
                 /Veto is not enabled for this round/i
             )
         })
@@ -991,15 +1090,18 @@ describe('Allies and Enemies', () => {
                 initial({
                     rounds: [
                         {
+                            nomination: '1',
                             status: TurnStatus.SecondHand,
                             enableVeto: true,
                         } as TurnState,
                     ],
-                })
+                }),
+                '1'
             )
-            const [ok, error] = state.callVeto()
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(
+
+            const resp = state.callVeto()
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
                 /Not enough enemy cards have been played to allow veto/i
             )
         })
@@ -1011,15 +1113,19 @@ describe('Allies and Enemies', () => {
                     } as BoardState,
                     rounds: [
                         {
+                            nomination: '1',
                             status: TurnStatus.SecondHand,
                             enableVeto: true,
                         } as TurnState,
                     ],
-                })
+                }),
+                '1'
             )
-            const [ok, error] = state.callVeto()
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(/No cards have been drawn/i)
+            const resp = state.callVeto()
+            expect('error' in resp).toBeTruthy()
+            expect((resp as ActionResponseError).error.toString()).toMatch(
+                /No cards have been drawn/i
+            )
         })
         it('sets the turn status to veto when all checks pass', () => {
             const state = new ActiveAlliesAndEnemiesState(
@@ -1029,6 +1135,7 @@ describe('Allies and Enemies', () => {
                     } as BoardState,
                     rounds: [
                         {
+                            nomination: '1',
                             enableVeto: true,
                             status: TurnStatus.SecondHand,
                             secondHand: [
@@ -1037,7 +1144,8 @@ describe('Allies and Enemies', () => {
                             ],
                         } as TurnState,
                     ],
-                })
+                }),
+                '1'
             )
             state.callVeto()
             expect(state.currentRound.status).toBe(TurnStatus.Veto)
@@ -1056,6 +1164,7 @@ describe('Allies and Enemies', () => {
                     } as BoardState,
                     rounds: [
                         {
+                            position: 0,
                             status: TurnStatus.Veto,
                             secondHand,
                         } as TurnState,
@@ -1064,7 +1173,8 @@ describe('Allies and Enemies', () => {
                     config: {
                         deck: { enemyCards: 3, allyCards: 0 },
                     } as ConfigurationOptions,
-                })
+                }),
+                '0'
             )
             expect(state.currentRound.status).toBe(TurnStatus.Veto)
             expect(state.currentRound.secondHand).toStrictEqual(secondHand)
@@ -1085,14 +1195,18 @@ describe('Allies and Enemies', () => {
                 initial({
                     rounds: [
                         {
+                            position: 0,
                             status: TurnStatus.Veto,
                         } as TurnState,
                     ],
-                })
+                }),
+                '0'
             )
-            const [ok, error] = state.vetoVote(VoteValue.Yes)
-            expect(ok).toBe(false)
-            expect(error?.toString()).toMatch(/invalid state/i)
+            const resp = state.vetoVote(VoteValue.Yes)
+            expect('error' in resp).toBeTruthy()
+            if ('error' in resp) {
+                expect(resp.error.toString()).toMatch(/invalid state/i)
+            }
         })
         it('returns to same second hand on a no vote', () => {
             const secondHand = [{ suit: Faction.Ally }, { suit: Faction.Ally }]
@@ -1105,6 +1219,7 @@ describe('Allies and Enemies', () => {
                     rounds: [
                         {
                             enableVeto: true,
+                            position: 0,
                             secondHand,
                             status: TurnStatus.Veto,
                         } as TurnState,
@@ -1113,7 +1228,8 @@ describe('Allies and Enemies', () => {
                     config: {
                         deck: { enemyCards: 3, allyCards: 0 },
                     } as ConfigurationOptions,
-                })
+                }),
+                '0'
             )
             expect(state.currentRound.status).toBe(TurnStatus.Veto)
             expect(state.currentRound.secondHand).toStrictEqual(secondHand)
