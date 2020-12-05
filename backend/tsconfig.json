@@ -1,24 +1,24 @@
 {
     "compilerOptions": {
-        "baseUrl": "./",
+        "baseUrl": ".",
         "emitDecoratorMetadata": true,
         "esModuleInterop": true,
         "experimentalDecorators": true,
         "importHelpers": true,
         "module": "commonjs",
+        "moduleResolution": "node",
         "outDir": "dist",
         "removeComments": true,
+        "rootDir": ".",
         "sourceMap": true,
         "strict": true,
-        "target": "es6",
-        "moduleResolution": "node",
         "strictPropertyInitialization": false,
-        "types": ["node"],
-        "typeRoots": ["node_modules/@types"]
+        "target": "es6",
+        "typeRoots": ["node_modules/@types"],
+        "types": ["node"]
     },
     "include": [
-        "src/**/*.ts",
-        "spec/**/*.ts",
+        "src/**/*",
         "node_modules/@types/jest/index.d.ts"
     ],
     "exclude": ["src/public/"]
