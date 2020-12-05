@@ -90,7 +90,7 @@ export class SecretTraitorStack extends cdk.Stack {
         const graphQLLambda = new lambda.Function(this, 'GraphQLHandler', {
             runtime: lambda.Runtime.NODEJS_12_X,
             handler: 'lambda.handler',
-            code: lambda.Code.fromAsset('../backend/dist'),
+            code: lambda.Code.fromAsset('../backend/dist/src'),
             environment: {
                 ENV_VAR_X: process.env.ENV_VAR_X || 'default-value-x',
                 NODE_ENV: 'production',
