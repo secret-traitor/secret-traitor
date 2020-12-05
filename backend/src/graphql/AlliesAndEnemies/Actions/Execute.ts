@@ -10,15 +10,15 @@ import {
 } from 'type-graphql'
 import { PubSubEngine } from 'graphql-subscriptions'
 
-import { ViewingPlayerState } from '@entities/AlliesAndEnemies'
-import { PlayerId } from '@entities/Player'
-import { GameId, GameType } from '@entities/Game'
-import { AlliesAndEnemiesPlayer } from '@graphql/AlliesAndEnemies/Player'
-import { Event } from '@graphql/Event'
-import { GameEvent } from '@graphql/GameEvent'
-import { ApiResponse } from '@shared/api'
-import { getTopicName, Topics } from '@shared/topics'
-import Context from '@shared/Context'
+import { ViewingPlayerState } from 'src/entities/AlliesAndEnemies'
+import { PlayerId } from 'src/entities/Player'
+import { GameId, GameType } from 'src/entities/Game'
+import { AlliesAndEnemiesPlayer } from 'src/graphql/AlliesAndEnemies/Player'
+import { Event } from 'src/graphql/Event'
+import { GameEvent } from 'src/graphql/GameEvent'
+import { ApiResponse } from 'src/shared/api'
+import { getTopicName, Topics } from 'src/shared/topics'
+import Context from 'src/shared/Context'
 
 @ObjectType({ implements: [Event, GameEvent] })
 class AlliesAndEnemiesExecutePlayer extends GameEvent {

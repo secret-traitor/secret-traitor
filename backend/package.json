@@ -4,7 +4,7 @@
     "scripts": {
         "build": "tsc --build tsconfig.json",
         "lint": "tslint --project \"tsconfig.json\"",
-        "start": "node -r module-alias/register ./dist --env=production",
+        "start": "node -r ./dist --env=production",
         "start:dev": "nodemon",
         "test": "npx jest --runInBand --detectOpenHandles --colors --verbose --reporters=default",
         "test:ci": "jest --ci --runInBand --silent --colors --coverage",
@@ -19,14 +19,6 @@
             "src/public"
         ],
         "exec": "ts-node -r tsconfig-paths/register ./src"
-    },
-    "_moduleAliases": {
-        "@clients": "dist/clients",
-        "@entities": "dist/entities",
-        "@games": "dist/games",
-        "@graphql": "dist/graphql",
-        "@shared": "dist/shared",
-        "@server": "dist/Server"
     },
     "dependencies": {
         "@graphql-tools/schema": "^6.2.3",

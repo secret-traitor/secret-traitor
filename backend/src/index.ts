@@ -1,9 +1,9 @@
 import './LoadEnv' // Must be the first import
 import 'reflect-metadata'
-import server from '@server'
-import logger from '@shared/Logger'
+import server from 'src/server'
+import logger from 'src/shared/Logger'
 
-import { waitForTable } from '@clients/Games'
+import { waitForTable } from 'src/clients/Games'
 
 const port = Number(process.env.PORT || 3000)
 

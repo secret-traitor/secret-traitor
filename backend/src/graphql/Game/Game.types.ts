@@ -5,7 +5,7 @@ import {
     GameType as Type,
     GameStatus,
     IGameDescription,
-} from '@entities/Game'
+} from 'src/entities/Game'
 
 @ObjectType({ description: 'Provides high level details about a game.' })
 export class Game implements IGame {

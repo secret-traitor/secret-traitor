@@ -11,14 +11,14 @@ import {
 } from 'type-graphql'
 import { PubSubEngine } from 'graphql-subscriptions'
 
-import { GameStatus, GameId, IGame } from '@entities/Game'
-import { Event } from '@graphql/Event'
-import { GameEvent } from '@graphql/GameEvent'
-import { DescriptiveError, ApiResponse } from '@shared/api'
-import { getTopicName, Topics } from '@shared/topics'
-import { IPlayer, PlayerId } from '@entities/Player'
-import { Player } from '@graphql/Player'
-import Context from '@shared/Context'
+import { GameStatus, GameId, IGame } from 'src/entities/Game'
+import { Event } from 'src/graphql/Event'
+import { GameEvent } from 'src/graphql/GameEvent'
+import { DescriptiveError, ApiResponse } from 'src/shared/api'
+import { getTopicName, Topics } from 'src/shared/topics'
+import { IPlayer, PlayerId } from 'src/entities/Player'
+import { Player } from 'src/graphql/Player'
+import Context from 'src/shared/Context'
 
 @ObjectType({ implements: [Event, GameEvent] })
 export class JoinGameEvent extends GameEvent {

@@ -5,7 +5,7 @@ import remove from 'lodash/remove'
 import shuffle from 'lodash/shuffle'
 import uniqBy from 'lodash/uniqBy'
 
-import GamesClient from '@clients/Games'
+import GamesClient from 'src/clients/Games'
 import {
     AlliesAndEnemiesState,
     BoardAction,
@@ -23,10 +23,10 @@ import {
     VictoryType,
     ViewingPlayerState,
     VoteValue,
-} from '@entities/AlliesAndEnemies'
-import { GameId } from '@entities/Game'
-import { IPlayer, PlayerId } from '@entities/Player'
-import { DescriptiveError } from '@shared/api'
+} from 'src/entities/AlliesAndEnemies'
+import { GameId } from 'src/entities/Game'
+import { IPlayer, PlayerId } from 'src/entities/Player'
+import { DescriptiveError } from 'src/shared/api'
 
 export type ActionResponse<T = { success: true }> = ActionResponseError | T
 export type ActionResponseError = { error: DescriptiveError }

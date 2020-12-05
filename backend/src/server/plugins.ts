@@ -1,6 +1,6 @@
 import { PluginDefinition } from 'apollo-server-core/src/types'
 
-import logger from '@shared/Logger'
+import logger from 'src/shared/Logger'
 
 export const LoggingPlugin: PluginDefinition = {
     requestDidStart(requestContext) {

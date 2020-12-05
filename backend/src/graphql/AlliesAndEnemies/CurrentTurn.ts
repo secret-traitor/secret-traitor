@@ -4,11 +4,11 @@ import {
     ActiveAlliesAndEnemiesState,
     BoardAction,
     TurnStatus,
-} from '@entities/AlliesAndEnemies'
-import { AlliesAndEnemiesPlayer } from '@graphql/AlliesAndEnemies/Player'
+} from 'src/entities/AlliesAndEnemies'
+import { AlliesAndEnemiesPlayer } from 'src/graphql/AlliesAndEnemies/Player'
 
-import { Card } from '@graphql/AlliesAndEnemies/Card'
-import { ApiResponse, DescriptiveError } from '@shared/api'
+import { Card } from 'src/graphql/AlliesAndEnemies/Card'
+import { ApiResponse, DescriptiveError } from 'src/shared/api'
 
 @ObjectType()
 export class CurrentTurn {}

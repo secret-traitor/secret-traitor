@@ -1,10 +1,10 @@
 import { Arg, Ctx, ID, Mutation, Resolver } from 'type-graphql'
 
-import { GameType, IGame } from '@entities/Game'
-import { PlayerId } from '@entities/Player'
-import { Game } from '@graphql/Game/Game.types'
-import { ApiResponse } from '@shared/api'
-import Context from '@shared/Context'
+import { GameType, IGame } from 'src/entities/Game'
+import { PlayerId } from 'src/entities/Player'
+import { Game } from 'src/graphql/Game/Game.types'
+import { ApiResponse } from 'src/shared/api'
+import Context from 'src/shared/Context'
 
 @Resolver(() => Game)
 export class DeleteGameResolver {

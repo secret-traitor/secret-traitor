@@ -1,5 +1,5 @@
-import { GameId } from '@entities/Game'
-import { IPlayer, PlayerId } from '@entities/Player'
+import { GameId } from 'src/entities/Game'
+import { IPlayer, PlayerId } from 'src/entities/Player'
 
 import { ConfigurationOptions } from './AlliesAndEnemies.config'
 

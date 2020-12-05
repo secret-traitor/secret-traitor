@@ -1,6 +1,6 @@
 import { Field, ID, ObjectType } from 'type-graphql'
 
-import { IPlayer, PlayerId } from '@entities/Player'
+import { IPlayer, PlayerId } from 'src/entities/Player'
 
 @ObjectType({ description: 'Player details' })
 export class Player implements IPlayer {

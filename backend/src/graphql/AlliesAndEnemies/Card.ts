@@ -1,7 +1,7 @@
 import { Field, ObjectType } from 'type-graphql'
 
-import { Faction } from '@entities/AlliesAndEnemies'
-import { Card as ICard } from '@entities/AlliesAndEnemies'
+import { Faction } from 'src/entities/AlliesAndEnemies'
+import { Card as ICard } from 'src/entities/AlliesAndEnemies'
 
 @ObjectType()
 export class Card implements ICard {

@@ -1,4 +1,4 @@
-import DataSources from '@shared/DataSources'
+import DataSources from 'src/shared/DataSources'
 
 type Context = {
     dataSources: DataSources

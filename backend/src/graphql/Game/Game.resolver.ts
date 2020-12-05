@@ -8,14 +8,14 @@ import {
     Root,
 } from 'type-graphql'
 
-import { GameId, GameStatus, IGame, IGameDescription } from '@entities/Game'
-import { IPlayer, PlayerId } from '@entities/Player'
-import { GameState, IGameState } from '@graphql/GameState'
-import { Player } from '@graphql/Player'
+import { GameId, GameStatus, IGame, IGameDescription } from 'src/entities/Game'
+import { IPlayer, PlayerId } from 'src/entities/Player'
+import { GameState, IGameState } from 'src/graphql/GameState'
+import { Player } from 'src/graphql/Player'
 
 import { Game, GameDescription, GameDescriptions } from './Game.types'
-import Context from '@shared/Context'
-import { ApiResponse, DescriptiveError } from '@shared/api'
+import Context from 'src/shared/Context'
+import { ApiResponse, DescriptiveError } from 'src/shared/api'
 
 @Resolver(() => Game)
 export class GameResolver {

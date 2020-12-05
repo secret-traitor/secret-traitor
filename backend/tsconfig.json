@@ -13,14 +13,6 @@
         "target": "es6",
         "moduleResolution": "node",
         "strictPropertyInitialization": false,
-        "paths": {
-            "@clients/*": ["src/clients/*"],
-            "@entities/*": ["src/entities/*"],
-            "@games/*": ["src/games/*"],
-            "@graphql/*": ["src/graphql/*"],
-            "@shared/*": ["src/shared/*"],
-            "@server": ["src/server"]
-        },
         "types": ["node"],
         "typeRoots": ["node_modules/@types"]
     },

@@ -4,9 +4,9 @@ import dynamoDb, {
     put,
     putMany,
     waitForTable as waitFor,
-} from '@clients/dynamoDb'
-import { GameId, GameStatus, GameType, IGame } from '@entities/Game'
-import { IPlayer, PlayerId } from '@entities/Player'
+} from 'src/clients/dynamoDb'
+import { GameId, GameStatus, GameType, IGame } from 'src/entities/Game'
+import { IPlayer, PlayerId } from 'src/entities/Player'
 
 const TableName = 'Games'
 export const waitForTable = async () => waitFor(TableName)

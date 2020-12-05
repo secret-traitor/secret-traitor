@@ -1,6 +1,6 @@
 import { Field, ObjectType, registerEnumType } from 'type-graphql'
 
-import { Player } from '@graphql/Player'
+import { Player } from 'src/graphql/Player'
 import {
     AlliesAndEnemiesState,
     BoardAction,
@@ -8,7 +8,7 @@ import {
     PlayerState,
     PlayerStatus,
     ViewingPlayerState,
-} from '@entities/AlliesAndEnemies'
+} from 'src/entities/AlliesAndEnemies'
 
 @ObjectType()
 export class AlliesAndEnemiesPlayer

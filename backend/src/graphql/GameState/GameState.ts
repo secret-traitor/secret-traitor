@@ -1,8 +1,8 @@
 import { Field, InterfaceType } from 'type-graphql'
 
-import { GameId, GameType } from '@entities/Game'
-import { PlayerId } from '@entities/Player'
-import { AlliesAndEnemiesGameState } from '@graphql/AlliesAndEnemies'
+import { GameId, GameType } from 'src/entities/Game'
+import { PlayerId } from 'src/entities/Player'
+import { AlliesAndEnemiesGameState } from 'src/graphql/AlliesAndEnemies'
 
 export interface IGameState {
     readonly gameId: GameId

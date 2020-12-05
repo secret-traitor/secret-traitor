@@ -9,8 +9,8 @@ import {
     Root,
 } from 'type-graphql'
 
-import { GameId, GameType, IGame } from '@entities/Game'
-import { PlayerId } from '@entities/Player'
+import { GameId, GameType, IGame } from 'src/entities/Game'
+import { PlayerId } from 'src/entities/Player'
 import {
     ActiveAlliesAndEnemiesState,
     BoardAction,
@@ -21,12 +21,12 @@ import {
     Victory,
     VictoryType,
     VoteValue,
-} from '@entities/AlliesAndEnemies'
+} from 'src/entities/AlliesAndEnemies'
 
-import { AlliesAndEnemiesVictoryStatus } from '@graphql/AlliesAndEnemies/VictoryStatus'
-import { GameState, IGameState } from '@graphql/GameState'
-import { DescriptiveError, ApiResponse } from '@shared/api'
-import Context from '@shared/Context'
+import { AlliesAndEnemiesVictoryStatus } from 'src/graphql/AlliesAndEnemies/VictoryStatus'
+import { GameState, IGameState } from 'src/graphql/GameState'
+import { DescriptiveError, ApiResponse } from 'src/shared/api'
+import Context from 'src/shared/Context'
 
 import { AlliesAndEnemiesPlayer } from './Player'
 import { BoardState } from './BoardState'

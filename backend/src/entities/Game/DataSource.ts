@@ -1,10 +1,10 @@
 import { DataSource } from 'apollo-datasource'
 import DataLoader from 'dataloader'
 
-import GamesClient from '@clients/Games'
-import { Condition } from '@clients/dynamoDb'
-import { GameId, GameType, IGame } from '@entities/Game'
-import Context from '@shared/Context'
+import GamesClient from 'src/clients/Games'
+import { Condition } from 'src/clients/dynamoDb'
+import { GameId, GameType, IGame } from 'src/entities/Game'
+import Context from 'src/shared/Context'
 
 class GamesDataSource extends DataSource<Context> {
     private loader = new DataLoader<GameId, any>(async (keys) => {

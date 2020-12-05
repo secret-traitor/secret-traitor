@@ -18,8 +18,8 @@ import {
     VictoryType,
     ViewingPlayerState,
     VoteValue,
-} from '@entities/AlliesAndEnemies'
-import { buildPlayers } from '@entities/AlliesAndEnemies/test/helpers'
+} from 'src/entities/AlliesAndEnemies'
+import { buildPlayers } from 'src/entities/AlliesAndEnemies/test/helpers'
 
 export const firstRound = () => ({
     consecutiveFailedElections: 0,

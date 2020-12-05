@@ -12,13 +12,13 @@ import {
 } from 'type-graphql'
 import { PubSubEngine } from 'graphql-subscriptions'
 
-import { GameId, GameStatus, IGame } from '@entities/Game'
-import { PlayerId } from '@entities/Player'
-import { Event } from '@graphql/Event'
-import { GameEvent } from '@graphql/GameEvent'
-import { ApiResponse, DescriptiveError } from '@shared/api'
-import { getTopicName, Topics } from '@shared/topics'
-import Context from '@shared/Context'
+import { GameId, GameStatus, IGame } from 'src/entities/Game'
+import { PlayerId } from 'src/entities/Player'
+import { Event } from 'src/graphql/Event'
+import { GameEvent } from 'src/graphql/GameEvent'
+import { ApiResponse, DescriptiveError } from 'src/shared/api'
+import { getTopicName, Topics } from 'src/shared/topics'
+import Context from 'src/shared/Context'
 
 type GameStateEvent = {
     game: IGame

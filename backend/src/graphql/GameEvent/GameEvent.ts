@@ -10,15 +10,15 @@ import {
     Subscription,
 } from 'type-graphql'
 
-import { GameId, IGame } from '@entities/Game'
-import { PlayerId, IPlayer } from '@entities/Player'
-import { Event } from '@graphql/Event'
-import { Game } from '@graphql/Game'
-import { IGameState } from '@graphql/GameState'
-import { Player } from '@graphql/Player'
-import { getTopicName, Topics } from '@shared/topics'
-import Context from '@shared/Context'
-import logger from '@shared/Logger'
+import { GameId, IGame } from 'src/entities/Game'
+import { PlayerId, IPlayer } from 'src/entities/Player'
+import { Event } from 'src/graphql/Event'
+import { Game } from 'src/graphql/Game'
+import { IGameState } from 'src/graphql/GameState'
+import { Player } from 'src/graphql/Player'
+import { getTopicName, Topics } from 'src/shared/topics'
+import Context from 'src/shared/Context'
+import logger from 'src/shared/Logger'
 
 export type IGameEvent = {
     readonly source: PlayerId

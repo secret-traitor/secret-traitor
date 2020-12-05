@@ -1,15 +1,15 @@
 import { DataSource } from 'apollo-datasource'
 import DataLoader from 'dataloader'
 
-import GamesClient from '@clients/Games'
-import Context from '@shared/Context'
-import { GameId } from '@entities/Game'
-import { PlayerId } from '@entities/Player'
+import GamesClient from 'src/clients/Games'
+import Context from 'src/shared/Context'
+import { GameId } from 'src/entities/Game'
+import { PlayerId } from 'src/entities/Player'
 
 import { AlliesAndEnemiesState } from './AlliesAndEnemies.types'
 import { ActiveAlliesAndEnemiesState } from './AlliesAndEnemies.game'
 import { StandardConfiguration } from './AlliesAndEnemies.config'
-import { DescriptiveError } from '@shared/api'
+import { DescriptiveError } from 'src/shared/api'
 
 class AlliesAndEnemiesStateDataSource extends DataSource<Context> {
     private loader = new DataLoader<GameId, AlliesAndEnemiesState>(
