@@ -46,6 +46,10 @@ jobs:
                   cd backend
                   npm run build
 
+            - name: copy over node_modules
+              run: |
+                  cp -r backend/node_modules backend/dist/node_modules
+
             - name: build frontend
               run: |
                   cd frontend
