@@ -17,9 +17,6 @@
         "typeRoots": ["node_modules/@types"],
         "types": ["node"]
     },
-    "include": [
-        "src/**/*",
-        "node_modules/@types/jest/index.d.ts"
-    ],
+    "include": ["lambda.ts", "src/**/*", "node_modules/@types/jest/index.d.ts"],
     "exclude": ["src/public/"]
 }
