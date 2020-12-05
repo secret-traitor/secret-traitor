@@ -30,4 +30,7 @@ const apollo = new ApolloServer({
 apollo.applyMiddleware({ app, path: '/graphql' })
 apollo.applyMiddleware({ app, cors: { credentials: false, origin: false } })
 apollo.installSubscriptionHandlers(server)
+app.get('canary', (req, res) => {
+    res.send({ canary: 'this app is running' })
+})
 export default server
