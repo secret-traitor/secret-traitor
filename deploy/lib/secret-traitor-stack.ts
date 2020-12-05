@@ -93,6 +93,7 @@ export class SecretTraitorStack extends cdk.Stack {
             code: lambda.Code.fromAsset('../backend/dist'),
             environment: {
                 ENV_VAR_X: process.env.ENV_VAR_X || 'default-value-x',
+                NODE_ENV: 'production',
             },
             timeout: cdk.Duration.seconds(30),
         })
