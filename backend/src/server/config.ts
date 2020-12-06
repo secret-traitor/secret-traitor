@@ -17,6 +17,7 @@ const context: ContextFunction = ({ req, connection }) =>
 const config = {
     context,
     dataSources,
+    introspection: true,
     playground: true,
     plugins,
     schema,
