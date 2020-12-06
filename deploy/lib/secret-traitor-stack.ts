@@ -88,6 +88,7 @@ export class SecretTraitorStack extends cdk.Stack {
 
         ///////////// ACTUAL SECRET TRAITOR RESOURCES /////////////
         const table = new dynamodb.Table(this, 'Games', {
+            tableName: 'Games',
             partitionKey: { name: 'PK', type: dynamodb.AttributeType.STRING },
             sortKey: { name: 'SK', type: dynamodb.AttributeType.STRING },
         })
