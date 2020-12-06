@@ -1,8 +1,4 @@
-'use strict'
+import 'reflect-metadata'
+import { handleHttp } from 'src/serverless'
 
-const awsServerlessExpress = require('aws-serverless-express')
-const app = require('./src/server/index')
-const server = awsServerlessExpress.createServer(app)
-
-exports.handler = (event: any, context: any) =>
-    awsServerlessExpress.proxy(server, event, context)
+exports.handler = handleHttp
