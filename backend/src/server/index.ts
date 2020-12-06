@@ -8,30 +8,31 @@ import schema from './schema'
 import { buildDataSources } from './buildDataSources'
 
 const app = express()
-const server = createServer(app)
-const apollo = new ApolloServer({
-    schema,
-    plugins,
-    dataSources: buildDataSources,
-    context: async ({ req, connection }) => {
-        let context = {
-            request: req,
-            headers: req?.headers,
-        }
-        if (connection) {
-            context = {
-                ...context,
-                ...connection.context,
-                dataSources: buildDataSources(),
-            }
-        }
-        return context
-    },
-})
-apollo.applyMiddleware({ app, path: '/graphql' })
-apollo.applyMiddleware({ app, cors: { credentials: false, origin: false } })
-apollo.installSubscriptionHandlers(server)
+const server = app
+// const server = createServer(app)
+// const apollo = new ApolloServer({
+//     schema,
+//     plugins,
+//     dataSources: buildDataSources,
+//     context: async ({ req, connection }) => {
+//         let context = {
+//             request: req,
+//             headers: req?.headers,
+//         }
+//         if (connection) {
+//             context = {
+//                 ...context,
+//                 ...connection.context,
+//                 dataSources: buildDataSources(),
+//             }
+//         }
+//         return context
+//     },
+// })
+// apollo.applyMiddleware({ app, path: '/graphql' })
+// apollo.applyMiddleware({ app, cors: { credentials: false, origin: false } })
+// apollo.installSubscriptionHandlers(server)
 app.get('canary', (req, res) => {
-    res.send({ canary: 'this app is running' })
+    return res.send({ canary: 'this app is running' })
 })
 export default server
