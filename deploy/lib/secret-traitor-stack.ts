@@ -109,6 +109,8 @@ export class SecretTraitorStack extends cdk.Stack {
         })
 
         table.grantReadWriteData(graphQLLambda)
+        table.grant(graphQLLambda, 'dynamodb:DescribeTable')
+
         // S3 bucket with the frontend assets
 
         // CloudFront distro with default behavior pulling from the S3 bucket,
