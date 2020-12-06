@@ -1,4 +1,5 @@
 import express from 'express'
+import 'reflect-metadata'
 import { ApolloServer } from 'apollo-server-express'
 import { createServer } from 'http'
 
