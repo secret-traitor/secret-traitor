@@ -1,14 +1,17 @@
 import { DynamoDB, Endpoint } from 'aws-sdk'
-import { DocumentClient } from 'aws-sdk/lib/dynamodb/document_client'
+import logger from '../shared/Logger'
 
-const dynamoDb = new DynamoDB({
-    region: process.env.AWS_DEFAULT_REGION,
-    credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? '',
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? '',
-    },
-    endpoint: new Endpoint(process.env.DYNAMODB_ENDPOINT ?? ''),
-})
+const dynamoDb =
+    process.env.NODE_ENV === 'production'
+        ? new DynamoDB()
+        : new DynamoDB({
+              region: process.env.AWS_DEFAULT_REGION,
+              credentials: {
+                  accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? '',
+                  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? '',
+              },
+              endpoint: new Endpoint(process.env.DYNAMODB_ENDPOINT ?? ''),
+          })
 
 const dynamoDocClient = new DynamoDB.DocumentClient({
     service: dynamoDb,
@@ -23,7 +26,7 @@ export const waitForTable = (TableName: string) =>
         .promise()
         .then((data) => {
             if (data.Table?.TableStatus !== 'ACTIVE') {
-                console.log(
+                logger.info(
                     `Table status: ${data.Table?.TableStatus}, retrying in ${backoffInterval}ms...`
                 )
                 return new Promise((resolve) => {
@@ -37,7 +40,7 @@ export const waitForTable = (TableName: string) =>
             }
         })
         .catch((error) => {
-            console.warn(
+            logger.warn(
                 `Table not found! Error below. Retrying in ${backoffInterval} ms...`,
                 error
             )

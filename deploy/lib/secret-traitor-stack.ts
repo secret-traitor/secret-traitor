@@ -5,6 +5,7 @@ import * as targets from '@aws-cdk/aws-route53-targets'
 import * as acm from '@aws-cdk/aws-certificatemanager'
 import * as lambda from '@aws-cdk/aws-lambda'
 import { HitCounter } from './hitcounter'
+import * as dynamodb from '@aws-cdk/aws-dynamodb'
 
 export class SecretTraitorStack extends cdk.Stack {
     constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
@@ -86,6 +87,11 @@ export class SecretTraitorStack extends cdk.Stack {
         })
 
         ///////////// ACTUAL SECRET TRAITOR RESOURCES /////////////
+        const table = new dynamodb.Table(this, 'Games', {
+            partitionKey: { name: 'PK', type: dynamodb.AttributeType.STRING },
+            sortKey: { name: 'SK', type: dynamodb.AttributeType.STRING },
+        })
+
         // API Gateway REST API with the GraphQL API
         const graphQLLambda = new lambda.Function(this, 'GraphQLHandler', {
             runtime: lambda.Runtime.NODEJS_12_X,
@@ -102,6 +108,7 @@ export class SecretTraitorStack extends cdk.Stack {
             handler: graphQLLambda,
         })
 
+        table.grantReadWriteData(graphQLLambda)
         // S3 bucket with the frontend assets
 
         // CloudFront distro with default behavior pulling from the S3 bucket,
