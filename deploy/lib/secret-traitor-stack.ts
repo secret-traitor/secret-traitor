@@ -103,6 +103,7 @@ export class SecretTraitorStack extends cdk.Stack {
                 NODE_ENV: 'production',
             },
             timeout: cdk.Duration.seconds(30),
+            memorySize: 3008,
         })
 
         const graphQLAPI = new apigw.LambdaRestApi(this, 'GraphQLAPI', {
