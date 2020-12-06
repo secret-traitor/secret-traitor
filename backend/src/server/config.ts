@@ -1,26 +1,22 @@
-import { Context, ContextFunction } from 'apollo-server-core'
-import { ExpressContext } from 'apollo-server-express/src/ApolloServer'
+import { ContextFunction } from 'apollo-server-core'
 
-import buildDataSources from './buildDataSources'
+import dataSources from './buildDataSources'
 import plugins from './plugins'
 import schema from './schema'
 
-const context: ContextFunction<ExpressContext, Context> = ({
-    req,
-    connection,
-}) =>
+const context: ContextFunction = ({ req, connection }) =>
     connection
         ? {
               request: req,
               headers: req?.headers,
-              dataSources: buildDataSources(),
+              dataSources: dataSources(),
               ...connection.context,
           }
         : { request: req, headers: req?.headers }
 
 const config = {
     context,
-    dataSources: buildDataSources,
+    dataSources,
     plugins,
     schema,
 }
