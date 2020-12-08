@@ -1,4 +1,4 @@
 import 'reflect-metadata'
-import { handleHttp } from 'src/serverless'
-
-exports.handler = handleHttp
+export { eventHandler } from 'src/serverless'
+export { httpHandler } from 'src/serverless'
+export { webSocketHandler } from 'src/serverless'

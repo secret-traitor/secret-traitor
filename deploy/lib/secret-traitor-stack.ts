@@ -96,7 +96,7 @@ export class SecretTraitorStack extends cdk.Stack {
         // API Gateway REST API with the GraphQL API
         const graphQLLambda = new lambda.Function(this, 'GraphQLHandler', {
             runtime: lambda.Runtime.NODEJS_12_X,
-            handler: 'lambda.handler',
+            handler: 'lambda.httpHandler',
             code: lambda.Code.fromAsset('../backend/dist'),
             environment: {
                 ENV_VAR_X: process.env.ENV_VAR_X || 'default-value-x',

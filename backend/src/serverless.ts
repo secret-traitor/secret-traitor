@@ -2,24 +2,29 @@ import {
     DynamoDBConnectionManager,
     DynamoDBEventProcessor,
     DynamoDBSubscriptionManager,
-    Server,
+    Server as LambdaGraphQLServer,
 } from 'aws-lambda-graphql'
 
 import dynamoDbClient from 'src/clients/dynamoDb'
+import config from 'src/server/config'
 
-import config from './server/config'
+const debug = Boolean(process.env.DEBUG)
 
 const subscriptionManager = new DynamoDBSubscriptionManager({ dynamoDbClient })
 const connectionManager = new DynamoDBConnectionManager({
     dynamoDbClient,
     subscriptions: subscriptionManager,
+    debug,
 })
-const server = new Server({
+const eventProcessor = new DynamoDBEventProcessor({
+    debug,
+})
+const server = new LambdaGraphQLServer({
     ...config,
     connectionManager,
-    eventProcessor: new DynamoDBEventProcessor(),
+    eventProcessor,
     subscriptionManager,
 })
-server.setGraphQLPath('/graphql')
-export const handleHttp = server.createHttpHandler()
-export const handleWebSocket = server.createWebSocketHandler()
+export const httpHandler = server.createHttpHandler()
+export const webSocketHandler = server.createWebSocketHandler()
+export const eventHandler = server.createEventHandler()
