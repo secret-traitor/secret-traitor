@@ -12,7 +12,7 @@ custom:
     host: localhost
     port: 8000
     # this fixes the problem with missing region
-    region: eu-central-1
+    region: us-east-1
     pollForever: true
     streams:
       - table: Events
@@ -22,7 +22,7 @@ custom:
 provider:
   name: aws
   runtime: nodejs10.x
-  region: eu-central-1 # NOTE: change with your preferred region
+  region: us-east-1 # NOTE: change with your preferred region
 
   iamRoleStatements:
     - Effect: Allow
