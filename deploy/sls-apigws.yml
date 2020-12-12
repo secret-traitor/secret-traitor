@@ -21,7 +21,7 @@ custom:
 
 provider:
     name: aws
-    runtime: nodejs10.x
+    runtime: nodejs12.x
     region: us-east-1 # NOTE: change with your preferred region
 
     iamRoleStatements:
@@ -66,14 +66,14 @@ provider:
 
 functions:
     httpHandler:
-        handler: src/index.handleHttp
+        handler: ../backend/dist/lambda.httpHandler
         events:
             - http:
                   path: /
                   method: any
                   cors: true
     webSocketHandler:
-        handler: src/index.handleWebSocket
+        handler: ../backend/dist/lambda.webSocketHandler
         events:
             - websocket:
                   route: $connect
@@ -82,7 +82,7 @@ functions:
             - websocket:
                   route: $default
     dynamoDBStreamHandler:
-        handler: src/index.handleDynamoDBStream
+        handler: ../backend/dist/lambda.eventHandler
         events:
             - stream:
                   enabled: true
