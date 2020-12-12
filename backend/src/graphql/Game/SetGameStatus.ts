@@ -75,26 +75,30 @@ export class SetGameStatusResolver {
             return new DescriptiveError('')
         }
         const newGame = { ...oldGame, status }
+        let ok = false
         if (
             oldGame.status === GameStatus.InLobby &&
             newGame.status === GameStatus.InProgress
         ) {
-            await alliesAndEnemies.start(gameId, viewingPlayerId)
+            ok = await alliesAndEnemies.start(gameId, viewingPlayerId)
         }
         if (
             oldGame.status === GameStatus.InProgress &&
             newGame.status === GameStatus.InLobby
         ) {
-            await alliesAndEnemies.delete(gameId)
+            ok = await alliesAndEnemies.delete(gameId)
         }
-        await games.put(newGame)
-        const payload = new GameStatusEvent({
-            game: newGame,
-            viewingPlayerId,
-            oldStatus: oldGame.status,
-            newStatus: newGame.status,
-        })
-        await pubSub.publish(getTopicName(Topics.Play, newGame.id), payload)
-        return payload
+        if (ok) {
+            await games.put(newGame)
+            const payload = new GameStatusEvent({
+                game: newGame,
+                viewingPlayerId,
+                oldStatus: oldGame.status,
+                newStatus: newGame.status,
+            })
+            await pubSub.publish(getTopicName(Topics.Play, newGame.id), payload)
+            return payload
+        }
+        return null
     }
 }

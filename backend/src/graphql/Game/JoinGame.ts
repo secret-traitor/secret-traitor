@@ -61,7 +61,7 @@ class JoinResolver {
                 'Please join games from the home page or using recently copied links.'
             )
         }
-        const player = await players.put(gameId, {
+        const player = await players.update(gameId, {
             id: playerId,
             nickname,
         })

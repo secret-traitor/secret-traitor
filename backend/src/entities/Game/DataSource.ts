@@ -31,5 +31,14 @@ class GamesDataSource extends DataSource<Context> {
     public async scan(filter: { [key: string]: Condition }): Promise<IGame[]> {
         return await GamesClient.games.scan(filter)
     }
+
+    /*
+        TODO: Add method which returns a list of joinable games.
+        This functionality should filter the games with the following criteria:
+            - games that are in lobby
+            - in progress games that the player has already joined
+
+        This will replace the scan called in the `joinGames` resolver.
+     */
 }
 export default GamesDataSource

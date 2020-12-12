@@ -33,6 +33,13 @@ class PlayersDataSource extends DataSource<Context> {
         await GamesClient.players.put({ gameId, ...player })
         return player
     }
+    public async update(
+        gameId: GameId,
+        player: Partial<IPlayer> & { id: PlayerId }
+    ) {
+        await GamesClient.players.update({ gameId, ...player })
+        return player
+    }
     public async scan(filter: {
         [key: string]: Condition
     }): Promise<IPlayer[]> {

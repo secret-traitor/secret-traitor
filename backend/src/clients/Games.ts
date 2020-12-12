@@ -11,19 +11,28 @@ import { IPlayer, PlayerId } from 'src/entities/Player'
 const TableName = 'Games'
 export const waitForTable = async () => waitFor(TableName)
 
-interface IGamesClient {
-    create(type: GameType): Promise<IGame>
-    get(id: GameId): Promise<IGame | undefined>
-    list(ids: GameId[]): Promise<IGame[]>
-    put(game: IGame): Promise<any>
-    scan(filter: { [key: string]: Condition }): Promise<IGame[]>
+export type GameModel = {
+    EntityType: 'game'
+    Status: GameStatus
+    Type: GameType
+    SK: string
+    PK: string
+}
+export type PlayerModel = {
+    EntityType: 'player'
+    SK: string
+    Host?: boolean
+    PK: string
+    Name?: string
+}
+export type StateModel = {
+    EntityType: 'state'
+    State: any
+    SK: string
+    PK: string
 }
 
-type NoUndefinedField<T> = {
-    [P in keyof T]-?: Exclude<T[P], null | undefined>
-}
-
-class GamesClient implements IGamesClient {
+class GamesClient {
     private entityType = 'game'
 
     async create(type: GameType): Promise<IGame> {
@@ -50,8 +59,8 @@ class GamesClient implements IGamesClient {
             .get({
                 TableName,
                 Key: {
-                    PK: `g#${id}`,
-                    SK: `g#${id}`,
+                    PK: `g#${id.toLowerCase()}`,
+                    SK: `g#${id.toLowerCase()}`,
                 },
             })
             .promise()
@@ -61,7 +70,7 @@ class GamesClient implements IGamesClient {
     }
 
     async list(ids: GameId[]): Promise<IGame[]> {
-        const AttributeValueList = ids.map((id) => `g#${id}`)
+        const AttributeValueList = ids.map((id) => `g#${id.toLowerCase()}`)
         return await dynamoDb
             .query({
                 TableName,
@@ -83,7 +92,7 @@ class GamesClient implements IGamesClient {
             )
     }
 
-    async put(args: IGame | IGame[], update?: boolean): Promise<any> {
+    async put(args: IGame | IGame[]): Promise<any> {
         return Array.isArray(args)
             ? putMany({
                   Items: args.map(this.toDynamo),
@@ -95,20 +104,20 @@ class GamesClient implements IGamesClient {
               })
     }
 
-    private readonly toDynamo = (game: IGame) => ({
-        EntityType: this.entityType,
-        PK: `g#${game.id.toLowerCase()}`,
-        SK: `g#${game.id.toLowerCase()}`,
-        Status: game.status,
-        Type: game.type,
-    })
-
-    private readonly fromDynamo = (result: any): IGame =>
+    private readonly toDynamo = (game: IGame): GameModel =>
         ({
-            id: result.PK.replace('g#', '').toLowerCase(),
-            status: result.Status,
-            type: result.Type,
-        } as NoUndefinedField<IGame>)
+            EntityType: this.entityType,
+            PK: `g#${game.id.toLowerCase()}`,
+            SK: `g#${game.id.toLowerCase()}`,
+            Status: game.status,
+            Type: game.type,
+        } as GameModel)
+
+    private readonly fromDynamo = (result: any): IGame => ({
+        id: result.PK.replace('g#', '').toLowerCase(),
+        status: result.Status,
+        type: result.Type,
+    })
 
     private readonly makeCode = () => {
         const length = 6
@@ -123,25 +132,10 @@ class GamesClient implements IGamesClient {
     }
 }
 
-type PutPlayer = Partial<Omit<IPlayer, 'id'>> & {
-    id: PlayerId
-    gameId: GameId
-}
+type PutPlayer = IPlayer & { gameId: GameId }
+type UpdatePlayer = Partial<IPlayer> & { id: PlayerId; gameId: GameId }
 
-interface IPlayersClient {
-    create(
-        gameId: GameId,
-        playerId: PlayerId,
-        host?: boolean,
-        nickname?: string
-    ): Promise<IPlayer>
-    get(gameId: GameId, playerId: PlayerId): Promise<IPlayer | undefined>
-    put(args: PutPlayer | PutPlayer[], update?: boolean): Promise<any>
-    list(gameId: GameId): Promise<IPlayer[]>
-    scan(filter: { [key: string]: Condition }): Promise<IPlayer[]>
-}
-
-class PlayersClient implements IPlayersClient {
+class PlayersClient {
     private entityType = 'player'
 
     async create(
@@ -203,6 +197,38 @@ class PlayersClient implements IPlayersClient {
             )
     }
 
+    async update(player: UpdatePlayer): Promise<any> {
+        const mapped = this.toDynamo(player)
+        const Key = {
+            PK: mapped.PK,
+            SK: mapped.SK,
+        }
+        const UpdateExpression = `set ${[
+            ...(mapped.Name ? ['#N = :n'] : []),
+            ...(mapped.Host ? ['#H = :h'] : []),
+            '#E = :e',
+        ].join(',')}`
+        const ExpressionAttributeNames = {
+            ...(mapped.Name ? { '#N': 'Name' } : {}),
+            ...(mapped.Host ? { '#H': 'Host' } : {}),
+            '#E': 'EntityType',
+        }
+        const ExpressionAttributeValues = {
+            ...(mapped.Name ? { ':n': mapped.Name } : {}),
+            ...(mapped.Host ? { ':h': mapped.Host } : {}),
+            ':e': this.entityType,
+        }
+        return await dynamoDb
+            .update({
+                TableName,
+                Key,
+                UpdateExpression,
+                ExpressionAttributeNames,
+                ExpressionAttributeValues,
+            })
+            .promise()
+    }
+
     async put(args: PutPlayer | PutPlayer[]): Promise<any> {
         return Array.isArray(args)
             ? putMany({
@@ -215,14 +241,14 @@ class PlayersClient implements IPlayersClient {
               })
     }
 
-    private readonly toDynamo = (player: PutPlayer) =>
+    private readonly toDynamo = (player: PutPlayer): PlayerModel =>
         ({
             EntityType: this.entityType,
             PK: `g#${player.gameId}`,
             SK: `p#${player.id}`,
             Name: player.nickname,
             Host: player.host,
-        } as NoUndefinedField<any>)
+        } as PlayerModel)
 
     private readonly fromDynamo = (result: any): IPlayer => ({
         id: result.SK.replace('p#', ''),
@@ -231,21 +257,16 @@ class PlayersClient implements IPlayersClient {
     })
 }
 
-interface IStateClient {
-    get<T = any>(gameId: GameId): Promise<T>
-    put<T = any>(gameId: GameId, state: T): Promise<any>
-}
-
-class StateClient implements IStateClient {
-    private client = dynamoDb
+class StateClient {
+    private entityType = 'state'
 
     async get<T>(gameId: GameId): Promise<T> {
-        return this.client
+        return dynamoDb
             .get({
                 TableName,
                 Key: {
                     PK: `g#${gameId}`,
-                    SK: 'state',
+                    SK: this.entityType,
                 },
             })
             .promise()
@@ -256,7 +277,7 @@ class StateClient implements IStateClient {
     }
 
     async list<T>(ids: GameId[]): Promise<T[]> {
-        return await this.client
+        return await dynamoDb
             .query({
                 TableName,
                 KeyConditions: {
@@ -266,7 +287,7 @@ class StateClient implements IStateClient {
                     },
                     SK: {
                         ComparisonOperator: 'EQ',
-                        AttributeValueList: ['state'],
+                        AttributeValueList: [this.entityType],
                     },
                 },
                 Limit: ids.length,
@@ -287,30 +308,24 @@ class StateClient implements IStateClient {
     }
 
     async delete(gameId: GameId): Promise<any> {
-        return await this.client
+        return await dynamoDb
             .delete({
                 TableName,
                 Key: {
                     PK: `g#${gameId}`,
-                    SK: 'state',
+                    SK: this.entityType,
                 },
             })
             .promise()
     }
 
-    private readonly toDynamo = (gameId: GameId, state: any) => ({
-        EntityType: 'state',
-        PK: `g#${gameId}`,
-        SK: `state`,
-        State: state,
-    })
-
-    private readonly toDynamo2 = (gameId: GameId, state: any) => ({
-        EntityType: 'state',
-        PK: `g#${gameId}`,
-        SK: `state`,
-        State: state,
-    })
+    private readonly toDynamo = (gameId: GameId, state: any): StateModel =>
+        ({
+            EntityType: this.entityType,
+            PK: `g#${gameId}`,
+            SK: this.entityType,
+            State: state,
+        } as StateModel)
 
     private readonly fromDynamo = <T>(result: any): any => result.State as T
 }

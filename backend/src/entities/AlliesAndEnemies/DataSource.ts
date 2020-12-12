@@ -28,7 +28,7 @@ class AlliesAndEnemiesStateDataSource extends DataSource<Context> {
             return keys.map((k) => reduced[k] || undefined)
         }
     )
-    async delete(gameId: GameId): Promise<any> {
+    async delete(gameId: GameId): Promise<boolean> {
         return await GamesClient.state.delete(gameId)
     }
     async exists(gameId: GameId): Promise<boolean> {
@@ -48,7 +48,7 @@ class AlliesAndEnemiesStateDataSource extends DataSource<Context> {
         }
         return new ActiveAlliesAndEnemiesState(state, playerId)
     }
-    async start(gameId: GameId, playerId: PlayerId) {
+    async start(gameId: GameId, playerId: PlayerId): Promise<boolean> {
         const players = await GamesClient.players.scan({
             PK: {
                 ComparisonOperator: 'CONTAINS',
@@ -70,6 +70,7 @@ class AlliesAndEnemiesStateDataSource extends DataSource<Context> {
             playerId
         )
         await state.save()
+        return true
     }
 }
 export default AlliesAndEnemiesStateDataSource
