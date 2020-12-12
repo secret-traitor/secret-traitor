@@ -6,6 +6,7 @@ import * as acm from '@aws-cdk/aws-certificatemanager'
 import * as lambda from '@aws-cdk/aws-lambda'
 import { HitCounter } from './hitcounter'
 import * as dynamodb from '@aws-cdk/aws-dynamodb'
+const { SSM } = require('aws-sdk')
 
 export class SecretTraitorStack extends cdk.Stack {
     constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
@@ -40,8 +41,49 @@ export class SecretTraitorStack extends cdk.Stack {
             handler: helloWithCounter.handler,
         })
 
-        // const graphqlApi =
+        ///////////// ACTUAL SECRET TRAITOR RESOURCES /////////////
+        const table = new dynamodb.Table(this, 'Games', {
+            tableName: 'Games',
+            partitionKey: { name: 'PK', type: dynamodb.AttributeType.STRING },
+            sortKey: { name: 'SK', type: dynamodb.AttributeType.STRING },
+        })
 
+        // API Gateway REST API with the GraphQL API
+        const graphQLLambda = new lambda.Function(this, 'GraphQLHandler', {
+            runtime: lambda.Runtime.NODEJS_12_X,
+            handler: 'lambda.handler',
+            code: lambda.Code.fromAsset('../backend/dist'),
+            environment: {
+                ENV_VAR_X: process.env.ENV_VAR_X || 'default-value-x',
+                NODE_ENV: 'production',
+            },
+            timeout: cdk.Duration.seconds(30),
+            memorySize: 3008,
+        })
+
+        const graphQLAPI = new apigw.LambdaRestApi(this, 'GraphQLAPI', {
+            handler: graphQLLambda,
+        })
+
+        table.grantReadWriteData(graphQLLambda)
+        table.grant(graphQLLambda, 'dynamodb:DescribeTable')
+
+        // S3 bucket with the frontend assets
+
+        // CloudFront distro with default behavior pulling from the S3 bucket,
+        // and /graphql pulling from the API Gateway API
+
+        ///////////////////////////// DNS //////////////////////////////////////
+        // if no parameter store value for the domain name
+        const ssm = new SSM()
+        var params = {
+            Name: '/test-params/p1',
+        }
+        ssm.getParameter(params, function (err: any, data: any) {
+            if (err) console.log(err, err.stack)
+            // an error occurred
+            else console.log(data) // successful response
+        })
         const apigwDomainName = new apigw.DomainName(
             this,
             'GraphQLDomainName',
@@ -85,37 +127,5 @@ export class SecretTraitorStack extends cdk.Stack {
             values: ['fromTemplate,Txt3'],
             recordName: 'txt3',
         })
-
-        ///////////// ACTUAL SECRET TRAITOR RESOURCES /////////////
-        const table = new dynamodb.Table(this, 'Games', {
-            tableName: 'Games',
-            partitionKey: { name: 'PK', type: dynamodb.AttributeType.STRING },
-            sortKey: { name: 'SK', type: dynamodb.AttributeType.STRING },
-        })
-
-        // API Gateway REST API with the GraphQL API
-        const graphQLLambda = new lambda.Function(this, 'GraphQLHandler', {
-            runtime: lambda.Runtime.NODEJS_12_X,
-            handler: 'lambda.handler',
-            code: lambda.Code.fromAsset('../backend/dist'),
-            environment: {
-                ENV_VAR_X: process.env.ENV_VAR_X || 'default-value-x',
-                NODE_ENV: 'production',
-            },
-            timeout: cdk.Duration.seconds(30),
-            memorySize: 3008,
-        })
-
-        const graphQLAPI = new apigw.LambdaRestApi(this, 'GraphQLAPI', {
-            handler: graphQLLambda,
-        })
-
-        table.grantReadWriteData(graphQLLambda)
-        table.grant(graphQLLambda, 'dynamodb:DescribeTable')
-
-        // S3 bucket with the frontend assets
-
-        // CloudFront distro with default behavior pulling from the S3 bucket,
-        // and /graphql pulling from the API Gateway API
     }
 }
