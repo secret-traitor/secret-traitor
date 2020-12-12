@@ -107,3 +107,6 @@ dist
 backend/src/daos/MockDb/MockDb.json
 
 dynamo/shared-local-instance.db
+
+# this comes up in serverless.yml
+!deploy/webpack.config.js
