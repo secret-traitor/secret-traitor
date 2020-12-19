@@ -123,6 +123,7 @@ export const usePlayGame = (gameId: string, playerId: string): PlayGame => {
             document: GameSubscription,
             variables: { gameId, playerId },
             updateQuery: (prev, { subscriptionData }) => {
+                console.log(subscriptionData)
                 if (subscriptionData?.data) {
                     const { game, ...event } = subscriptionData.data.play
                     events.current.push(event)

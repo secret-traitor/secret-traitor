@@ -183,7 +183,7 @@ type GameStatusEvent implements Event & GameEvent {
 
 type JoinGameEvent implements Event & GameEvent {
     game: Game
-    joined: Player
+    joined: Player!
     source: Player
     timestamp: DateTime!
     type: String!

@@ -1,7 +1,8 @@
 import { AlliesAndEnemiesState } from 'Games/AlliesAndEnemies/types'
+import { Player } from './Player'
 
 export enum GameType {
-    AllisNEnemies,
+    AlliesNEnemies = 'AlliesNEnemies',
 }
 
 export enum GameStatus {
@@ -13,6 +14,7 @@ export enum GameStatus {
 
 export type Game = {
     id: string
+    players: Player[]
     status: GameStatus
     type: GameType
 }

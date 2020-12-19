@@ -15,7 +15,8 @@ export function usePollingQuery<TData = any, TVariables = OperationVariables>(
 ): QueryResult<TData, TVariables> {
     const results = useQuery<TData, TVariables>(query, {
         ...options,
-        // using this poll interval will cause the component to continue to poll even after unmounting
+        // using this poll interval will cause the component
+        // to continue to poll even after unmounting
         pollInterval: undefined,
     })
     const { startPolling, stopPolling } = results

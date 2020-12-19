@@ -4,7 +4,7 @@ import ConfirmRedirect from 'Components/ConfirmRedirect'
 import LoadingScreen from 'Components/LoadingScreen'
 
 import { GameState, GameStatus } from 'types/Game'
-import { getHomeUrl, getJoinUrl } from 'links'
+import { getHomeUrl } from 'links'
 import { usePageTitle } from 'hooks/document'
 
 import { usePlayGame, useStartGame } from './hooks'
@@ -33,7 +33,7 @@ const Play: React.FC<{
     const loading = loadingPlay
     if (!loading && !player?.nickname) {
         return (
-            <ConfirmRedirect push to={getJoinUrl({ gameId, playerId })}>
+            <ConfirmRedirect push to={getHomeUrl()}>
                 You need to join this game first!
             </ConfirmRedirect>
         )

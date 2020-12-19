@@ -42,26 +42,6 @@ export const PlayRouterButton: React.FC<ButtonProps & PlayProps> = ({
     </RouterButton>
 )
 
-export type JoinProps = {
-    playerId?: string
-    gameId: string
-}
-export const getJoinUrl = (args: JoinProps): string =>
-    args.playerId
-        ? `/join/${args.gameId}/${args.playerId}`
-        : `/join/${args.gameId}`
-export const JoinRouterButton: React.FC<ButtonProps & JoinProps> = ({
-    children,
-    ...props
-}) => (
-    <RouterButton
-        {...(props as ButtonProps)}
-        path={getJoinUrl({ ...(props as JoinProps) })}
-    >
-        {children}
-    </RouterButton>
-)
-
 const baseUrl = process.env.REACT_APP_URL || window.location.href.slice(0, -1)
 
 export const createAbsolutePath = (...paths: string[]) =>

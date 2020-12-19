@@ -1,12 +1,12 @@
 import React from 'react'
 
 import { GameStatus } from '../types/Game'
-import { Text } from 'grommet'
+import { Text, TextProps } from 'grommet'
 
 const map = {
     [GameStatus.InProgress]: { color: 'status-error', text: 'In Progress' },
     [GameStatus.InLobby]: {
-        color: 'status-ok',
+        color: 'blue-3',
         text: 'In Lobby',
         joinable: true,
     },
@@ -14,18 +14,22 @@ const map = {
     [GameStatus.Closed]: { color: 'status-disabled', text: 'Closed' },
 }
 
-export const LobbyCodeText: React.FC<{ gameId: string }> = ({ gameId }) => (
-    <Text color="brand-3" weight="bold">
+export const LobbyCodeText: React.FC<{ gameId: string } & TextProps> = ({
+    gameId,
+    ...props
+}) => (
+    <Text color="brand-9" weight="bold" {...props}>
         {gameId?.toUpperCase()}
     </Text>
 )
 
-export const GameStatusText: React.FC<{ status: GameStatus }> = ({
+export const GameStatusText: React.FC<{ status: GameStatus } & TextProps> = ({
     status,
+    ...props
 }) => {
     const { color, text } = map[status]
     return (
-        <Text color={color} weight="bold">
+        <Text color={color} weight="bold" {...props}>
             {text}
         </Text>
     )

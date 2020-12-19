@@ -22,7 +22,7 @@ const Header: React.FC<HeaderProps> = () => (
         <Heading level="3" margin="none">
             <HomeRouterButton
                 focusIndicator={false}
-                icon={<Home color="brand-5" />}
+                icon={<Home />}
                 hoverIndicator
             />
         </Heading>

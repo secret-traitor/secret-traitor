@@ -1,44 +1,60 @@
-import React, { useState } from 'react'
-import { useClipboard } from 'use-clipboard-copy'
+import React from 'react'
+import { useHistory } from 'react-router-dom'
 
 import LoadingScreen from 'Components/LoadingScreen'
-import { SuccessToast } from 'Components/Toast'
+import { GameType } from 'types/Game'
+import { getPlayUrl } from 'links'
 import { usePageTitle } from 'hooks/document'
+import { usePlayerId, usePlayerNickname } from 'types/Player'
 
 import Home from './Home.component'
-import { usePollGames } from './hooks'
+import { usePollGames, useCreateGame, useJoinGame } from './hooks'
 
 const HomeContainer: React.FC = () => {
     usePageTitle('Home | Secret Traitor')
-    const [showCopySuccess, setShowCopySuccess] = useState(false)
-    const { copy } = useClipboard({
-        onSuccess: () => setShowCopySuccess(true),
-        copiedTimeout: 25000,
-    })
+    const history = useHistory()
+    const playerId = usePlayerId()
+    const [playerNickname, setPlayerNickname] = usePlayerNickname()
+    const [joinFn, joinResults] = useJoinGame(playerId)
+    const join = async (gameId: string, playerNickname: string) => {
+        if (playerNickname) {
+            const results = await joinFn(gameId, playerNickname)
+            if (results?.game) {
+                setPlayerNickname(playerNickname)
+                history.push(getPlayUrl({ gameId: results.game.id, playerId }))
+            } else {
+            }
+        }
+    }
+    const [createFn, createResults] = useCreateGame(playerId)
+    const create = async () => {
+        if (playerNickname) {
+            const results = await createFn(GameType.AlliesNEnemies)
+            if (results.game) {
+                await join(results.game.id, playerNickname)
+            }
+        }
+    }
     const {
         games,
         loading: loadingGames,
-        error: gamesError,
+        error: errorGames,
         refetch: refetchGames,
     } = usePollGames()
-    if (gamesError || (!loadingGames && !games)) {
+    if (errorGames || (!loadingGames && !games)) {
         return <>Uh oh</>
     }
-    if (loadingGames) {
-        return <LoadingScreen />
-    }
+    const loading = loadingGames || joinResults.loading || createResults.loading
     return (
         <>
-            {showCopySuccess && (
-                <SuccessToast onClose={() => setShowCopySuccess(false)}>
-                    Copied game link to clipboard!
-                </SuccessToast>
-            )}
+            {loading && <LoadingScreen />}
             <Home
-                games={games}
+                games={games ?? []}
                 refresh={() => refetchGames()}
-                copy={(text) => copy(text)}
-                showGameDetails={() => {}}
+                join={join}
+                nickname={playerNickname}
+                setNickname={setPlayerNickname}
+                create={create}
             />
         </>
     )
