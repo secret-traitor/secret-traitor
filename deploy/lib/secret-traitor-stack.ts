@@ -1,11 +1,14 @@
-import * as cdk from '@aws-cdk/core'
+import * as acm from '@aws-cdk/aws-certificatemanager'
 import * as apigw from '@aws-cdk/aws-apigateway'
+import * as cdk from '@aws-cdk/core'
+import * as dynamodb from '@aws-cdk/aws-dynamodb'
+import * as lambda from '@aws-cdk/aws-lambda'
 import * as route53 from '@aws-cdk/aws-route53'
 import * as targets from '@aws-cdk/aws-route53-targets'
-import * as acm from '@aws-cdk/aws-certificatemanager'
-import * as lambda from '@aws-cdk/aws-lambda'
+import * as events from '@aws-cdk/aws-events'
+import * as iam from '@aws-cdk/aws-iam'
+import * as eventTargets from '@aws-cdk/aws-events-targets'
 import { HitCounter } from './hitcounter'
-import * as dynamodb from '@aws-cdk/aws-dynamodb'
 
 export class SecretTraitorStack extends cdk.Stack {
     constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
@@ -39,8 +42,6 @@ export class SecretTraitorStack extends cdk.Stack {
         const lambdaApi = new apigw.LambdaRestApi(this, 'Endpoint', {
             handler: helloWithCounter.handler,
         })
-
-        // const graphqlApi =
 
         const apigwDomainName = new apigw.DomainName(
             this,
@@ -87,31 +88,69 @@ export class SecretTraitorStack extends cdk.Stack {
         })
 
         ///////////// ACTUAL SECRET TRAITOR RESOURCES /////////////
-        const table = new dynamodb.Table(this, 'Games', {
+        // API Gateway REST API with the GraphQL API
+        const HttpHandler = new lambda.Function(this, 'HttpHandler', {
+            code: lambda.Code.fromAsset('../backend/dist'),
+            environment: { NODE_ENV: 'production' },
+            handler: 'lambda.httpHandler',
+            memorySize: 512,
+            runtime: lambda.Runtime.NODEJS_12_X,
+            timeout: cdk.Duration.seconds(30),
+        })
+        const httpEvent = new events.Rule(this, 'http', {})
+        const RestApi = new apigw.LambdaRestApi(this, 'RestApi', {
+            handler: HttpHandler,
+        })
+
+        const WebsocketHandler = new lambda.Function(this, 'WebSocketHandler', {
+            code: lambda.Code.fromAsset('../backend/dist'),
+            environment: { NODE_ENV: 'production' },
+            handler: 'lambda.webSocketHandler',
+            memorySize: 512,
+            runtime: lambda.Runtime.NODEJS_12_X,
+            timeout: cdk.Duration.seconds(30),
+        })
+        const WebsocketPolicy = new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            resources: [WebsocketHandler.functionArn],
+            actions: ['lambda:InvokeFunction'],
+        })
+        const WebsocketRole = new iam.Role(this, 'WebsocketRole', {
+            assumedBy: new iam.ServicePrincipal('apigateway.amazonaws.com'),
+        })
+        WebsocketRole.addToPolicy(WebsocketPolicy)
+
+        const ConnectionsTable = new dynamodb.Table(this, 'Connections', {
+            tableName: 'Connections',
+            partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+            billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        })
+        ConnectionsTable.grantReadWriteData(HttpHandler)
+        ConnectionsTable.grant(HttpHandler, 'dynamodb:DescribeTable')
+
+        const SubscriptionsTable = new dynamodb.Table(this, 'Subscriptions', {
+            tableName: 'Subscriptions',
+            partitionKey: {
+                name: 'event',
+                type: dynamodb.AttributeType.STRING,
+            },
+            sortKey: {
+                name: 'subscriptionId',
+                type: dynamodb.AttributeType.STRING,
+            },
+            billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        })
+        SubscriptionsTable.grantReadWriteData(HttpHandler)
+        SubscriptionsTable.grant(HttpHandler, 'dynamodb:DescribeTable')
+
+        const GamesTable = new dynamodb.Table(this, 'Games', {
             tableName: 'Games',
             partitionKey: { name: 'PK', type: dynamodb.AttributeType.STRING },
             sortKey: { name: 'SK', type: dynamodb.AttributeType.STRING },
+            billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
         })
-
-        // API Gateway REST API with the GraphQL API
-        const graphQLLambda = new lambda.Function(this, 'GraphQLHandler', {
-            runtime: lambda.Runtime.NODEJS_12_X,
-            handler: 'lambda.httpHandler',
-            code: lambda.Code.fromAsset('../backend/dist'),
-            environment: {
-                ENV_VAR_X: process.env.ENV_VAR_X || 'default-value-x',
-                NODE_ENV: 'production',
-            },
-            timeout: cdk.Duration.seconds(30),
-            memorySize: 3008,
-        })
-
-        const graphQLAPI = new apigw.LambdaRestApi(this, 'GraphQLAPI', {
-            handler: graphQLLambda,
-        })
-
-        table.grantReadWriteData(graphQLLambda)
-        table.grant(graphQLLambda, 'dynamodb:DescribeTable')
+        GamesTable.grantReadWriteData(HttpHandler)
+        GamesTable.grant(HttpHandler, 'dynamodb:DescribeTable')
 
         // S3 bucket with the frontend assets
 
