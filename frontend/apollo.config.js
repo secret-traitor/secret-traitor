@@ -1,8 +1,10 @@
+import { backendHttpUrl } from 'src/env'
+
 module.exports = {
     client: {
         service: {
             name: 'backend',
-            url: 'http://localhost:4000/graphql',
+            url: backendHttpUrl,
             skipSSLValidation: true,
         },
     },

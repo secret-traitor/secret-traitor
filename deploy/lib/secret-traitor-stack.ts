@@ -105,6 +105,12 @@ export class SecretTraitorStack extends cdk.Stack {
             environment: {
                 ENV_VAR_X: process.env.ENV_VAR_X || 'default-value-x',
                 NODE_ENV: 'production',
+                BACKEND_HTTP_URL:
+                    // replace me with the domain name
+                    'https://8c99q6ims2.execute-api.us-east-1.amazonaws.com/prod/graphql',
+                BACKEND_WS_URL:
+                    // replace me with the domain name
+                    'ws://8c99q6ims2.execute-api.us-east-1.amazonaws.com/prod/graphql',
             },
             timeout: cdk.Duration.seconds(30),
             memorySize: 3008,
@@ -119,8 +125,9 @@ export class SecretTraitorStack extends cdk.Stack {
 
         // S3 bucket with the frontend assets
         const websiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
-            websiteIndexDocument: 'index.html',
             publicReadAccess: true,
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+            websiteIndexDocument: 'index.html',
         })
         const websiteDeploy = new s3deploy.BucketDeployment(
             this,
