@@ -34,9 +34,9 @@ jobs:
                   cd frontend
                   npm install
 
-            - name: install deploy
+            - name: install infrastucture
               run: |
-                  cd deploy
+                  cd infrastucture
                   npm install
 
             - name: build backend
@@ -53,15 +53,24 @@ jobs:
                   cd frontend
                   npm run build
 
-            - name: build deploy
+            - name: build infrastucture
               run: |
-                  cd deploy
+                  cd infrastucture
                   npm run build
 
-            - name: test deploy
+            - name: test infrastucture
               run: |
-                  cd deploy
+                  cd infrastucture
                   npm test
+
+            - name: Bootstrap AWS
+              env:
+                  AWS_ACCESS_KEY_ID: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+                  AWS_SECRET_ACCESS_KEY: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+                  AWS_DEFAULT_REGION: ${{ secrets.PROD_AWS_DEFAULT_REGION }}
+              run: |
+                  cd infrastucture
+                  npx cdk bootstrap
 
             - name: Deploy to prod
               env:
@@ -69,13 +78,13 @@ jobs:
                   AWS_SECRET_ACCESS_KEY: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
                   AWS_DEFAULT_REGION: ${{ secrets.PROD_AWS_DEFAULT_REGION }}
               run: |
-                  cd deploy
+                  cd infrastucture
                   npm run deploy-prod
 
             - name: Verify prod deployment
               run:
                   | # this will actually be calling something in the itest/ folder
-                  cd deploy
+                  cd infrastucture
                   PROD_URL=https://$(cat cdk.json | jq '.context.graphqlSubdomain' | tr -d \").$(cat cdk.json | jq '.context.domain' | tr -d \")
                   echo ${PROD_URL}
                   curl ${PROD_URL}/test-from-build
