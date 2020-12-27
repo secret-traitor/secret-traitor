@@ -17,7 +17,6 @@ export class SecretTraitorStack extends cdk.Stack {
 
         ///////////// ACTUAL SECRET TRAITOR RESOURCES /////////////
         const table = new dynamodb.Table(this, 'Games', {
-            tableName: 'Games',
             partitionKey: { name: 'PK', type: dynamodb.AttributeType.STRING },
             sortKey: { name: 'SK', type: dynamodb.AttributeType.STRING },
         })
@@ -28,6 +27,7 @@ export class SecretTraitorStack extends cdk.Stack {
             handler: 'lambda.httpHandler',
             code: lambda.Code.fromAsset('../backend/dist'),
             environment: {
+                GAMES_TABLE_NAME: table.tableName,
                 ENV_VAR_X: process.env.ENV_VAR_X || 'default-value-x',
                 NODE_ENV: 'production',
                 BACKEND_HTTP_URL:
