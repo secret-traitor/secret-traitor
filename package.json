@@ -13,7 +13,8 @@
         "frontend-install": "yarn --cwd frontend install",
         "backend": "PORT=4000 DYNAMO_PORT=8000 yarn --cwd backend start:dev",
         "backend-install": "yarn --cwd backend install",
-        "start:containers": "docker-compose up"
+        "start:containers": "docker-compose up",
+        "infra-bootstrap": "npx cdk bootstrap"
     },
     "dependencies": {
         "npm": "^6.14.5"

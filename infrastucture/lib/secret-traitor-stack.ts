@@ -15,81 +15,6 @@ export class SecretTraitorStack extends cdk.Stack {
     constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
         super(scope, id, props)
 
-        const zoneName = this.node.tryGetContext('domain') as string
-        const appDescriptor = this.node.tryGetContext('appDescriptor') as string
-        const graphqlSubdomain = this.node.tryGetContext(
-            'graphqlSubdomain'
-        ) as string
-
-        const hostedZone = route53.HostedZone.fromLookup(
-            this,
-            `${appDescriptor}Zone`,
-            { domainName: zoneName }
-        )
-
-        const certificate = new acm.Certificate(this, 'Certificate', {
-            domainName: zoneName,
-            subjectAlternativeNames: [
-                `*.${zoneName}`,
-                `${graphqlSubdomain}.${zoneName}`,
-                `www.${zoneName}`,
-            ],
-            validation: acm.CertificateValidation.fromDns(hostedZone),
-        })
-
-        const helloWithCounter = new HitCounter(this, 'HelloHitCounter', {})
-
-        // define an API Gateway REST API resource backed by our "helloWithCounter" function.
-        const lambdaApi = new apigw.LambdaRestApi(this, 'Endpoint', {
-            handler: helloWithCounter.handler,
-        })
-
-        // const graphqlApi =
-
-        const apigwDomainName = new apigw.DomainName(
-            this,
-            'GraphQLDomainName',
-            {
-                domainName: `${graphqlSubdomain}.${zoneName}`,
-                certificate,
-                endpointType: apigw.EndpointType.EDGE,
-                securityPolicy: apigw.SecurityPolicy.TLS_1_2,
-            }
-        )
-        apigwDomainName.addBasePathMapping(lambdaApi)
-        new route53.ARecord(this, 'GraphQLAlias', {
-            zone: hostedZone,
-            target: route53.RecordTarget.fromAlias(
-                new targets.ApiGatewayDomain(apigwDomainName)
-            ),
-            recordName: `${graphqlSubdomain}`,
-        })
-
-        const apigwHitCounterDomainName = new apigw.DomainName(
-            this,
-            'HitCounterDomainName',
-            {
-                domainName: `hitc.${zoneName}`,
-                certificate,
-                endpointType: apigw.EndpointType.EDGE,
-                securityPolicy: apigw.SecurityPolicy.TLS_1_2,
-            }
-        )
-        apigwHitCounterDomainName.addBasePathMapping(lambdaApi)
-        new route53.ARecord(this, 'HitCounterAlias', {
-            zone: hostedZone,
-            target: route53.RecordTarget.fromAlias(
-                new targets.ApiGatewayDomain(apigwHitCounterDomainName)
-            ),
-            recordName: `hitc`,
-        })
-
-        new route53.TxtRecord(this, 'Txt3Record', {
-            zone: hostedZone,
-            values: ['fromTemplate,Txt3'],
-            recordName: 'txt3',
-        })
-
         ///////////// ACTUAL SECRET TRAITOR RESOURCES /////////////
         const table = new dynamodb.Table(this, 'Games', {
             partitionKey: { name: 'PK', type: dynamodb.AttributeType.STRING },
@@ -102,8 +27,8 @@ export class SecretTraitorStack extends cdk.Stack {
             handler: 'lambda.httpHandler',
             code: lambda.Code.fromAsset('../backend/dist'),
             environment: {
-                NODE_ENV: 'production',
                 GAMES_TABLE_NAME: table.tableName,
+                NODE_ENV: 'production',
             },
             timeout: cdk.Duration.seconds(30),
             memorySize: 3008,
