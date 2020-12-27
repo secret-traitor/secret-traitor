@@ -8,7 +8,7 @@ import dynamoDb, {
 import { GameId, GameStatus, GameType, IGame } from 'src/entities/Game'
 import { IPlayer, PlayerId } from 'src/entities/Player'
 
-const TableName = 'Games'
+const TableName = process.env.GAMES_TABLE_NAME as string
 export const waitForTable = async () => waitFor(TableName)
 
 export type GameModel = {
