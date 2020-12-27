@@ -63,6 +63,10 @@ jobs:
                   cd infrastucture
                   npm test
 
+            - name: Identify AWS account
+              run: |
+                  aws sts get-caller-identity
+
             - name: Bootstrap AWS
               env:
                   AWS_ACCESS_KEY_ID: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
