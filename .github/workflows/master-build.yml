@@ -63,7 +63,33 @@ jobs:
                   cd infrastucture
                   npm test
 
-            - name: Identify AWS account
+            - name: Identify AWS test account
+              env:
+                  AWS_ACCESS_KEY_ID: ${{ secrets.TEST_AWS_ACCESS_KEY_ID }}
+                  AWS_SECRET_ACCESS_KEY: ${{ secrets.TEST_AWS_SECRET_ACCESS_KEY }}
+                  AWS_DEFAULT_REGION: 'us-west-1'
+              run: |
+                  aws sts get-caller-identity
+
+            - name: Bootstrap AWS test account
+              env:
+                  AWS_ACCESS_KEY_ID: ${{ secrets.TEST_AWS_ACCESS_KEY_ID }}
+                  AWS_SECRET_ACCESS_KEY: ${{ secrets.TEST_AWS_SECRET_ACCESS_KEY }}
+                  AWS_DEFAULT_REGION: 'us-west-1'
+              run: |
+                  cd infrastucture
+                  npx cdk bootstrap
+
+            - name: Deploy to test
+              env:
+                  AWS_ACCESS_KEY_ID: ${{ secrets.TEST_AWS_ACCESS_KEY_ID }}
+                  AWS_SECRET_ACCESS_KEY: ${{ secrets.TEST_AWS_SECRET_ACCESS_KEY }}
+                  AWS_DEFAULT_REGION: 'us-west-1'
+              run: |
+                  cd infrastucture
+                  npm run deploy-prod
+
+            - name: Identify AWS prod account
               env:
                   AWS_ACCESS_KEY_ID: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
                   AWS_SECRET_ACCESS_KEY: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
@@ -71,7 +97,7 @@ jobs:
               run: |
                   aws sts get-caller-identity
 
-            - name: Bootstrap AWS
+            - name: Bootstrap AWS prod account
               env:
                   AWS_ACCESS_KEY_ID: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
                   AWS_SECRET_ACCESS_KEY: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
