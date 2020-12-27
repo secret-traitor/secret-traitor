@@ -70,7 +70,6 @@ jobs:
                   AWS_DEFAULT_REGION: ${{ secrets.PROD_AWS_DEFAULT_REGION }}
               run: |
                   aws sts get-caller-identity
-                  aws configure get region
 
             - name: Bootstrap AWS
               env:
