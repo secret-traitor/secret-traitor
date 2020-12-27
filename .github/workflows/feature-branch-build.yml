@@ -62,7 +62,7 @@ jobs:
                   cd deploy
                   npm test
 
-            - name: Deploy to the dev environment
+            - name: Bootstrap the dev environment
               env:
                   AWS_ACCESS_KEY_ID: ${{ secrets.DEV_AWS_ACCESS_KEY_ID }}
                   AWS_SECRET_ACCESS_KEY: ${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
@@ -76,7 +76,6 @@ jobs:
                   AWS_SECRET_ACCESS_KEY: ${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
                   AWS_DEFAULT_REGION: 'us-east-2'
               run: |
-                  npm run-script infra-bootstrap
                   cd deploy
                   npm run deploy-prod
 
