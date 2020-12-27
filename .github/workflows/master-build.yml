@@ -87,7 +87,7 @@ jobs:
                   AWS_DEFAULT_REGION: 'us-west-1'
               run: |
                   cd infrastucture
-                  npm run deploy-prod
+                  npm run cdk-deploy
 
             - name: Identify AWS prod account
               env:
@@ -113,7 +113,7 @@ jobs:
                   AWS_DEFAULT_REGION: ${{ secrets.PROD_AWS_DEFAULT_REGION }}
               run: |
                   cd infrastucture
-                  npm run deploy-prod
+                  npm run cdk-deploy
 
             - name: Verify prod deployment
               run:
