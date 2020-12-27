@@ -53,7 +53,6 @@ export class SecretTraitorStack extends cdk.Stack {
             publicReadAccess: true,
             removalPolicy: cdk.RemovalPolicy.DESTROY,
             websiteIndexDocument: 'index.html',
-            bucketName: 'secrettraitor-prodbucket',
         })
         const websiteDeploy = new s3deploy.BucketDeployment(
             this,
