@@ -8,6 +8,7 @@ import * as route53 from '@aws-cdk/aws-route53'
 import * as s3 from '@aws-cdk/aws-s3'
 import * as s3deploy from '@aws-cdk/aws-s3-deployment'
 import * as targets from '@aws-cdk/aws-route53-targets'
+import * as origins from '@aws-cdk/aws-cloudfront-origins'
 
 import { HitCounter } from './hitcounter'
 
@@ -72,5 +73,34 @@ export class SecretTraitorStack extends cdk.Stack {
                 ],
             }
         )
+
+        const frontendBucket = new s3.Bucket(this, 'FrontendBucket')
+        const lambdaApiUrlConstructed =
+            graphQLAPI.restApiId +
+            '.execute-api.' +
+            this.region +
+            '.' +
+            this.urlSuffix
+        const distro = new cloudfront.Distribution(this, 'Distro', {
+            defaultBehavior: { origin: new origins.S3Origin(frontendBucket) },
+            defaultRootObject: 'index.html',
+            additionalBehaviors: {
+                '/prod/*': {
+                    origin: new origins.HttpOrigin(lambdaApiUrlConstructed, {
+                        protocolPolicy:
+                            cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+                    }),
+                },
+            },
+        })
+        new cdk.CfnOutput(this, 'Distro-distributionDomainName', {
+            value: distro.distributionDomainName,
+        })
+        new cdk.CfnOutput(this, 'Distro-domainName', {
+            value: distro.domainName,
+        })
+        new cdk.CfnOutput(this, 'WebsiteDistro-distributionDomainName', {
+            value: cloudFrontDistro.distributionDomainName,
+        })
     }
 }
