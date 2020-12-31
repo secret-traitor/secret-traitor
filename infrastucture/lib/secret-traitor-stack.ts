@@ -1,16 +1,11 @@
-import * as acm from '@aws-cdk/aws-certificatemanager'
 import * as apigw from '@aws-cdk/aws-apigateway'
 import * as cdk from '@aws-cdk/core'
 import * as cloudfront from '@aws-cdk/aws-cloudfront'
 import * as dynamodb from '@aws-cdk/aws-dynamodb'
 import * as lambda from '@aws-cdk/aws-lambda'
-import * as route53 from '@aws-cdk/aws-route53'
 import * as s3 from '@aws-cdk/aws-s3'
 import * as s3deploy from '@aws-cdk/aws-s3-deployment'
-import * as targets from '@aws-cdk/aws-route53-targets'
 import * as origins from '@aws-cdk/aws-cloudfront-origins'
-
-import { HitCounter } from './hitcounter'
 
 export class SecretTraitorStack extends cdk.Stack {
     constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
