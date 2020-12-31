@@ -79,9 +79,6 @@ export class SecretTraitorStack extends cdk.Stack {
                 destinationBucket: websiteBucket,
             }
         )
-        new cdk.CfnOutput(this, 'WebsiteBucketDeploymentNodeId', {
-            value: websiteBucketDeployment.node.id,
-        })
 
         // CloudFront distro with default behavior pulling from the S3 bucket,
         // and /graphql pulling from the API Gateway API
