@@ -13,83 +13,87 @@ export class SecretTraitorStack extends cdk.Stack {
     constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
         super(scope, id, props)
 
-        const table = new dynamodb.Table(this, 'Table', {
+        const Table = new dynamodb.Table(this, 'Table', {
             partitionKey: { name: 'PK', type: dynamodb.AttributeType.STRING },
             sortKey: { name: 'SK', type: dynamodb.AttributeType.STRING },
             billingMode: BillingMode.PAY_PER_REQUEST,
             removalPolicy: RemovalPolicy.DESTROY,
         })
         new cdk.CfnOutput(this, 'TableArn', {
-            value: table.tableArn,
+            value: Table.tableArn,
         })
         new cdk.CfnOutput(this, 'TableName', {
-            value: table.tableName,
+            value: Table.tableName,
         })
 
         // API Gateway REST API with the GraphQL API
-        const httpLambda = new lambda.Function(this, 'HttpLambdaFunction', {
-            runtime: lambda.Runtime.NODEJS_12_X,
-            handler: 'lambda.httpHandler',
-            code: lambda.Code.fromAsset('../backend/dist'),
-            environment: {
-                GAMES_TABLE_NAME: table.tableName,
-                NODE_ENV: 'production',
-            },
-            timeout: cdk.Duration.seconds(30),
-            memorySize: 3008,
-        })
+        const HttpLambdaFunction = new lambda.Function(
+            this,
+            'HttpLambdaFunction',
+            {
+                runtime: lambda.Runtime.NODEJS_12_X,
+                handler: 'lambda.httpHandler',
+                code: lambda.Code.fromAsset('../backend/dist'),
+                environment: {
+                    GAMES_TABLE_NAME: Table.tableName,
+                    NODE_ENV: 'production',
+                },
+                timeout: cdk.Duration.seconds(30),
+                memorySize: 3008,
+            }
+        )
         new cdk.CfnOutput(this, 'HttpLambdaFunctionArn', {
-            value: httpLambda.functionArn,
+            value: HttpLambdaFunction.functionArn,
         })
         new cdk.CfnOutput(this, 'HttpLambdaFunctionName', {
-            value: httpLambda.functionName,
+            value: HttpLambdaFunction.functionName,
         })
-        const httpLambdaApi = new apigw.LambdaRestApi(this, 'HttpLambdaApi', {
-            handler: httpLambda,
+        const HttpLambdaApi = new apigw.LambdaRestApi(this, 'HttpLambdaApi', {
+            handler: HttpLambdaFunction,
         })
         new cdk.CfnOutput(this, 'HttpLambdaApiId', {
-            value: httpLambdaApi.restApiId,
+            value: HttpLambdaApi.restApiId,
         })
         new cdk.CfnOutput(this, 'HttpLambdaApiUrl', {
-            value: httpLambdaApi.url,
+            value: HttpLambdaApi.url,
         })
 
-        table.grantReadWriteData(httpLambda)
+        Table.grantReadWriteData(HttpLambdaFunction)
 
         // S3 bucket with the frontend assets
-        const websiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
+        const WebsiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
             publicReadAccess: true,
             removalPolicy: cdk.RemovalPolicy.DESTROY,
             websiteIndexDocument: 'index.html',
         })
         new cdk.CfnOutput(this, 'WebsiteBucketArn', {
-            value: websiteBucket.bucketArn,
+            value: WebsiteBucket.bucketArn,
         })
         new cdk.CfnOutput(this, 'WebsiteBucketDomainName', {
-            value: websiteBucket.bucketDomainName,
+            value: WebsiteBucket.bucketDomainName,
         })
         new cdk.CfnOutput(this, 'WebsiteBucketName', {
-            value: websiteBucket.bucketName,
+            value: WebsiteBucket.bucketName,
         })
-        const websiteBucketDeployment = new s3deploy.BucketDeployment(
+        const WebsiteBucketDeployment = new s3deploy.BucketDeployment(
             this,
             'WebsiteBucketDeployment',
             {
                 sources: [s3deploy.Source.asset('../frontend/build')],
-                destinationBucket: websiteBucket,
+                destinationBucket: WebsiteBucket,
             }
         )
 
         // CloudFront distro with default behavior pulling from the S3 bucket,
         // and /graphql pulling from the API Gateway API
-        const webDistribution = new cloudfront.CloudFrontWebDistribution(
+        const WebDistribution = new cloudfront.CloudFrontWebDistribution(
             this,
             'WebDistribution',
             {
                 originConfigs: [
                     {
                         s3OriginSource: {
-                            s3BucketSource: websiteBucket,
+                            s3BucketSource: WebsiteBucket,
                         },
                         behaviors: [{ isDefaultBehavior: true }],
                     },
@@ -97,15 +101,15 @@ export class SecretTraitorStack extends cdk.Stack {
             }
         )
         new cdk.CfnOutput(this, 'WebDistributionDomainName', {
-            value: webDistribution.distributionDomainName,
+            value: WebDistribution.distributionDomainName,
         })
         new cdk.CfnOutput(this, 'WebDistributionId', {
-            value: webDistribution.distributionId,
+            value: WebDistribution.distributionId,
         })
 
-        const httpLambdaApiDomainName = `${httpLambdaApi.restApiId}.execute-api.${this.region}.${this.urlSuffix}`
-        const distribution = new cloudfront.Distribution(this, 'Distribution', {
-            defaultBehavior: { origin: new origins.S3Origin(websiteBucket) },
+        const httpLambdaApiDomainName = `${HttpLambdaApi.restApiId}.execute-api.${this.region}.${this.urlSuffix}`
+        const Distribution = new cloudfront.Distribution(this, 'Distribution', {
+            defaultBehavior: { origin: new origins.S3Origin(WebsiteBucket) },
             defaultRootObject: 'index.html',
             additionalBehaviors: {
                 '/prod/*': {
@@ -117,10 +121,10 @@ export class SecretTraitorStack extends cdk.Stack {
             },
         })
         new cdk.CfnOutput(this, 'DistributionDomainName', {
-            value: distribution.distributionDomainName,
+            value: Distribution.distributionDomainName,
         })
         new cdk.CfnOutput(this, 'DistributionName', {
-            value: distribution.domainName,
+            value: Distribution.domainName,
         })
     }
 }
