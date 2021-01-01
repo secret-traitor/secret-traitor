@@ -61,11 +61,7 @@ export class SecretTraitorStack extends cdk.Stack {
         Table.grantReadWriteData(HttpLambdaFunction)
 
         // S3 bucket with the frontend assets
-        const WebsiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
-            publicReadAccess: true,
-            removalPolicy: cdk.RemovalPolicy.DESTROY,
-            websiteIndexDocument: 'index.html',
-        })
+        const WebsiteBucket = new s3.Bucket(this, 'WebsiteBucket')
         new cdk.CfnOutput(this, 'WebsiteBucketArn', {
             value: WebsiteBucket.bucketArn,
         })
