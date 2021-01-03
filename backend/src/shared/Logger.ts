@@ -6,12 +6,14 @@
 
 import { createLogger, format, transports } from 'winston'
 
+import * as env from 'src/shared/config'
+
 // Import Functions
-const { File, Console } = transports
+const { Console } = transports
 
 // Init Logger
 const logger = createLogger({
-    level: 'debug',
+    level: env.LOG_LEVEL,
 })
 
 const errorStackFormat = format((info) => {
