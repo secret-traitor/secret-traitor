@@ -8,9 +8,9 @@ import { IntrospectionFragmentMatcher } from 'apollo-cache-inmemory'
 import introspectionQueryResultData from './fragmentTypes.json'
 
 let href = window.location.href
-if (process.env.NODE_ENV === 'development') {
-    href = 'http://localhost:4000/'
-}
+// if (process.env.NODE_ENV === 'development') {
+//     href = 'http://localhost:4000/'
+// }
 const httpUrl = new URL('/graphql', href)
 const wsUrl = new URL(httpUrl.href)
 wsUrl.protocol = wsUrl.protocol === 'https:' ? 'wss:' : 'ws:'
