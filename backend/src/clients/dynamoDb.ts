@@ -1,17 +1,16 @@
-import { DynamoDB, Endpoint } from 'aws-sdk'
-import logger from '../shared/Logger'
+import { DynamoDB } from 'aws-sdk'
+
+import * as env from 'src/shared/config'
+import logger from 'src/shared/Logger'
+import {
+    LocalDynamoDBClient,
+    ProductionDynamoDBClient,
+} from 'src/shared/DynamoDb'
 
 const dynamoDb =
-    process.env.NODE_ENV === 'production'
-        ? new DynamoDB()
-        : new DynamoDB({
-              region: process.env.AWS_DEFAULT_REGION,
-              credentials: {
-                  accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? '',
-                  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? '',
-              },
-              endpoint: new Endpoint(process.env.DYNAMODB_ENDPOINT ?? ''),
-          })
+    env.NODE_ENV === 'production'
+        ? new ProductionDynamoDBClient()
+        : new LocalDynamoDBClient()
 
 const dynamoDocClient = new DynamoDB.DocumentClient({
     service: dynamoDb,

@@ -1,15 +1,9 @@
-import dynamoDb, {
-    Condition,
-    scan,
-    put,
-    putMany,
-    waitForTable as waitFor,
-} from 'src/clients/dynamoDb'
+import dynamoDb, { Condition, scan, put, putMany } from 'src/clients/dynamoDb'
 import { GameId, GameStatus, GameType, IGame } from 'src/entities/Game'
 import { IPlayer, PlayerId } from 'src/entities/Player'
+import * as env from 'src/shared/config'
 
-const TableName = process.env.GAMES_TABLE_NAME as string
-export const waitForTable = async () => waitFor(TableName)
+const TableName = env.GAMES_TABLE_NAME
 
 export type GameModel = {
     EntityType: 'game'
