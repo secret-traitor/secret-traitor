@@ -13,17 +13,17 @@ export class SecretTraitorStack extends cdk.Stack {
     constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
         super(scope, id, props)
 
-        const Table = new dynamodb.Table(this, 'Table', {
+        const GamesTable = new dynamodb.Table(this, 'GamesTable', {
             partitionKey: { name: 'PK', type: dynamodb.AttributeType.STRING },
             sortKey: { name: 'SK', type: dynamodb.AttributeType.STRING },
             billingMode: BillingMode.PAY_PER_REQUEST,
             removalPolicy: RemovalPolicy.DESTROY,
         })
         new cdk.CfnOutput(this, 'TableArn', {
-            value: Table.tableArn,
+            value: GamesTable.tableArn,
         })
         new cdk.CfnOutput(this, 'TableName', {
-            value: Table.tableName,
+            value: GamesTable.tableName,
         })
 
         // API Gateway REST API with the GraphQL API
@@ -35,7 +35,7 @@ export class SecretTraitorStack extends cdk.Stack {
                 handler: 'lambda.httpHandler',
                 code: lambda.Code.fromAsset('../backend/dist'),
                 environment: {
-                    GAMES_TABLE_NAME: Table.tableName,
+                    GAMES_TABLE_NAME: GamesTable.tableName,
                     NODE_ENV: 'production',
                 },
                 timeout: cdk.Duration.seconds(30),
@@ -58,7 +58,7 @@ export class SecretTraitorStack extends cdk.Stack {
             value: HttpLambdaApi.url,
         })
 
-        Table.grantReadWriteData(HttpLambdaFunction)
+        GamesTable.grantReadWriteData(HttpLambdaFunction)
 
         // S3 bucket with the frontend assets
         const WebsiteBucket = new s3.Bucket(this, 'WebsiteBucket')
