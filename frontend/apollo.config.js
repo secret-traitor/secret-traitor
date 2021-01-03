@@ -1,10 +1,8 @@
-import { backendHttpUrl } from 'src/env'
-
 module.exports = {
     client: {
         service: {
-            name: 'backend',
-            url: backendHttpUrl,
+            name: 'secret-traitor-backend',
+            url: 'http://localhost:4000/graphql',
             skipSSLValidation: true,
         },
     },

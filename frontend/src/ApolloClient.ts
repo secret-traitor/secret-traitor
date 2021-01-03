@@ -7,7 +7,13 @@ import { IntrospectionFragmentMatcher } from 'apollo-cache-inmemory'
 
 import introspectionQueryResultData from './fragmentTypes.json'
 
-import { backendHttpUrl, backendWsUrl } from './env'
+let href = window.location.href
+if (process.env.NODE_ENV === 'development') {
+    href = 'http://localhost:4000/'
+}
+const httpUrl = new URL('/graphql', href)
+const wsUrl = new URL(httpUrl.href)
+wsUrl.protocol = wsUrl.protocol === 'https:' ? 'wss:' : 'ws:'
 
 const getLink = () =>
     split(
@@ -19,10 +25,10 @@ const getLink = () =>
             )
         },
         new WebSocketLink({
-            uri: backendWsUrl,
+            uri: wsUrl.href,
             options: { reconnect: true },
         }),
-        new HttpLink({ uri: backendHttpUrl })
+        new HttpLink({ uri: httpUrl.href })
     )
 
 export const bootstrapClient = async () =>

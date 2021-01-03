@@ -1,27 +1,23 @@
 {
-  "compilerOptions": {
-    "baseUrl": "./src",
-    "allowJs": true,
-    "downlevelIteration": true,
-    "target": "es5",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "module": "esnext",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react",
-    "typeRoots": ["./types", "./node_modules/@types",
-      "./types"
-    ]
-  },
-  "exclude": ["node_modules",
-    "types"
-  ],
-  "include": ["src"]
+    "compilerOptions": {
+        "baseUrl": "./src",
+        "allowJs": true,
+        "downlevelIteration": true,
+        "target": "ES2020",
+        "lib": ["dom", "dom.iterable", "esnext", "ES2020"],
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "strict": true,
+        "forceConsistentCasingInFileNames": true,
+        "module": "esnext",
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": true,
+        "jsx": "react",
+        "typeRoots": ["./types", "./node_modules/@types", "./types"]
+    },
+    "exclude": ["node_modules", "types"],
+    "include": ["src"]
 }
