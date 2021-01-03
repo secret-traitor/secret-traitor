@@ -3,10 +3,10 @@ import GamesDataSource from 'src/entities/Game/DataSource'
 import PlayersDataSource from 'src/entities/Player/DataSource'
 import DataSources from 'src/shared/DataSources'
 
-const buildDataSources = (): DataSources => ({
+const dataSources = (): DataSources => ({
     alliesAndEnemies: new AlliesAndEnemiesStateDataSource(),
     games: new GamesDataSource(),
     players: new PlayersDataSource(),
 })
 
-export default buildDataSources
+export default dataSources

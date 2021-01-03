@@ -1,20 +1,11 @@
-import { ContextFunction } from 'apollo-server-core'
+import { Config as ApolloConfig } from 'apollo-server-core'
 
-import dataSources from './buildDataSources'
+import dataSources from './dataSources'
 import plugins from './plugins'
 import schema from './schema'
+import context from './context'
 
-const context: ContextFunction = ({ req, connection }) =>
-    connection
-        ? {
-              request: req,
-              headers: req?.headers,
-              dataSources: dataSources(),
-              ...connection.context,
-          }
-        : { request: req, headers: req?.headers }
-
-const config = {
+const config: ApolloConfig = {
     context,
     dataSources,
     introspection: true,
