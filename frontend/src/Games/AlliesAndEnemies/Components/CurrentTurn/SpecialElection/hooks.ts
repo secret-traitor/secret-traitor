@@ -3,7 +3,7 @@ import { useMutation } from '@apollo/react-hooks'
 import { MutationResult } from '@apollo/react-common'
 import { ExecutionResult } from '@apollo/react-common'
 
-import { Player } from 'types/Player'
+import { Player } from 'Types/Player'
 
 const NominateSpecialElectionMutation = gql`
     mutation alliesAndEnemiesSpecialElection(

@@ -19,10 +19,10 @@ export class SecretTraitorStack extends cdk.Stack {
             billingMode: BillingMode.PAY_PER_REQUEST,
             removalPolicy: RemovalPolicy.DESTROY,
         })
-        new cdk.CfnOutput(this, 'TableArn', {
+        new cdk.CfnOutput(this, 'GamesTableArn', {
             value: GamesTable.tableArn,
         })
-        new cdk.CfnOutput(this, 'TableName', {
+        new cdk.CfnOutput(this, 'GamesTableName', {
             value: GamesTable.tableName,
         })
 

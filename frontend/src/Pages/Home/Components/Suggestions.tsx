@@ -1,5 +1,5 @@
 import React from 'react'
-import { Game } from '../../../types/Game'
+import { Game } from '../../../Types/Game'
 import GameInfo from '../../../Components/GameInfo'
 import { Box } from 'grommet'
 

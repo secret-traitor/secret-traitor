@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { GameStatus } from '../types/Game'
+import { GameStatus } from '../Types/Game'
 import { Text, TextProps } from 'grommet'
 
 const map = {

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Game } from '../types/Game'
+import { Game } from '../Types/Game'
 import { Box, Text, TextProps } from 'grommet'
 import { GameStatusText, LobbyCodeText } from './GameText'
 import { BoxProps } from 'grommet/components/Box'

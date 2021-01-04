@@ -7,13 +7,13 @@ import {
 } from '@apollo/react-common'
 import { useMutation } from '@apollo/react-hooks'
 
-import { Game, GameState } from 'types/Game'
-import { Player } from 'types/Player'
+import { Game, GameState } from 'Types/Game'
+import { Player } from 'Types/Player'
 import {
     AlliesAndEnemiesGameStateFragment,
     AlliesAndEnemiesGameEventFragment,
 } from 'Games/AlliesAndEnemies'
-import { usePollingQuery } from '../../hooks/apollo'
+import { usePollingQuery } from '../../Hooks/apollo'
 
 const PlayerFragment = gql`
     fragment PlayerFragement on Player {

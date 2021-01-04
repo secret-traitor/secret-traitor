@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
-import { Box, Button, Form, FormField, Main, TextInput, Text } from 'grommet'
+import { Box, Button, Form, FormField, TextInput, Text } from 'grommet'
 import { AddCircle, CirclePlay } from 'grommet-icons'
 
-import { Game } from 'types/Game'
+import { Game } from 'Types/Game'
 import GameInfo from 'Components/GameInfo'
+import Main from 'Components/Main'
 
 type HomeProps = {
     create: () => void

@@ -6,9 +6,9 @@ import {
     QueryResult,
 } from '@apollo/react-common'
 
-import { Game, GameType } from 'types/Game'
-import { usePollingQuery } from 'hooks/apollo'
-import { GameDescription } from 'types/GameDescription'
+import { Game, GameType } from 'Types/Game'
+import { usePollingQuery } from 'Hooks/apollo'
+import { GameDescription } from 'Types/GameDescription'
 
 const GamesQuery = gql`
     query joinableGames {

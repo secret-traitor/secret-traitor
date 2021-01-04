@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Box, Form, Main, Text } from 'grommet'
 
-import { Game } from 'types/Game'
+import { Game } from 'Types/Game'
 
 import { Section } from './Section'
 import { Suggestions } from './Suggestions'

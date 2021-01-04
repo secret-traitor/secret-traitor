@@ -1,8 +1,8 @@
 import { gql } from 'apollo-boost'
 import { MutationResult, ExecutionResult } from '@apollo/react-common'
 
-import { Player } from 'types/Player'
-import { useGameMutation } from 'hooks/games'
+import { Player } from 'Types/Player'
+import { useGameMutation } from 'Hooks/games'
 
 const NominationMutation = gql`
     mutation nominatePlayer(

@@ -2,29 +2,37 @@ import React, { Suspense } from 'react'
 import { Box } from 'grommet'
 import { Route, RouteComponentProps, Switch } from 'react-router-dom'
 
+import * as links from 'Links'
+
 import LoadingScreen from 'Components/LoadingScreen'
+import { Redirect } from 'react-router'
+import { useLocationSearchParams } from '../Hooks/location'
 
 const Play = React.lazy(() => import('Pages/Play'))
 const Home = React.lazy(() => import('Pages/Home'))
+const Error = React.lazy(() => import('Pages/Error'))
 
 const HomeRouter: React.FC<RouteComponentProps> = () => <Home />
 const PlayRouter: React.FC<RouteComponentProps<{
     playerId: string
     gameId: string
 }>> = (props) => <Play {...props.match?.params} />
+const ErrorRouter: React.FC<RouteComponentProps> = () => (
+    <Error type={useLocationSearchParams().get('type') || undefined} />
+)
 
 const PageBody: React.FC = () => (
     <Suspense fallback={<LoadingScreen />}>
-        <Box fill overflow="hidden">
-            <Switch>
-                <Route exact path="/" component={HomeRouter} />
-                <Route
-                    exact
-                    path="/play/:gameId/:playerId"
-                    component={PlayRouter}
-                />
-            </Switch>
-        </Box>
+        <Switch>
+            <Route exact path={links.homePath} component={HomeRouter} />
+            <Route exact path={links.playPath} component={PlayRouter} />
+            <Route exact path={links.errorPath} component={ErrorRouter} />
+            <Route
+                exact
+                path="*"
+                component={() => <Redirect to={links.homePath} />}
+            />
+        </Switch>
     </Suspense>
 )
 

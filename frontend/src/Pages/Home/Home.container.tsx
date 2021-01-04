@@ -2,12 +2,13 @@ import React from 'react'
 import { useHistory } from 'react-router-dom'
 
 import LoadingScreen from 'Components/LoadingScreen'
-import { GameType } from 'types/Game'
-import { getPlayUrl } from 'links'
-import { usePageTitle } from 'hooks/document'
-import { usePlayerId, usePlayerNickname } from 'types/Player'
+import { usePageTitle } from 'Hooks/document'
+import { getPlayUrl } from 'Links'
+import { GameType } from 'Types/Game'
+import { usePlayerId, usePlayerNickname } from 'Types/Player'
 
 import Home from './Home.component'
+import HomeErrorPage from './Components/ErrorPage'
 import { usePollGames, useCreateGame, useJoinGame } from './hooks'
 
 const HomeContainer: React.FC = () => {
@@ -21,7 +22,7 @@ const HomeContainer: React.FC = () => {
             const results = await joinFn(gameId, playerNickname)
             if (results?.game) {
                 setPlayerNickname(playerNickname)
-                history.push(getPlayUrl({ gameId: results.game.id, playerId }))
+                history.push(getPlayUrl(results.game.id, playerId))
             } else {
             }
         }
@@ -41,8 +42,8 @@ const HomeContainer: React.FC = () => {
         error: errorGames,
         refetch: refetchGames,
     } = usePollGames()
-    if (errorGames || (!loadingGames && !games)) {
-        return <>Uh oh</>
+    if (errorGames) {
+        return <HomeErrorPage error={errorGames} />
     }
     const loading = loadingGames || joinResults.loading || createResults.loading
     return (

@@ -3,9 +3,9 @@ import React from 'react'
 import ConfirmRedirect from 'Components/ConfirmRedirect'
 import LoadingScreen from 'Components/LoadingScreen'
 
-import { GameState, GameStatus } from 'types/Game'
-import { getHomeUrl } from 'links'
-import { usePageTitle } from 'hooks/document'
+import { GameState, GameStatus } from 'Types/Game'
+import { getHomeUrl } from 'Links'
+import { usePageTitle } from 'Hooks/document'
 
 import { usePlayGame, useStartGame } from './hooks'
 

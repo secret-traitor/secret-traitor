@@ -1,19 +1,14 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import { ApolloProvider } from '@apollo/react-hooks'
 import { enableExperimentalFragmentVariables } from 'graphql-tag'
 
 import * as serviceWorker from './serviceWorker'
-import { bootstrapClient } from './ApolloClient'
 import App from './App'
 ;(async () => {
     enableExperimentalFragmentVariables()
-    const ApolloClient = await bootstrapClient()
     ReactDOM.render(
         <React.StrictMode>
-            <ApolloProvider client={ApolloClient}>
-                <App />
-            </ApolloProvider>
+            <App />
         </React.StrictMode>,
         document.getElementById('root')
     )

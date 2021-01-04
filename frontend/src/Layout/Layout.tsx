@@ -1,15 +1,18 @@
 import React from 'react'
-import { Grommet } from 'grommet'
-import { HashRouter } from 'react-router-dom'
+import { Box } from 'grommet'
 
 import PageBody from 'Layout/PageBody'
-import theme from 'theme'
 
 const Layout: React.FC = () => (
-    <Grommet theme={theme} full>
-        <HashRouter>
-            <PageBody />
-        </HashRouter>
-    </Grommet>
+    <Box
+        overflow="hidden"
+        background={{
+            color: `brand-8`,
+            opacity: 'medium',
+        }}
+        fill
+    >
+        <PageBody />
+    </Box>
 )
 export default Layout

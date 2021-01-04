@@ -1,4 +1,4 @@
-import { Player } from 'types/Player'
+import { Player } from 'Types/Player'
 
 export enum BoardAction {
     Execution = 'Execution',

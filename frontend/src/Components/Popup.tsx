@@ -1,18 +1,18 @@
 import React from 'react'
-import { Box, BoxProps, Layer, LayerPositionType } from 'grommet'
+import { Box, BoxProps, Layer, LayerProps } from 'grommet'
 
-type PopupProps = BoxProps & {
-    position?: LayerPositionType
-    onClose?: () => void
-}
+type PopupProps = BoxProps & LayerProps & { onClose?: () => void }
 
 const Popup: React.FC<PopupProps> = ({
     children,
-    onClose,
-    position = 'center',
+    onClose = () => ({}),
     ...props
 }) => (
-    <Layer position={position} onClickOutside={onClose}>
+    <Layer
+        position="center"
+        onClickOutside={onClose}
+        {...(props as LayerProps)}
+    >
         <Box
             pad="large"
             gap="medium"

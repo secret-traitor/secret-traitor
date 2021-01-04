@@ -3,8 +3,8 @@ import { Box, Button, Main, Text } from 'grommet'
 import { Close, Deploy } from 'grommet-icons'
 import sort from 'lodash/sortBy'
 
-import { Game } from 'types/Game'
-import { Player } from 'types/Player'
+import { Game } from 'Types/Game'
+import { Player } from 'Types/Player'
 
 import GameInfo from 'Components/GameInfo'
 

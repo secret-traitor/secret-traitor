@@ -3,7 +3,7 @@ import { Box, Button, Text } from 'grommet'
 
 import { PlayerVote } from 'Games/AlliesAndEnemies/types'
 import Popup from 'Components/Popup'
-import { Player } from 'types/Player'
+import { Player } from 'Types/Player'
 
 type VoteVetoProps = {
     vote: (vote: PlayerVote) => void

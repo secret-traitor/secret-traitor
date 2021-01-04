@@ -15,6 +15,7 @@ const DelayedRedirect: React.FC<DelayedRedirectProps> = ({
 }) => {
     const history = useHistory()
     const timeout = setTimeout(() => {
+        console.log('here i go...', { replace })
         if (replace) {
             history.replace(to)
         } else {
