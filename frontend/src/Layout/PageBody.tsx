@@ -1,12 +1,10 @@
 import React, { Suspense } from 'react'
-import { Box } from 'grommet'
+import { Redirect } from 'react-router'
 import { Route, RouteComponentProps, Switch } from 'react-router-dom'
 
-import * as links from 'Links'
-
 import LoadingScreen from 'Components/LoadingScreen'
-import { Redirect } from 'react-router'
-import { useLocationSearchParams } from '../Hooks/location'
+import * as links from 'Links'
+import { useLocationSearchParams } from 'Hooks/location'
 
 const Play = React.lazy(() => import('Pages/Play'))
 const Home = React.lazy(() => import('Pages/Home'))

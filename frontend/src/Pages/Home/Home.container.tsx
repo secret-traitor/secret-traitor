@@ -7,9 +7,10 @@ import { getPlayUrl } from 'Links'
 import { GameType } from 'Types/Game'
 import { usePlayerId, usePlayerNickname } from 'Types/Player'
 
-import Home from './Home.component'
-import HomeErrorPage from './Components/ErrorPage'
 import { usePollGames, useCreateGame, useJoinGame } from './hooks'
+
+const Home = React.lazy(require('./Home.component'))
+const Error = React.lazy(require('./Components/ErrorPage'))
 
 const HomeContainer: React.FC = () => {
     usePageTitle('Home | Secret Traitor')
@@ -23,7 +24,6 @@ const HomeContainer: React.FC = () => {
             if (results?.game) {
                 setPlayerNickname(playerNickname)
                 history.push(getPlayUrl(results.game.id, playerId))
-            } else {
             }
         }
     }
@@ -43,7 +43,7 @@ const HomeContainer: React.FC = () => {
         refetch: refetchGames,
     } = usePollGames()
     if (errorGames) {
-        return <HomeErrorPage error={errorGames} />
+        return <Error error={errorGames} />
     }
     const loading = loadingGames || joinResults.loading || createResults.loading
     return (

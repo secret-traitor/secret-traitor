@@ -9,9 +9,6 @@ import Popup from 'Components/Popup'
 import { getErrorUrl } from 'Links'
 
 const ErrorPage: React.FC<{ error: ApolloError }> = ({ error }) => {
-    console.log(error?.networkError)
-    console.log(error?.message)
-    console.log(error?.graphQLErrors)
     let type
     if (error?.networkError) {
         type = 'network'
