@@ -9,8 +9,8 @@ import { usePlayerId, usePlayerNickname } from 'Types/Player'
 
 import { usePollGames, useCreateGame, useJoinGame } from './hooks'
 
-const Home = React.lazy(require('./Home.component'))
-const Error = React.lazy(require('./Components/ErrorPage'))
+const Home = React.lazy(() => import('./Home.component'))
+const Error = React.lazy(() => import('./Components/ErrorPage'))
 
 const HomeContainer: React.FC = () => {
     usePageTitle('Home | Secret Traitor')
@@ -47,7 +47,7 @@ const HomeContainer: React.FC = () => {
     }
     const loading = loadingGames || joinResults.loading || createResults.loading
     return (
-        <>
+        <React.Suspense fallback={<LoadingScreen />}>
             {loading && <LoadingScreen />}
             <Home
                 games={games ?? []}
@@ -57,7 +57,7 @@ const HomeContainer: React.FC = () => {
                 setNickname={setPlayerNickname}
                 create={create}
             />
-        </>
+        </React.Suspense>
     )
 }
 
